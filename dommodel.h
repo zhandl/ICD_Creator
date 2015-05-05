@@ -42,13 +42,14 @@
 #define DOMMODEL_H
 
 #include <QAbstractItemModel>
+#include <QStandardItemModel>
 #include <QDomDocument>
 #include <QModelIndex>
 #include <QVariant>
 
 class DomItem;
 
-//! [0]
+
 class DomModel : public QAbstractItemModel
 {
     Q_OBJECT
@@ -66,11 +67,12 @@ public:
     QModelIndex parent(const QModelIndex &child) const;
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
     int columnCount(const QModelIndex &parent = QModelIndex()) const;
+    DomItem* getRootItem();
+    void update();
 
 private:
-    QDomDocument domDocument;
+    QDomDocument domDocument;    
     DomItem *rootItem;
 };
-//! [0]
 
 #endif

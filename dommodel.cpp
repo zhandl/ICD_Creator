@@ -57,7 +57,7 @@ DomModel::~DomModel()
 
 int DomModel::columnCount(const QModelIndex &/*parent*/) const
 {
-    return 1;
+    return 3;
 }
 
 QVariant DomModel::data(const QModelIndex &index, int role) const
@@ -72,13 +72,20 @@ QVariant DomModel::data(const QModelIndex &index, int role) const
 
     QDomNode node = item->node();
 
-//    QStringList attributes;
-//    QDomNamedNodeMap attributeMap = node.attributes();
+    QStringList attributes;
+    QDomNamedNodeMap attributeMap = node.attributes();
 
     switch (index.column()) {
         case 0:
-            return node.nodeName();
-/*        case 1:
+            if(node.nodeType() == QDomNode::ElementNode)
+                return node.nodeName();
+            else if(node.nodeType() == QDomNode::CommentNode)
+                return node.nodeValue();
+            else if(node.nodeType() == QDomNode::ProcessingInstructionNode)
+                return node.nodeName();
+            else if(node.nodeType() == QDomNode::TextNode)
+                return node.nodeValue();
+        case 1:
             for (int i = 0; i < attributeMap.count(); ++i) {
                 QDomNode attribute = attributeMap.item(i);
                 attributes << attribute.nodeName() + "=\""
@@ -86,7 +93,7 @@ QVariant DomModel::data(const QModelIndex &index, int role) const
             }
             return attributes.join(" ");
         case 2:
-            return node.nodeValue().split("\n").join(" ");*/
+            return node.nodeValue().split("\n").join(" ");
         default:
             return QVariant();
     }
@@ -107,10 +114,10 @@ QVariant DomModel::headerData(int section, Qt::Orientation orientation,
         switch (section) {
             case 0:
                 return tr("Name");
-/*            case 1:
+            case 1:
                 return tr("Attributes");
             case 2:
-                return tr("Value");*/
+                return tr("Value");
             default:
                 return QVariant();
         }
@@ -122,8 +129,12 @@ QVariant DomModel::headerData(int section, Qt::Orientation orientation,
 QModelIndex DomModel::index(int row, int column, const QModelIndex &parent)
             const
 {
+//    qDebug()<<"Here is DomModel index"<<row<<" "<<column;
     if (!hasIndex(row, column, parent))
+    {
+//        qDebug()<<"there is no Index";
         return QModelIndex();
+    }
 
     DomItem *parentItem;
 
@@ -132,8 +143,11 @@ QModelIndex DomModel::index(int row, int column, const QModelIndex &parent)
     else
         parentItem = static_cast<DomItem*>(parent.internalPointer());
 
+//    qDebug()<<"The parentItem name is "<<parentItem->node().toElement().tagName();
+
     DomItem *childItem = parentItem->child(row);
-    if (childItem)
+//    qDebug()<<"The childItem name is "<<childItem->node().toElement().tagName();
+    if (childItem->node().nodeType() == QDomNode::ElementNode||childItem->node().nodeType() == QDomNode::TextNode)
         return createIndex(row, column, childItem);
     else
         return QModelIndex();
@@ -147,7 +161,7 @@ QModelIndex DomModel::parent(const QModelIndex &child) const
     DomItem *childItem = static_cast<DomItem*>(child.internalPointer());
     DomItem *parentItem = childItem->parent();
 
-    if (!parentItem || parentItem == rootItem)
+    if (!parentItem || parentItem == rootItem )
         return QModelIndex();
 
     return createIndex(parentItem->row(), 0, parentItem);
@@ -166,5 +180,16 @@ int DomModel::rowCount(const QModelIndex &parent) const
         parentItem = static_cast<DomItem*>(parent.internalPointer());
 
     return parentItem->node().childNodes().count();
+}
+
+DomItem* DomModel::getRootItem()
+{
+    return rootItem;
+}
+
+void DomModel::update()
+{
+//    reset();
+    rootItem = new DomItem(domDocument, 0);
 }
 

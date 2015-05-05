@@ -16,8 +16,10 @@ TEMPLATE = app
 SOURCES += main.cpp\
         mainwindow.cpp \
     domitem.cpp \
-    dommodel.cpp
+    dommodel.cpp \
+    qitemaction.cpp
 
 HEADERS  += mainwindow.h \
     domitem.h \
-    dommodel.h
+    dommodel.h \
+    qitemaction.h

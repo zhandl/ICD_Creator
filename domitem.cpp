@@ -72,11 +72,20 @@ DomItem *DomItem::child(int i)
     if (childItems.contains(i))
         return childItems[i];
 
+//    qDebug()<<"Here is DomItem child"<<domNode.toElement().tagName();
+//    qDebug()<<"the child count is "<<domNode.childNodes().count();
     if (i >= 0 && i < domNode.childNodes().count()) {
+//        qDebug()<<"the number of current child is "<<i;
         QDomNode childNode = domNode.childNodes().item(i);
-        DomItem *childItem = new DomItem(childNode, i, this);
-        childItems[i] = childItem;
-        return childItem;
+//        qDebug()<<"the name of current child is "<<childNode.toElement().tagName();
+//        if(childNode.nodeType() == QDomNode::ElementNode)
+        {
+            DomItem *childItem = new DomItem(childNode, i, this);
+            childItems[i] = childItem;
+            return childItem;
+        }
+//        else
+//            return 0;
     }
     return 0;
 }
