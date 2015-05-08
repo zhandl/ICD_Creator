@@ -95,3 +95,8 @@ int DomItem::row()
     return rowNumber;
 }
 
+void DomItem::removeChild(int i)
+{
+    childItems.remove(i);
+    return;
+}

@@ -162,6 +162,8 @@ private:
     QItemAction *qAddBDA;
     QItemAction *qAddEnumVal;
 
+    QAction *qRefresh;
+
     QString newFileName;
     QString openFileName;
 
@@ -202,7 +204,7 @@ private slots:
     void fileOpenAct();
     void fileSaveAct();
 
-    void deleteChildren(QDomNode);
+    void deleteChildren(DomItem*);
 
     void deleteItem(QPoint);
 
@@ -301,6 +303,8 @@ private slots:
     void addDA(QPoint);
     void addBDA(QPoint);
     void addEnumVal(QPoint);
+
+    void refresh();
 
 
     void showPopMenu(QPoint cp);

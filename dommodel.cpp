@@ -189,7 +189,7 @@ DomItem* DomModel::getRootItem()
 
 void DomModel::update()
 {
-//    reset();
+    resetInternalData();
     rootItem = new DomItem(domDocument, 0);
 }
 

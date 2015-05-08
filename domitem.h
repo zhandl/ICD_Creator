@@ -53,6 +53,7 @@ public:
     DomItem *parent();
     QDomNode node() const;
     int row();
+    void removeChild(int i);
 
 private:
     QDomNode domNode;

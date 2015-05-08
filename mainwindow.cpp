@@ -207,6 +207,9 @@ void MainWindow::CreateActions()
     connect(qAddBDA, SIGNAL(clicked(QPoint)), this, SLOT(addBDA(QPoint)));
     qAddEnumVal = new QItemAction(tr("²åÈëEnumVal"),this);
     connect(qAddEnumVal, SIGNAL(clicked(QPoint)), this, SLOT(addEnumVal(QPoint)));
+
+    qRefresh = new QAction(tr("Ë¢ÐÂ"),this);
+    connect(qRefresh, SIGNAL(triggered()), this, SLOT(refresh()));
 }
 
 void MainWindow::CreateMenus()
@@ -642,11 +645,23 @@ void MainWindow::showPopMenu(QPoint cp)
 
     *currentItem = view->indexAt(cp);
 
-    if(currentItem->data().isNull())
+    if(currentItem->data().isNull() && newFileName == NULL)
         return;
+
+    if(currentItem->data().isNull() && newFileName != NULL)
+    {
+        qPopMenu->addAction(qRefresh);
+        qPopMenu->exec(QCursor::pos());
+        return;
+    }
 
     DomItem *Item = static_cast<DomItem*>(currentItem->internalPointer());
     QDomNode currentNode = Item->node();
+
+
+
+    //    if(currentItem->data().isNull())
+    //        qPopMenu->addAction(qRefresh);
 
     if(currentItem->data().toString() == tr("SCL"))
     {
@@ -1323,6 +1338,7 @@ void MainWindow::showPopMenu(QPoint cp)
     {
         qPopMenu->setDisabled(1);
     }
+
     qPopMenu->exec(QCursor::pos());
 }
 /*
@@ -5236,7 +5252,7 @@ void MainWindow::deleteItem(QPoint cp)
 //    {
 //        currentNode.removeChild(currentNode.childNodes().at(i));
 //    }
-    deleteChildren(currentNode);
+    deleteChildren(currentItem);
 //    for(int i=0; i<parentNode.childNodes().count(); i++)
 //    {
 //        if(parentNode.childNodes().at(i).nodeName() == currentNode.nodeName())
@@ -5254,12 +5270,17 @@ void MainWindow::deleteItem(QPoint cp)
 
 }
 
-void MainWindow::deleteChildren(QDomNode node)
+void MainWindow::deleteChildren(DomItem* item)
 {
-    qDebug()<<node.nodeName();
-    while(node.hasChildNodes())
+    qDebug()<<item->node().nodeName();
+    int i=0;
+    while(item->node().hasChildNodes())
     {
-        deleteChildren(node.firstChild());
+//        for(i=0; i<item->node().childNodes().count();i++)
+        if(i<item->node().childNodes().count())
+            deleteChildren(item->child(i++));
+        else
+            break;
 //        for(int i=0; i<item->node().childNodes().count(); i++)
 //        {
 //            qDebug()<<i<<'\t'<<item->child(i)->node().nodeName();
@@ -5269,7 +5290,24 @@ void MainWindow::deleteChildren(QDomNode node)
     }
 //    else
 //    {
-        node.parentNode().removeChild(node);
-        //item->parent()->node().removeChild(item->node());
+    qDebug()<<item->parent()->node().nodeName();
+    qDebug()<<item->node().nodeName();
+    for(int j=0; j<item->parent()->node().childNodes().count();j++)
+        qDebug()<<item->parent()->node().childNodes().at(j).nodeName();
+        item->parent()->node().removeChild(item->node());
+        i--;
+        //node.parentNode().removeChild(node);
+//        item->parent()->node().removeChild(item->node());
+//        for(int j=0; j<item->parent()->node().childNodes().count(); j++)
+//            if(item->parent()->node().childNodes().at(j).nodeName() == item->node().nodeName())
+//                item->parent()->removeChild(j);
 //    }
+}
+
+void MainWindow::refresh()
+{
+    model->update();
+    DomModel *newModel = new DomModel(*doc);
+    view->setModel(newModel);
+    model = newModel;
 }
