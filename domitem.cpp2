@@ -1,4 +1,4 @@
-﻿/****************************************************************************
+/****************************************************************************
 **
 ** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
@@ -42,49 +42,45 @@
 
 #include "domitem.h"
 
+//! [0]
 DomItem::DomItem(QDomNode &node, int row, DomItem *parent)
 {
     domNode = node;
+//! [0]
     // Record the item's location within its parent.
+//! [1]
     rowNumber = row;
     parentItem = parent;
-
-    // Add childItems here
-    for(int i=0; i<node.childNodes().count(); i++)
-    {
-        QDomNode childNode = node.childNodes().item(i);
-        DomItem *childItem = new DomItem(childNode, i, this);
-        childItems.insert(i,childItem);
-    }
 }
+//! [1]
 
+//! [2]
 DomItem::~DomItem()
 {
-//    QHash<int,DomItem*>::iterator it;
-//    for (it = childItems.begin(); it != childItems.end(); ++it)
-//       delete it.value();
-    qDeleteAll(childItems);
+    QHash<int,DomItem*>::iterator it;
+    for (it = childItems.begin(); it != childItems.end(); ++it)
+        delete it.value();
 }
+//! [2]
 
+//! [3]
 QDomNode DomItem::node() const
 {
     return domNode;
 }
+//! [3]
 
+//! [4]
 DomItem *DomItem::parent()
 {
     return parentItem;
 }
+//! [4]
 
+//! [5]
 DomItem *DomItem::child(int i)
 {
-       qDebug()<<i<<'\t'<<domNode.nodeName();
-       qDebug()<<domNode.childNodes().count();
-       for(int j=0; j<domNode.childNodes().count(); j++)
-           qDebug()<<domNode.childNodes().at(j).nodeName();
-       for(int j=0; j<childItems.size(); j++)
-           qDebug()<<childItems.value(j)->node().nodeName();
-/*    if (childItems.contains(i))
+    if (childItems.contains(i))
         return childItems[i];
 
     if (i >= 0 && i < domNode.childNodes().count()) {
@@ -93,58 +89,13 @@ DomItem *DomItem::child(int i)
         childItems[i] = childItem;
         return childItem;
     }
-    return 0;*/
-//    if(childItems.contains(childItems.value(i)))
-//    {
-//        qDebug()<<childItems.value(i)->node().toElement().tagName();
-        return childItems.value(i);
-//    }
-
-/*    if (i >= 0 && i < domNode.childNodes().count()) {
-        QDomNode childNode = domNode.childNodes().item(i);
-        {
-            DomItem *childItem = new DomItem(childNode, i, this);
-            childItems.insert(i, childItem);
-            return childItem;
-        }
-    }
-    return 0;*/
+    return 0;
 }
+//! [5]
 
+//! [6]
 int DomItem::row()
 {
     return rowNumber;
 }
-
-int DomItem::childNum()
-{
-    return childItems.size();
-}
-
-bool DomItem::insertChildren(int position, DomItem item)
-{
-    if (position < 0 || position > childItems.size())
-        return false;
-
-//    DomItem *item = new DomItem(node, position, this);
-    item.parentItem = this;
-    item.rowNumber = position;
-
-    qDebug()<<childItems.size();
-    childItems.insert(position, &item);
-    qDebug()<<childItems.size();
-
-    return true;
-}
-
-bool DomItem::removeChildren(int position, int count)
-{
-    if (position < 0 || position + count > childItems.size())
-        return false;
-
-    for (int row = 0; row < count; ++row)
-        delete childItems.takeAt(position);
-//        childItems.remove(position);
-
-    return true;
-}
+//! [6]

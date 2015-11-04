@@ -1,4 +1,4 @@
-﻿/****************************************************************************
+/****************************************************************************
 **
 ** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
@@ -211,18 +211,13 @@ void DomModel::update()
 //    rootItem = new DomItem(domDocument, 0);
 }
 
-bool DomModel::insertRows(int position, DomItem item, const QModelIndex &parent)
+bool DomModel::insertRows(int position, int rows, const QModelIndex &parent)
 {
     DomItem *parentItem = getItem(parent);
     bool success;
 
-    beginInsertRows(parent, position, position);
-    success = parentItem->insertChildren(position, item);
-
-//    DomItem *childItem = parentItem->child(position);
-//    if (childItem->node().nodeType() == QDomNode::ElementNode)//||childItem->node().nodeType() == QDomNode::TextNode)
-//        createIndex(position, 0, childItem);
-
+    beginInsertRows(parent, position, position + rows - 1);
+//    success = parentItem->insertChildren(position, rows);
     endInsertRows();
 
     return success;
@@ -237,23 +232,6 @@ bool DomModel::removeRows(int row, int count, const QModelIndex &parent)
     beginRemoveRows(parent, row, row + count - 1);
     success = parentItem->removeChildren(row, count);
     endRemoveRows();
-
-    return success;
-}
-
-bool DomModel::moveUpRows(const QModelIndex &index)//, int sourceFirst, int sourceLast, const QModelIndex &destinationParent, int position)
-{
-    qDebug()<<"in MoveRows";
-    bool success = true;
-    QModelIndex parentIndex = index.parent();
-    DomItem* item = getItem(index);
-    int row = index.row();
-
-    beginMoveRows(parentIndex, row, row, parentIndex, row-1);
-    insertRows(row-1, *item, parentIndex);
-    success = removeRows(row,1,parentIndex);
-
-    endMoveRows();
 
     return success;
 }

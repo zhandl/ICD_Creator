@@ -1,4 +1,4 @@
-﻿#ifndef QITEMACTION_H
+#ifndef QITEMACTION_H
 #define QITEMACTION_H
 
 #include <QAction>

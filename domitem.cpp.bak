@@ -1,4 +1,4 @@
-﻿/****************************************************************************
+/****************************************************************************
 **
 ** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
@@ -113,27 +113,17 @@ DomItem *DomItem::child(int i)
 
 int DomItem::row()
 {
+    qDebug()<<domNode.toElement().tagName()<<'\t'<<rowNumber;
     return rowNumber;
 }
 
-int DomItem::childNum()
-{
-    return childItems.size();
-}
-
-bool DomItem::insertChildren(int position, DomItem item)
+bool DomItem::insertChildren(int position, QDomNode node)
 {
     if (position < 0 || position > childItems.size())
         return false;
 
-//    DomItem *item = new DomItem(node, position, this);
-    item.parentItem = this;
-    item.rowNumber = position;
-
-    qDebug()<<childItems.size();
-    childItems.insert(position, &item);
-    qDebug()<<childItems.size();
-
+    DomItem *item = new DomItem(node, position, this);
+    childItems.insert(position, item);
     return true;
 }
 

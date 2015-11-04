@@ -1,4 +1,4 @@
-#-------------------------------------------------
+﻿#-------------------------------------------------
 #
 # Project created by QtCreator 2015-03-23T15:20:08
 #
@@ -26,5 +26,4 @@ HEADERS  += mainwindow.h \
     dommodel.h \
     qitemaction.h \
     nodetablewidget.h \
-    icdtreeview.h \
-    icdCreator.h
+    icdtreeview.h

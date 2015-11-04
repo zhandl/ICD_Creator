@@ -1,4 +1,4 @@
-﻿#ifndef MAINWINDOW_H
+#ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
 #include <QMainWindow>
@@ -86,21 +86,6 @@ private:
     QItemAction *qAddHistory;
     QItemAction *qAddHitem;
 
-    QItemAction *qAddVoltageLevel;
-    QItemAction *qAddFunction;
-    QItemAction *qAddPowerTransformer;
-    QItemAction *qAddGeneralEquipment;
-    QItemAction *qAddLNode;
-
-    QItemAction *qAddVoltage;
-    QItemAction *qAddBay;
-    QItemAction *qAddSubFunction;
-
-    QItemAction *qAddConductingEquipment;
-    QItemAction *qAddConnectivityNode;
-
-    QItemAction *qAddSubEquipment;
-
     QItemAction *qAddServices;
     QItemAction *qAddAccessPoint;
 
@@ -185,9 +170,6 @@ private:
     QItemAction *qAddBDA;
     QItemAction *qAddEnumVal;
 
-    QItemAction *qMoveUp;
-    QItemAction *qMoveDown;
-
     QAction *qRefresh;
 
     QString newFileName;
@@ -246,22 +228,6 @@ private slots:
     void addTextAct(const QModelIndex&);
     void addTextContentAct(const QModelIndex&);
     void addHitemAct(const QModelIndex&);
-
-    void addVoltageLevel(const QModelIndex&);
-    void addFunction(const QModelIndex&);
-    void addPowerTransformer(const QModelIndex&);
-    void addGeneralEquipment(const QModelIndex&);
-    void addLNode(const QModelIndex &);
-
-    void addVoltage(const QModelIndex&);
-    void addBay(const QModelIndex&);
-    void addSubFunction(const QModelIndex&);
-
-    void addConductingEquipment(const QModelIndex&);
-    void addSubEquipment(const QModelIndex&);
-    void addConnectivityNode(const QModelIndex&);
-
-    void addTerminal(const QModelIndex&);
 
     void addServices(const QModelIndex&);
     void addAccessPoint(const QModelIndex&);
@@ -346,9 +312,6 @@ private slots:
     void addDA(const QModelIndex&);
     void addBDA(const QModelIndex&);
     void addEnumVal(const QModelIndex&);
-
-    void ItemMoveUp(const QModelIndex&);
-    void ItemMoveDown(const QModelIndex&);
 
     void refresh();
 

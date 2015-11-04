@@ -1,4 +1,4 @@
-﻿/****************************************************************************
+/****************************************************************************
 **
 ** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
@@ -69,10 +69,8 @@ public:
     int columnCount(const QModelIndex &parent = QModelIndex()) const;
 
     void update();
-    bool insertRows(int position, DomItem item, const QModelIndex &parent);
+    bool insertRows(int position, int row, const QModelIndex &parent);
     bool removeRows(int row, int count, const QModelIndex &parent=QModelIndex());
-    bool moveUpRows(const QModelIndex &index);//, int sourceFirst, int sourceLast, const QModelIndex &destinationParent, int position);
-    bool moveDownRows(const QModelIndex &index);
 
 private:
     DomItem* getItem(const QModelIndex &index) const;

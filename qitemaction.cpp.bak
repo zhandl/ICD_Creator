@@ -1,4 +1,4 @@
-﻿#include "qitemaction.h"
+#include "qitemaction.h"
 
 QItemAction::QItemAction(QObject *parent) :
     QAction(parent)

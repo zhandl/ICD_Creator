@@ -5268,9 +5268,7 @@ void MainWindow::addValContent(const QModelIndex& currentIndex)
         QDomText qNewText = doc->createTextNode(ContentEdit->text());
 
         currentNode.appendChild(qNewText);
-        DomItem newItem = DomItem(qNewText, 0, 0);
-	currentItem->insertChildren(currentItem->childNum(), newItem);
-// 	currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewText); 
+        currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewText);
 
         QModelIndex parentIndex = currentIndex.parent();
         view->setExpanded(parentIndex,0);
@@ -5365,10 +5363,7 @@ void MainWindow::addExtRef(const QModelIndex& currentIndex)
         qNewElement.setAttribute(tr("iedName"), AttrTable->item(6,1)->text());
         qNewElement.setAttribute(tr("ldInst"), AttrTable->item(7,1)->text());
 
-        currentNode.appendChild(qNewElement);
-        DomItem newItem = DomItem(qNewElement, 0, 0);
-        currentItem->insertChildren(currentItem->childNum(), newItem);
-//      currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
+        currentNode.appendChild(qNewElement);urrentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
 
         QModelIndex parentIndex = currentIndex.parent();
         view->setExpanded(parentIndex,0);
@@ -6230,7 +6225,7 @@ void MainWindow::hideAttributes(const QModelIndex& index)
 
 void MainWindow::ItemMoveUp(const QModelIndex& index)
 {
-    ((DomModel*)(view->model()))->moveUpRows(index);
+    ((DomModel*)(view->model()))->moveRows(index.parent(), index.row(), index.row(), index.parent(), index.row()-1);
 }
 
 void MainWindow::ItemMoveDown(const QModelIndex& index)

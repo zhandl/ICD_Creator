@@ -1,4 +1,4 @@
-/****************************************************************************
+﻿/****************************************************************************
 **
 ** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
@@ -53,13 +53,17 @@ public:
     DomItem *parent();
     QDomNode node() const;
     int row();
-    void removeChild(int i);
+    int childNum();
+    bool insertChildren(int position, DomItem item);
+    bool removeChildren(int position, int);
 
 private:
     QDomNode domNode;
-    QHash<int,DomItem*> childItems;
+//    QHash<int,DomItem*> childItems;
+    QList<DomItem*> childItems;
     DomItem *parentItem;
     int rowNumber;
+
 };
 
 #endif
