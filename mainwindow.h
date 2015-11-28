@@ -42,6 +42,8 @@
 #include "nodetablewidget.h"
 #include "icdtreeview.h"
 
+#include "xmleditwidget.h"
+
 
 class MainWindow : public QMainWindow
 {
@@ -50,6 +52,112 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = 0);
     ~MainWindow();
+
+    QAction *actionNew;
+    QAction *actionQuit;
+    QAction *actionOpen;
+    QAction *actionSave;
+    QAction *actionSaveAs;
+    QAction *actionCut;
+    QAction *actionCopy;
+    QAction *actionPaste;
+    QAction *actionExpandAll;
+    QAction *actionShowAttrLine;
+    QAction *actionAbout;
+    QAction *actionAddComment;
+    QAction *actionAppendComment;
+    QAction *actionAddProcessingInstruction;
+    QAction *actionAppendProcessingInstruction;
+    QAction *actionResizeToContents;
+    QAction *actionAddChildElement;
+    QAction *actionAppendChildElement;
+    QAction *actionEdit;
+    QAction *actionDelete;
+    QAction *actionMoveUp;
+    QAction *actionMoveDown;
+    QAction *actionFind;
+    QAction *actionGo_To_Parent;
+    QAction *actionGo_to_Previous_Brother;
+    QAction *actionGo_to_Next_Brother;
+    QAction *actionShowChildIndex;
+    QAction *actionCloseThisAllBrothers;
+    QAction *actionNewFromClipboard;
+    QAction *actionCompactView;
+    QAction *actionHideBrothers;
+    QAction *actionFixedSizeAttributes;
+    QAction *actionShowAttributesLength;
+    QAction *actionShowBase64;
+    QAction *actionShowCurrentElementTextBase64;
+    QAction *actionConfigure;
+    QAction *actionEditInnerXML;
+    QAction *actionEditInnerXMLBase64;
+    QAction *actionEditInnerBase64Text;
+    QAction *actionZoomIn;
+    QAction *actionZoomOut;
+    QAction *actionCompare;
+    QAction *actionReload;
+    QAction *actionLastFiles;
+    QAction *actionCopyPathToClipboard;
+    QAction *actionAddCurrentDirectory;
+    QAction *actionEditPreferredDirectories;
+    QAction *actionValidate;
+    QAction *actionValidateFile;
+    QAction *actionValidateNewFile;
+    QAction *actionInsertSnippet;
+    QAction *actionConfigureSnippets;
+    QAction *actionExecuteAutoTest;
+    QAction *actionPlugins;
+    QAction *actionTransforminSnippet;
+    QAction *actionShowElementTextLength;
+    QAction *actionShowElementSize;
+    QAction *actionXplore;
+    QAction *actionBlindLoadFile;
+    QAction *actionHideView;
+    QAction *actionSearchInFiles;
+    QAction *actionHelpOnQXmlEdit;
+    QAction *actionAllowedSchemaElements;
+    QAction *actionPasteAndSubstituteText;
+    QAction *actionNewUsingXMLSchema;
+    QAction *actionTransformInComment;
+    QAction *actionExtractElementsFromComment;
+    QAction *actionInsertNoNamespaceSchemaReferenceAttributes;
+    QAction *actionInsertSchemaReferenceAttributes;
+    QAction *actionExtractFragmentsFromFile;
+    QAction *actionWelcomeDialog;
+    QAction *actionSaveACopyAs;
+    QAction *actionHideAllLeafChildren;
+    QAction *actionShowAllLeafChildren;
+    QAction *actionHideLeafChildren;
+    QAction *actionShowLeafChildren;
+    QAction *actionViewAsXsd;
+    QAction *actionColumnView;
+    QAction *actionShowCurrentSessionPanel;
+    QAction *actionNewSession;
+    QAction *actionPauseSession;
+    QAction *actionResumeSession;
+    QAction *actionCloseSession;
+    QAction *actionManageSessions;
+    QAction *actionSessionDetails;
+    QAction *actionUndo;
+    QAction *actionRedo;
+    QAction *actionNewWindow;
+    QAction *actionViewData;
+    QAction *actionBase64Tools;
+    QAction *actionEncodingTools;
+    QWidget *centralwidget;
+    QHBoxLayout *horizontalLayout;
+    XmlEditWidget *editor;
+    QMenuBar *menubar;
+    QMenu *menu_Navigation;
+    QMenu *menuHelp;
+    QMenu *menuEdit;
+    QMenu *menuFile;
+    QMenu *menu_XML;
+    QMenu *menuXML_Schema;
+    QMenu *menuTools;
+    QMenu *menuView;
+    QStatusBar *statusbar;
+    QToolBar *toolBar;
 
 private:
     QStringList lnClass;
@@ -218,6 +326,7 @@ private:
     /*UI Function Declare*/
     void CreateActions();
     void CreateMenus();
+    void retranslateUi();
 
     /*Document Function Declare*/
     void CreateNewICD(QDomDocument*);

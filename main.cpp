@@ -2,7 +2,7 @@
 #include "icdCreator.h"
 #include <QApplication>
 
-const char *APP_TITLE = QT_TR_NOOP("ICD Creator");
+//const char *APP_TITLE = QT_TR_NOOP("ICD Creator");
 
 int main(int argc, char *argv[])
 {

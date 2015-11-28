@@ -42,25 +42,45 @@
 #define DOMMODEL_H
 
 #include <QAbstractItemModel>
-#include <QStandardItemModel>
-#include <QDomDocument>
-#include <QModelIndex>
+#include <QtXml/QDomDocument>
+#include <QtXml/QDomNode>
 #include <QVariant>
+#include <QtGui>
+
+
+#include "global.h"
+
+#include "domitem.h"
+#include "paintinfo.h"
 
 class DomItem;
+class DocumentType;
 
-
-class DomModel : public QAbstractItemModel
+class LIBQXMLEDITSHARED_EXPORT DomModel : public QAbstractItemModel
 {
     Q_OBJECT
 
+    friend class TestXsd;
+
+    static const int ModelName;
+    static const int ModelValue;
+    static const int ModelColumns;
+
+    // constants
+    enum EConsts {
+        // undo limit
+        UndoLimitCount = 10
+    };
+    QUndoStack _undoStack;
 public:
-    DomModel(QDomDocument document, QObject *parent = 0);
+    DomModel(QDomDocument & document, const QString &name);
+    DomModel();
     ~DomModel();
 
+    //**********************************  Model Interface
     QVariant data(const QModelIndex &index, int role) const;
     Qt::ItemFlags flags(const QModelIndex &index) const;
-    QVariant headerData(int section, Qt::Orientation orientation,
+    virtual QVariant headerData(int section, Qt::Orientation orientation,
                         int role = Qt::DisplayRole) const;
     QModelIndex index(int row, int column,
                       const QModelIndex &parent = QModelIndex()) const;
@@ -68,16 +88,205 @@ public:
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
     int columnCount(const QModelIndex &parent = QModelIndex()) const;
 
-    void update();
-    bool insertRows(int position, DomItem item, const QModelIndex &parent);
-    bool removeRows(int row, int count, const QModelIndex &parent=QModelIndex());
-    bool moveUpRows(const QModelIndex &index);//, int sourceFirst, int sourceLast, const QModelIndex &destinationParent, int position);
-    bool moveDownRows(const QModelIndex &index);
+    //******************************** end Model Interface
+
+    QString docType();
+    void setDocType(const QString& newDocType, const QString &systemID, const QString &publicId);
+
+    void setPaintInfo(PaintInfo *newValue);
+    PaintInfo *getPaintInfo();
+
+    void caricaValori(QTreeWidget *pTree);
+    bool isEmpty(const bool isRealElement);
+    DomItem *root() const;
+    void setRootItem(DomItem *newRoot);
+    bool write(const QString &filePath);
+    QByteArray writeMemory();
+    QString getAsText();
+
+    DomItem *newItem();
+    DomItem *newItem(const QString &tagName);
+    DomItem *newItem(const DomItem::ItemType newType);
+
+    void setModified(const bool state);
+    bool isModified() const;
+    void setEmptyRoot();
+    void expand(QTreeWidget *tree);
+
+    QString &fileName();
+    void setFileName(const QString &newFileName);
+
+    void addChild(QWidget *window, QTreeWidget *tree);
+    void addChild(QWidget *window, QTreeWidget *tree, DomItem *preItem);
+    DomItem* addChildToItem(QWidget *window, QTreeWidget *tree, DomItem *parentItem, const QString &itemTag, const bool useUndo = false);
+    void addBrother(QWidget *window, QTreeWidget *tree);
+    void addBrother(QWidget *window, QTreeWidget *tree, DomItem *theNewItem);
+    void paste(QWidget *window, QTreeWidget *tree, DomItem *pasteItem);
+    void pasteInternals(QTreeWidget *tree, DomItem *parentItem, DomItem *pasteItem, const int position);
+    void pasteNoUI(DomItem *pasteItem, DomItem *pasteTo);
+    void insertInternal(QTreeWidget *tree, DomItem *parentItem, DomItem *pasteItem, const int position);
+
+    void redisplay();
+    void redisplayItem(DomItem *domItem);
+//    void markSaved();
+    bool editItem(QWidget * const parentWindow, QTreeWidgetItem *item);
+    bool editInnerXMLBase64Item(QTreeWidgetItem *item);
+    bool editInnerXMLItem(QTreeWidgetItem *item);
+    bool editTextNodeItemBase64(QWidget *const parentWindow, QTreeWidgetItem *item);
+    bool editAndSubstituteTextInNodeItem(QWidget *const parentWindow, DomItem *pItem);
+    bool editEntry(QWidget *const parentWindow, const QString &title, const QString &label, const QString &actualText, QString &result);
+
+    bool addTopItem(DomItem *theNewItem, const int position = -1);
+    void notifyDeletionTopItem(DomItem *pEL);
+    void appendComment(QWidget *window, QTreeWidget *tree);
+    void appendComment(QWidget *window, QTreeWidget *tree, DomItem *newComment);
+    void addComment(QWidget *window, QTreeWidget *tree);
+    void addComment(QWidget *window, QTreeWidget *tree, DomItem *newComment);
+    void appendProcessingInstruction(QWidget *window, QTreeWidget *tree);
+    void appendProcessingInstruction(QWidget *window, QTreeWidget *tree, DomItem *newPI);
+    void addProcessingInstruction(QWidget *window, QTreeWidget *tree);
+    void addProcessingInstruction(QWidget *window, QTreeWidget *tree, DomItem *newPI);
+
+    QVector<DomItem*> &getItems() {
+        return childItems;
+    }
+    QVector<DomItem*> *getChildItems() {
+        return &childItems;
+    }
+
+    static QBrush setBkBrush;
+
+    void findText(FindTextParams &FindArgs, DomItem *seletedItem);
+    void unseleted();
+
+    void takeOutItem(DomItem *item);
+    void addSelected(DomItem *item);
+    void unseletedAll();
+
+    bool loadXplore(const QString &fileName);
+
+    QString documentXsd() {
+        return _documentXsd;
+    }
+
+    QString userDefinedXsd() {
+        return _userDefinedXsd;
+    }
+
+    void setUserAndDocumentXsd(const QString &newXsd);
+
+    void setUserDefinedXsd(const QString &path);
+    void pasteXML(QWidget *window, QTreeWidget *tree, DomModel *newModel);
+
+    bool collectSizeData();
+    void setCollectSizeData(const bool isCollect);
+    void assignCollectSizeDataFlag(const bool isCollect);
+
+    QString addNameToPool(const QString &inputString);
+    QString getAttributeString(const QString &attributeName);
+    bool isValidXsd();
+    void transformInComment(QWidget *window, QTreeWidget *tree, DomItem *itemToTransform);
+    bool generateFromComment(QTreeWidget *tree, DomItem* itemToTranform);
+    int indexOfTopLevelItem(DomItem *item);
+    bool hasMoreThanOneXsdFile();
+
+    DomItem *findChildItemByArray(DomItem *item, QList<int> &selection, const int listPos);
+    DomItem *findItemByArray(QList<int> &selection);
+
+    enum EInsSchemaRefInfo {
+        INSERT_SCHEMA_ATTR_NOERROR = 0,
+        INSERT_SCHEMA_ATTR_ERROR_NOROOT,
+        INSERT_SCHEMA_ATTR_INFO_SCHEMAPRESENT,
+        INSERT_SCHEMA_ATTR_INFO_REFPRESENT
+    };
+    EInsSchemaRefInfo insertNoNamespaceSchemaReferenceAttributes();
+    EInsSchemaRefInfo insertSchemaReferenceAttributes();
+
+    QString textOfCantEditMixedContentItemText();
+    void hideLeafNodes();
+    void showLeafNodes();
+
+    bool moveUp(DomItem *item);
+    bool moveDown(DomItem *item);
+    bool internalMoveUp(DomItem *item, const bool registerInUndo);
+    bool internalMoveDown(DomItem *item, const bool registerInUndo);
+
+    void redo();
+    void undo();
+    bool canUndo();
+    bool canRedo();
+    int undoCount();
+
+    bool checkIfUIItemsCorrespondToItems(DomItem *target);
+
+    bool deleteItem(DomItem *item);
+    bool deleteItem(DomItem *item, const bool isAutoDelete);
+
+    void emptyUndoStack();
+    void dumpDocument(QDomDocument &document);
+
+signals:
+    void wasModified();
+    void undoStateChanged();
+    void uiDeleted(DomItem *item);
+    void docTypeChanged(const QString &docType);
 
 private:
-    DomItem* getItem(const QModelIndex &index) const;
-    QDomDocument domDocument;    
     DomItem *rootItem;
+    // Items
+    QVector<DomItem*> childItems;
+    QString   xmlFileName;
+    bool      modified;
+    QHash<int, DomItem*> selection;
+    PaintInfo  *paintInfo;
+
+    // XSD file referenced in the document
+    QString _noNameSpaceXsd;
+    QString _documentXsd;
+    QHash<QString, QString> _namespacesByPrefixAndName;  // list of namespaces
+    QHash<QString, QString> _namespacesByNameAndPrefix;  // inverse of the previous
+    QHash<QString, QString> _schemaLocationsByNamespace; // list of schemas
+    QString _userDefinedXsd;
+
+    // collect size information about items while editing
+    bool    _collectSizeData;
+    QMap<QString, int>  _namesMap;
+    QSet<QString>       _namesPool;
+    QSet<QString>       _attributeValuesPool;
+    DocumentType        *_docType;
+
+    void clear();
+    void clearUndo();
+    void addUndoInsert(QTreeWidget *tree, DomItem *item);
+    QTreeWidgetItem *getSelItem(QTreeWidget *tree);
+    bool editNodeItemAsXML(const bool isBase64Coded, DomItem *pItem);
+    bool editNodeItem(QWidget *const parenteWindow, DomItem *pItem);
+    bool editNodeComment(QWidget *const parentWindow, DomItem *pItem);
+    bool editTextNodeItem(QWidget *const parentWindow, const bool isBase64Coded, DomItem *pItem);
+    void recalcSize();
+
+    void checkValidationReference();
+    void decodeASchema(const QString &value);
+
+    int setTopLevelItemLike(DomItem *newItem, DomItem *oldItem);
+    int swapAndDeleteItem(DomItem *newItem, DomItem *oldItem);
+
+    void insertItemInternal(DomItem *theNewItem, DomItem *parentItem, QTreeWidget *tree);
+    void insertItemInternal(DomItem *theNewItem, DomItem *parentItem, QTreeWidget *tree, const bool useUndo);
+    void appendItemInternal(DomItem *theNewItem, DomItem *brotherItem, QTreeWidget *tree, const bool useUndo = true);
+    void afterInsertHousekeeping(DomItem *theNewItem, QTreeWidget *tree);
+    void afterInsertHousekeeping(DomItem *theNewItem, QTreeWidget *tree, const bool useUndo);
+    void assignMixedContentText(DomItem *parent, const QString &text, const bool isCData, QVector<DomItem*> *collection);
+    DomItem *setItem(QDomNode &node, DomItem *parent, QVector<DomItem*> *collection);
+    bool addUndoDeleteItem(DomItem *item);
+    bool editAndSubstituteTextInNodeItemInternal(QWidget *const parentWindow, DomItem *pItem);
+    void init();
+    void processDocument(QDomDocument &document);
+    QDomDocument createNewDocument();
 };
 
-#endif
+// external edit
+bool EditCommentNode(QWidget *parent, DomItem *pTarget);
+bool editProcessingInstruction(QWidget *const parentWindow, DomItem *pItem);
+
+#endif  // DOMMODEL_H
