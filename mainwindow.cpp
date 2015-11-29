@@ -7,15 +7,30 @@
 
 #include "mainwindow.h"
 
+#include "config.h"
+#include "utils.h"
 #include "qxmledit.h"
 #include "schemavalidator.h"
 #include "SchemaInterface.h"
 
+#define MAX_LAST_FILES  (20)
+#define SHORT_TIMEOUT  1000
+#define LONG_TIMEOUT   5000
+
+extern const char *APP_TITLE;
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
-    CreateActions();
+//    CreateActions();
+
+    maxLastFiles = MAX_LAST_FILES;
+    maxPrefDirs = QXmlEditParameters::NUM_PREF_DIRS;
+
     CreateMenus();
+
+    QString windowTitle = APP_TITLE;
+    setWindowTitle(windowTitle);
 }
 
 MainWindow::~MainWindow()
@@ -290,6 +305,7 @@ BasicType << "BOOLEAN" << "INT8" << "INT16" << "INT24" << "INT32" << "INT128" <<
     QIcon icon1;
     icon1.addFile(QString::fromUtf8(":/new/images/document-new.png"), QSize(), QIcon::Normal, QIcon::Off);
     actionNew->setIcon(icon1);
+//    connect(actionNew, SIGNAL(triggered()), this, SLOT(onAc)
 
     actionQuit = new QAction(this);
     actionQuit->setObjectName(QString::fromUtf8("actionQuit"));
@@ -813,12 +829,13 @@ BasicType << "BOOLEAN" << "INT8" << "INT16" << "INT24" << "INT32" << "INT128" <<
 
     retranslateUi();
 
+    QMetaObject::connectSlotsByName(this);
 
 }
 
 void MainWindow::retranslateUi()
 {
-    setWindowTitle(QApplication::translate("MainWindow", "QXmlEdit", 0, QApplication::UnicodeUTF8));
+    setWindowTitle(QApplication::translate("MainWindow", "ICD Creator", 0, QApplication::UnicodeUTF8));
     actionNew->setText(QApplication::translate("MainWindow", "&New", 0, QApplication::UnicodeUTF8));
     actionNew->setIconText(QApplication::translate("MainWindow", "New", 0, QApplication::UnicodeUTF8));
     actionNew->setShortcut(QApplication::translate("MainWindow", "Ctrl+N", 0, QApplication::UnicodeUTF8));
@@ -839,9 +856,9 @@ void MainWindow::retranslateUi()
     actionExpandAll->setText(QApplication::translate("MainWindow", "&Expand", 0, QApplication::UnicodeUTF8));
     actionExpandAll->setShortcut(QApplication::translate("MainWindow", "Ctrl+E", 0, QApplication::UnicodeUTF8));
     actionShowAttrLine->setText(QApplication::translate("MainWindow", "Show &One Attribute per Line", 0, QApplication::UnicodeUTF8));
-    actionAbout->setText(QApplication::translate("MainWindow", "&About QXmlEdit...", 0, QApplication::UnicodeUTF8));
+    actionAbout->setText(QApplication::translate("MainWindow", "&About ICD Creator...", 0, QApplication::UnicodeUTF8));
 #ifndef QT_NO_TOOLTIP
-    actionAbout->setToolTip(QApplication::translate("MainWindow", "About QXmlEdit", 0, QApplication::UnicodeUTF8));
+    actionAbout->setToolTip(QApplication::translate("MainWindow", "About ICD Creator", 0, QApplication::UnicodeUTF8));
 #endif // QT_NO_TOOLTIP
     actionAddComment->setText(QApplication::translate("MainWindow", "Add &Comment as Child...", 0, QApplication::UnicodeUTF8));
     actionAddComment->setShortcut(QApplication::translate("MainWindow", "F3", 0, QApplication::UnicodeUTF8));
@@ -1023,9 +1040,9 @@ void MainWindow::retranslateUi()
 #ifndef QT_NO_TOOLTIP
     actionSearchInFiles->setToolTip(QApplication::translate("MainWindow", "Search in files", 0, QApplication::UnicodeUTF8));
 #endif // QT_NO_TOOLTIP
-    actionHelpOnQXmlEdit->setText(QApplication::translate("MainWindow", "Help on QXmlEdit", 0, QApplication::UnicodeUTF8));
+    actionHelpOnQXmlEdit->setText(QApplication::translate("MainWindow", "Help on ICD Creator", 0, QApplication::UnicodeUTF8));
 #ifndef QT_NO_TOOLTIP
-    actionHelpOnQXmlEdit->setToolTip(QApplication::translate("MainWindow", "Help on QXmlEdit", 0, QApplication::UnicodeUTF8));
+    actionHelpOnQXmlEdit->setToolTip(QApplication::translate("MainWindow", "Help on ICD Creator", 0, QApplication::UnicodeUTF8));
 #endif // QT_NO_TOOLTIP
     actionAllowedSchemaElements->setText(QApplication::translate("MainWindow", "Allowed Schema Elements", 0, QApplication::UnicodeUTF8));
 #ifndef QT_NO_TOOLTIP
@@ -1152,6 +1169,1508 @@ void MainWindow::retranslateUi()
     menuView->setTitle(QApplication::translate("MainWindow", "&View", 0, QApplication::UnicodeUTF8));
     toolBar->setWindowTitle(QApplication::translate("MainWindow", "toolBar", 0, QApplication::UnicodeUTF8));
 
+}
+
+QString MainWindow::editNodeElementAsXML(const bool isBase64Coded, DomItem *pItem, const QString &text, const bool isCData, bool &isCDataOut, bool &isOk)
+{
+    return tr("");
+}
+
+void MainWindow::cleanExtractResults()
+{
+}
+
+void MainWindow::deleteSchema()
+{
+    editor->deleteSchema();
+}
+
+void MainWindow::autoTest()
+{
+
+}
+
+void MainWindow::changeEvent(QEvent *e)
+{
+    QMainWindow::changeEvent(e);
+    switch(e->type()) {
+    case QEvent::StyleChange:
+        VStyle::changeDefaultBrush(QApplication::palette().text());
+        break;
+    default:
+        break;
+    }
+}
+
+void MainWindow::on_actionNew_triggered()
+{
+    if(!verifyAbandonChanges()) {
+        return ;
+    }
+    editor->doNew();
+}
+
+void MainWindow::startUIState()
+{
+    actionPaste->setEnabled(false);
+    actionResizeToContents->setEnabled(true);
+}
+
+bool MainWindow::finishSetUpUi()
+{
+    if(editor->versionNumber() != VERSION_NUMBER) {
+        Utils::error(this, tr("The XML Editor component is not correct (%1)").arg(editor->versionNumber()));
+        return false;
+    }
+//    editor->setData(appl);
+    if(editor->init()) {
+        Utils::error(this, tr("XML Editor initialization failed"));
+        return false;
+    }
+
+    connect(editor, SIGNAL(documentIsModified(bool)), this, SLOT(onDocumentIsModified(bool)));
+    connect(editor, SIGNAL(reevaluateSelectionState()), this, SLOT(onComputeSelectionState()));
+    connect(editor, SIGNAL(signalSetClipBoardActionsState(bool)), this, SLOT(setClipBoardActionsState(bool)));
+    connect(editor, SIGNAL(okClicked()), this, SLOT(on_ok_clicked()));
+    connect(editor, SIGNAL(cancelClicked()), this, SLOT(on_cancel_clicked()));
+    connect(editor, SIGNAL(viewAsXsdRequested()), this, SLOT(on_actionViewAsXsd_triggered()));
+    connect(editor, SIGNAL(schemaLabelChanged(QString)), this, SLOT(schemaLoadComplete(QString)));
+    connect(editor, SIGNAL(dataReadyMessage(QString)), this, SLOT(onNewMessage(QString)));
+    connect(editor, SIGNAL(loadCurrentPage(int)), this, SLOT(navigateToPage(int)));
+    connect(editor, SIGNAL(showStatusMessage(QString,bool)), this, SLOT(onShowStatusMessage(QString,bool)));
+    connect(editor, SIGNAL(undoStateUpdated(bool,bool)), this, SLOT(onUndoStateUpdated(bool,bool)));
+
+    startUIState();
+    actionShowAttrLine->setCheckable(true);
+    actionShowChildIndex->setCheckable(true);
+    actionCompactView->setCheckable(true);
+    actionHideBrothers->setCheckable(true);
+    actionShowBase64->setCheckable(true);
+    actionShowCurrentElementTextBase64->setCheckable(true);
+    actionShowElementSize->setCheckable(true);
+
+    actionFixedSizeAttributes->setCheckable(true);
+    actionShowAttributesLength->setCheckable(true);
+    actionShowElementTextLength->setCheckable(true);
+    actionHideView->setCheckable(true);
+    PaintInfo *paintInfo = editor->getPaintInfo();
+    actionShowAttrLine->setChecked(paintInfo->oneAttrPerLine());
+    actionShowElementTextLength->setChecked(paintInfo->showItemTextLength());
+    actionShowChildIndex->setChecked(paintInfo->indexPerChild());
+    actionCompactView->setChecked(paintInfo->compactView());
+    actionFixedSizeAttributes->setChecked(paintInfo->userFixedLengthFont());
+    actionShowAttributesLength->setChecked(paintInfo->showAttributesLength());
+    actionShowBase64->setChecked(paintInfo->showUnBase64());
+    actionShowElementSize->setChecked(paintInfo->showItemSize());
+    actionHideView->setChecked(paintInfo->hideView());
+
+    updateUndoState(false, false);
+
+    connect(editor, SIGNAL(treeContextMenuRequested(QPoint)), this, SLOT(treeContextMenu(QPoint)));
+
+    menu_XML->setTearOffEnabled(true);
+
+    bool isOk = true;
+    QToolButton *editTextButton = new QToolButton(this);
+    QMenu *editTextMenu = new QMenu(this);
+    if((NULL == editTextButton) || (editTextMenu == NULL)) {
+        isOk = true;
+    } else {
+        editTextMenu->addAction(actionPasteAndSubstituteText);
+        editTextMenu->addAction(actionEditInnerBase64Text);
+        editTextMenu->addAction(actionEditInnerXML);
+        editTextMenu->addAction(actionEditInnerXMLBase64);
+        editTextButton->setMenu(editTextMenu);
+        editTextButton->setPopupMode(QToolButton::InstantPopup);
+        editTextButton->setIcon(QIcon(":/commands/modify"));
+        toolBar->insertWidget(actionHelpOnQXmlEdit, editTextButton);
+        toolBar->insertSeparator(actionHelpOnQXmlEdit);
+    }
+
+    actionLastFiles->setVisible(false);
+    QMenu *recentFiles = new QMenu(this);
+    if(NULL == recentFiles) {
+        isOk = false;
+    } else {
+        recentFiles->setTitle(tr("Recent Files"));
+        menuFile->insertMenu(actionLastFiles, recentFiles);
+
+        if(!buildLastObjects(maxLastFiles, lastFiles, SLOT(onRecentFile()), recentFiles)) {
+            isOk = false;
+        }
+    }
+
+    QMenu *preferredDirsMenu = new QMenu(this);
+    if(NULL == preferredDirsMenu) {
+        isOk = false;
+    } else {
+        preferredDirsMenu->setTitle(tr("Preferred Directories"));
+        menuFile->insertMenu(actionLastFiles, preferredDirsMenu);
+        preferredDirsMenu->addAction(actionEditPreferredDirectories);
+        preferredDirsMenu->addAction(actionAddCurrentDirectory);
+        preferredDirsMenu->addSeparator();
+
+        if(!buildLastObjects(maxPrefDirs, preferredDirs, SLOT(onPreferredDir()), preferredDirsMenu)) {
+            isOk = false;
+        }
+    }
+
+    QMenu *pluginsMenu = new QMenu(this);
+    if(NULL == pluginsMenu) {
+        isOk = false;
+    } else {
+        actionPlugins->setMenu(pluginsMenu);
+        if(!buildPluginsMenu(SLOT(onPlugin()), pluginsMenu)) {
+            isOk = false;
+        }
+    }
+
+    return isOk;
+}
+
+bool MainWindow::buildLastObjects(const int maxObjects, QList<QAction*> &cmdList, const char *method, QMenu *parent)
+{
+    bool isOk = true ;
+    //--- last files and dirs
+    for(int i = 0 ; i < maxObjects ; i++) {
+        QAction *action = new QAction(this);
+        if(NULL != action) {
+            cmdList.append(action);
+            action->setVisible(false);
+            connect(action, SIGNAL(triggered()), this, method);
+            parent->addAction(action);
+        } else {
+            isOk = false;
+        }
+    }
+    return isOk;
+}
+
+
+QAction *MainWindow::createAnAction(QMenu *menu, const QString &label, const QString &tag, const QString &tooltip)
+{
+    QAction *action = new QAction(menu);
+    action->setText(label);
+    action->setData(tag);
+    action->setToolTip(tooltip);
+    return action ;
+    //TODO -14-
+}
+
+void MainWindow::repaint()
+{
+    editor->repaint();
+}
+
+void MainWindow::display()
+{
+    editor->display();
+}
+
+void MainWindow::treeContextMenu(const QPoint& position)
+{
+    QMenu contextMenu(this);
+    contextMenu.addAction(actionCut);
+    contextMenu.addAction(actionCopy);
+    bool isActionMode = editor->isActionMode();
+    if(isActionMode) {
+        contextMenu.addAction(actionPaste);
+    }
+    contextMenu.addSeparator() ;
+    if(isActionMode) {
+        contextMenu.addAction(actionPasteAndSubstituteText);
+        contextMenu.addAction(actionEditInnerBase64Text);
+    }
+//    if(!isSlave && isActionMode) {
+    if(isActionMode) {
+        contextMenu.addAction(actionEditInnerXML);
+    }
+    if(isActionMode) {
+        contextMenu.addAction(actionEditInnerXMLBase64);
+        contextMenu.addAction(actionTransforminSnippet);
+        contextMenu.addSeparator() ;
+        contextMenu.addAction(actionMoveUp);
+        contextMenu.addAction(actionMoveDown);
+    }
+    DomItem *element = getSelectedItem();
+    if(NULL != element) {
+        if(element->areChildrenLeavesHidden(element->getUI())) {
+            contextMenu.addAction(actionShowLeafChildren);
+        } else {
+            contextMenu.addAction(actionHideLeafChildren);
+        }
+    }
+
+#ifdef XSD_INTEGRATION
+    if(NULL != editor->schema()) {
+        //SchemaValidator validator;
+        // TODO: redo
+        /*QStringList options = validator.checkInsertionPoint(_schemaRoot, regola, getSelectedItem());
+        QMenu *menu = new QMenu(&contextMenu);
+        if(NULL != menu) {
+            ui.actionAllowedSchemaElements->setMenu(menu);
+            foreach( QString item, options ) {
+                QAction *action = new QAction( item, &contextMenu );
+                menu->addAction( action );
+            }
+        }*/
+        contextMenu.addSeparator() ;
+        contextMenu.addAction(actionAllowedSchemaElements);
+    }
+#endif
+    contextMenu.exec(editor->getMainTreeWidget()->mapToGlobal(position));
+}
+
+// Solo il salva come...
+void MainWindow::onDocumentIsModified(const bool isModified)
+{
+    TRACEQ(QString("MainWindow::onDocumentIsModified(%1)").arg(isModified));
+    bool isFileName = false;
+    DomModel *model = editor->getModel();
+    if(!model->fileName().isEmpty()) {
+        isFileName = true ;
+    }
+    actionSave->setEnabled(isFileName && editor->isActionNoScanMode());
+    bool modelIsEmpty = model->isEmpty(false);
+    actionSaveAs->setEnabled(!modelIsEmpty);
+    actionSaveACopyAs->setEnabled(!modelIsEmpty);
+    setFileTitle();
+    setWindowModified(isModified);
+}
+
+//cambia la sel clipb.
+void MainWindow::setClipBoardActionsState(const bool isAction)
+{
+    actionPaste->setEnabled(isAction && editor->isActionMode());
+}
+
+void MainWindow::onComputeSelectionState()
+{
+    DomModel *model = getModel();
+    bool isSomeItemSelected = false;
+    bool selectSpecials = false;
+    bool selectSpecialsUp = false;
+    bool selectSpecialsDown = false;
+    bool isNormalViewState = true;
+    bool canAddChild = false;
+    bool isShownAsBase64 = false ;
+    qxmledit::EDisplayMode displayMode = editor->displayMode();
+    bool isExplore = (displayMode != qxmledit::NORMAL) && (displayMode != qxmledit::SCAN) ;
+    int numberSelected = editor->getMainTreeWidget()->selectedItems().size();
+    if(numberSelected > 0) {
+        selectSpecials = true ;
+        selectSpecialsUp = true ;
+        selectSpecialsDown = true ;
+        DomItem *item = DomItem::fromItemData(editor->getMainTreeWidget()->selectedItems().at(0));
+        selectSpecialsUp = !item->isFirstChild();
+        selectSpecialsDown = !item->isLastChild();
+        if(item->getType() == DomItem::ET_ELEMENT)
+            canAddChild = true;
+        isNormalViewState = item->isNormalViewState();
+        isSomeItemSelected = true ;
+        isShownAsBase64 = item->isShownBase64();
+        //if il primo item
+        //disabilita accoda, mvup e down
+        //altrimenti se il selected si trova al primo o ultimo posto della catena deselezmv up o down
+    } else {
+        if(model->isEmpty(true))
+            canAddChild = true;
+    }
+    bool enableGoToParent = false;
+    bool enableNextBrother = false;
+    bool enablePreviousBrother = false;
+    bool isComment = false ;
+    DomItem *item = NULL ;
+    if(1 == numberSelected) {
+        item = getSelectedItem();
+        if(NULL != item) {
+            if(item->getType() == DomItem::ET_COMMENT) {
+                isComment = true ;
+            }
+            if(NULL != item->parent()) {
+                enableGoToParent = true;
+            }
+            bool isLast = false;
+            bool isFirst = false;
+            item->isFirstOrLastChild(isFirst, isLast);
+            enableNextBrother = !isLast;
+            enablePreviousBrother = !isFirst ;
+        }
+    }
+    actionAddChildElement->setEnabled(canAddChild && !isExplore);
+    actionAppendChildElement->setEnabled(selectSpecials && !isExplore);
+    actionAddComment->setEnabled(!isExplore);
+    actionAppendComment->setEnabled(selectSpecials && !isExplore);
+    actionAppendProcessingInstruction->setEnabled(selectSpecials && !isExplore);
+    actionAddProcessingInstruction->setEnabled(!isExplore);
+    actionDelete->setEnabled(isSomeItemSelected && !isExplore);
+    actionEditInnerBase64Text->setEnabled(isSomeItemSelected && !isExplore);
+//    actionEditInnerXML->setEnabled(isSomeItemSelected && !isSlave && !isExplore);
+    actionEditInnerXML->setEnabled(isSomeItemSelected);
+    actionEditInnerXMLBase64->setEnabled(isSomeItemSelected && !isExplore);
+    actionEdit->setEnabled(isSomeItemSelected);
+    actionMoveUp->setEnabled(selectSpecialsUp && !isExplore);
+    actionMoveDown->setEnabled(selectSpecialsDown && !isExplore);
+    actionCut->setEnabled(isSomeItemSelected);
+    actionCopy->setEnabled(isSomeItemSelected);
+    actionGo_to_Next_Brother->setEnabled(enableNextBrother);
+    actionGo_to_Previous_Brother->setEnabled(enablePreviousBrother);
+    actionGo_To_Parent->setEnabled(enableGoToParent);
+
+    actionHideBrothers->setEnabled(isSomeItemSelected);
+    actionHideBrothers->setChecked(!isNormalViewState);
+    actionShowCurrentElementTextBase64->setEnabled(isSomeItemSelected && !isExplore);
+    actionShowCurrentElementTextBase64->setChecked(isShownAsBase64);
+    actionReload->setEnabled((NULL != model) && !model->fileName().isEmpty());
+    enableZoom();
+    actionCopyPathToClipboard->setEnabled((NULL != model) && !model->fileName().isEmpty());
+    actionAddCurrentDirectory->setEnabled((NULL != model) && !model->fileName().isEmpty());
+    // TODO: test
+    //ui.testNext->setEnabled((NULL!=regola)?regola->nextBookmark()>=0:false);
+    //ui.testPrev->setEnabled((NULL!=regola)?regola->previousBookmark()>=0:false);
+
+    actionValidate->setEnabled((NULL != model) && !isExplore);
+
+    actionValidateFile->setEnabled((NULL != model) && ! model->userDefinedXsd().isEmpty() && !isExplore);
+    actionValidateNewFile->setEnabled((NULL != model) && !isExplore);
+    actionTransforminSnippet->setEnabled(isSomeItemSelected && !isExplore);
+
+    actionViewAsXsd->setEnabled(isValidXsd() && !isExplore);
+
+    actionTransformInComment->setEnabled(isSomeItemSelected && !isExplore && !isComment);
+    actionExtractElementsFromComment->setEnabled(isSomeItemSelected && !isExplore && isComment);
+
+    actionInsertNoNamespaceSchemaReferenceAttributes->setEnabled((NULL != model) && !isExplore);
+    actionInsertSchemaReferenceAttributes->setEnabled((NULL != model) && !isExplore);
+    //TODO: always???? ui.actionExtractFragmentsFromFile->setEnabled(XXX);
+
+    actionNewUsingXMLSchema->setEnabled(true);
+    actionNewUsingXMLSchema->setVisible(true);
+
+    evaluateSingleItemLeaves(item);
+}
+
+void MainWindow::evaluateSingleItemLeaves(DomItem *item)
+{
+    bool isHiddenLeaves = false;
+    bool isVisibleLeaves = false;
+    if(NULL != item) {
+        if(!item->isALeaf()) {
+            if(item->areChildrenLeavesHidden(item->getUI())) {
+                isHiddenLeaves = true ;
+            } else {
+                isVisibleLeaves = true;
+            }
+        }
+    }
+    actionHideLeafChildren->setEnabled(isVisibleLeaves);
+    actionShowLeafChildren->setEnabled(isHiddenLeaves);
+}
+
+void MainWindow::enableZoom()
+{
+    PaintInfo *paintInfo = editor->getPaintInfo();
+    actionZoomIn->setEnabled(paintInfo->canZoomIn());
+    actionZoomOut->setEnabled(paintInfo->canZoomOut());
+}
+
+DomItem *MainWindow::getSelectedItem()
+{
+    return editor->getSelectedItem();
+}
+
+void MainWindow::resetTree()
+{
+    editor->resetTree();
+}
+
+void MainWindow::on_actionOpen_triggered()
+{
+    openFileUsingDialog(getModel()->fileName());
+}
+
+void MainWindow::openFileUsingDialog(const QString folderPath)
+{
+    if(!MainWindow::checkAbandonChanges()) {
+        return ;
+    }
+    QString filePath = QFileDialog::getOpenFileName(
+                           this, tr("Open File"),
+                           folderPath,
+                           tr("XML files (*.xml);;XML Schema files (*.xsd);;All files (*);;")
+                       );
+    if(!filePath.isEmpty()) {
+        loadFile(filePath);
+    }
+}
+
+void MainWindow::on_actionNewFromClipboard_triggered()
+{
+    if(!MainWindow::checkAbandonChanges()) {
+        return ;
+    }
+    editor->onActionNewFromClipboard();
+}
+
+
+void MainWindow::on_actionResizeToContents_triggered()
+{
+    editor->resizeTreeColumns();
+}
+
+void MainWindow::on_actionSaveAs_triggered()
+{
+    DomModel * model = getModel();
+    if(NULL == model) {
+        error(tr("No data to save."));
+        return ;
+    }
+    if(model->isEmpty(false)) {
+        error(tr("Cannot write an empty file."));
+        return ;
+    }
+    QString newFilePath = askFileName(model->fileName());
+    if(newFilePath.isEmpty()) {
+        return ;
+    }
+    if(!model->write(newFilePath)) {
+        error(tr("Error saving data. Old file is still intact."));
+        return ;
+    }
+    if(editor->displayMode() != qxmledit::SCAN) {
+        model->setFileName(newFilePath);
+    }
+    updateRecentFilesMenu(newFilePath);
+    model->setModified(false);
+    statusBar()->showMessage(tr("File saved"), SHORT_TIMEOUT);
+}
+
+void MainWindow::on_actionSaveACopyAs_triggered()
+{
+    DomModel * model = getModel();
+    if(NULL == model) {
+        error(tr("No data to save."));
+        return ;
+    }
+    if(model->isEmpty(false)) {
+        error(tr("Cannot write an empty file."));
+        return ;
+    }
+    bool modifiedStatus = model->isModified();
+    QString newFilePath = askFileName(model->fileName());
+    if(newFilePath.isEmpty()) {
+        return ;
+    }
+//    if(!model->write(newFilePath, false)) {
+//        error(tr("Error saving data. Old file is still intact."));
+//        return ;
+//    }
+    updateRecentFilesMenu(newFilePath);
+    model->setModified(modifiedStatus);
+    statusBar()->showMessage(tr("File saved"), SHORT_TIMEOUT);
+}
+
+void MainWindow::on_actionSave_triggered()
+{
+    DomModel * model = getModel();
+    if(!editor->isActionNoScanMode()) {
+        return ;
+    }
+    if(editor->displayMode() == qxmledit::SCAN) {
+        return ;
+    }
+    if(model->fileName().isEmpty()) {
+        on_actionSaveAs_triggered();
+        return ;
+    }
+    if(model->isEmpty(false)) {
+        error(tr("Cannot write empty file."));
+        return ;
+    }
+
+    // scrivi il nuovo con il nome vecchio+estensione
+    QString newFilePath = model->fileName() + ".new_new~"  ;
+    if(!model->write(newFilePath)) {
+        error(tr("Error saving data. Old file is still intact."));
+        return ;
+    }
+    // rinomina il vecchio
+    QString backupFilePath = model->fileName() + "~"  ;
+    if(QFile::exists(backupFilePath)) {
+        if(!QFile::remove(backupFilePath)) {
+            error(tr("Error saving data: cleaning backup file."));
+            return ;
+        }
+    }
+    if(!QFile::rename(model->fileName(), backupFilePath)) {
+        error(tr("Error renaming old file. You can access written data at file '%1'. Old data are untouched").arg(newFilePath));
+        return ;
+    }
+    // rinomina il nuovo nel nome vecchio
+    if(!QFile::rename(newFilePath, model->fileName())) {
+        error(tr("Error renaming new file. You can access written data at file '%1'. You can find old data in the backup file").arg(newFilePath));
+        return ;
+    }
+    model->setModified(false);
+    Utils::message(this, tr("Operation terminated"));
+    statusBar()->showMessage(tr("File saved"), SHORT_TIMEOUT);
+}
+
+QString MainWindow::askFileName(const QString &actualName)
+{
+    QString filePath = QFileDialog::getSaveFileName(this, tr("Save Data"),
+                       actualName, tr("XML files (*.xml);;XML Schema files (*.xsd);;All files (*);;"));
+
+    if(!filePath.isEmpty()) {
+        return filePath;
+    }
+    return "";
+}
+
+void MainWindow::errorNoRule()
+{
+    error(tr("No main structure"));
+}
+
+void MainWindow::on_actionAddChildElement_triggered()
+{
+    editor->onActionAddChildItem();
+}
+
+void MainWindow::on_actionAppendChildElement_triggered()
+{
+    editor->onActionAppendChildItem();
+}
+
+void MainWindow::on_actionEdit_triggered()
+{
+    editor->onActionEdit();
+}
+
+void MainWindow::on_actionDelete_triggered()
+{
+    editor->onActionDelete();
+}
+void MainWindow::on_actionMoveUp_triggered()
+{
+    editor->onActionMoveUp();
+}
+
+void MainWindow::on_actionMoveDown_triggered()
+{
+    editor->onActionMoveDown();
+}
+
+void MainWindow::on_actionCut_triggered()
+{
+    editor->onActionCut();
+}
+
+void MainWindow::on_actionCopy_triggered()
+{
+    editor->onActionCopy();
+}
+
+void MainWindow::on_actionPaste_triggered()
+{
+    editor->onActionPaste();
+}
+
+void MainWindow::on_actionAbout_triggered()
+{
+//    QList<AuthorInfo*> authors = authorsInfo() ;
+//    AboutDialog about(this,
+//                      AuthorInfo::appName, AuthorInfo::version, AuthorInfo::copyright,
+//                      AuthorInfo::license,
+//                      AuthorInfo::other,
+//                      authors);
+//    about.setModal(true);
+//    about.exec() ;
+//    deleteAuthorsInfo(authors);
+}
+
+
+void MainWindow::onShowStatusMessage(const QString &message, const bool isLongTimeout)
+{
+    statusBar()->showMessage(message, isLongTimeout ? LONG_TIMEOUT : SHORT_TIMEOUT);
+}
+
+void MainWindow::setFileTitle()
+{
+    QString windowTitle = APP_TITLE;
+//    if(!isSlave)
+    {
+        windowTitle.append(" - ");
+        if(!getModel()->fileName().isEmpty()) {
+            windowTitle.append(getModel()->fileName());
+        } else {
+            windowTitle.append(tr("--No file--"));
+        }
+        windowTitle.append(" [*]");
+    }
+    setWindowTitle(windowTitle);
+}
+
+void MainWindow::closeEvent(QCloseEvent * event)
+{
+    if(!MainWindow::checkAbandonChanges()) {
+        event->ignore();
+        return ;
+    }
+    event->accept();
+//    if(isAutoDelete) {
+        deleteLater();
+//    }
+}
+
+void MainWindow::on_actionQuit_triggered()
+{
+    if(MainWindow::checkAbandonChanges()) {
+//        application->quit();
+        close();
+    }
+}
+
+bool MainWindow::checkAbandonChanges()
+{
+    DomModel *model = getModel();
+    if(NULL == model) {
+        return false;
+    }
+
+    if(model->isModified()) {
+        if(QMessageBox::Yes != QMessageBox::question(this, APP_TITLE,
+                tr("Abandon changes?"),
+                QMessageBox::Yes | QMessageBox::No)) {
+            return false ;
+        }
+    }
+    return true ;
+}
+
+
+void MainWindow::on_actionExpandAll_triggered()
+{
+    editor->onActionExpandAll();
+}
+
+void MainWindow::on_actionShowAttrLine_triggered()
+{
+    editor->onActionShowAttrLine(actionShowAttrLine->isChecked());
+}
+
+void MainWindow::on_actionAddComment_triggered()
+{
+    editor->onActionAddComment();
+}
+
+
+void MainWindow::on_actionAppendComment_triggered()
+{
+    editor->onActionAppendComment();
+}
+
+void MainWindow::on_actionAppendProcessingInstruction_triggered()
+{
+    editor->onActionAppendProcessingInstruction();
+}
+
+
+void MainWindow::on_actionAddProcessingInstruction_triggered()
+{
+    editor->onActionAddProcessingInstruction();
+}
+
+void MainWindow::dragEnterEvent(QDragEnterEvent *event)
+{
+    if(event->mimeData()->hasFormat("text/uri-list"))
+        event->acceptProposedAction();
+}
+
+void MainWindow::dropEvent(QDropEvent *event)
+{
+    if(event->mimeData()->hasFormat("text/uri-list")) {
+        QString filePath = "" ;
+        event->acceptProposedAction();
+        if(event->mimeData()->hasUrls()) {
+            foreach(QUrl url, event->mimeData()->urls()) {
+                filePath = url.toLocalFile();
+                break;
+            }
+        }
+        if(filePath.length() > 0) {
+            if(!MainWindow::checkAbandonChanges()) {
+                event->ignore();
+                return ;
+            }
+            loadFile(filePath);
+        }
+        event->acceptProposedAction();
+    }
+}
+
+void MainWindow::on_actionFind_triggered()
+{
+    editor->onActionFind();
+}
+
+void MainWindow::on_actionGo_To_Parent_triggered()
+{
+    editor->onActionGoToParent();
+}
+
+void MainWindow::on_actionGo_to_Previous_Brother_triggered()
+{
+    editor->onActionGoToPreviousBrother();
+}
+
+void MainWindow::on_actionGo_to_Next_Brother_triggered()
+{
+    editor->onActionGoToNextBrother();
+}
+
+
+void MainWindow::on_actionShowChildIndex_triggered()
+{
+    editor->onActionShowChildIndex(actionShowChildIndex->isChecked());
+}
+
+void MainWindow::on_actionCompactView_triggered()
+{
+    editor->onActionCompactView(actionCompactView->isChecked());
+}
+
+void MainWindow::on_actionFixedSizeAttributes_triggered()
+{
+    editor->onActionFixedSizeAttributes(actionFixedSizeAttributes->isChecked());
+}
+
+void MainWindow::on_actionShowAttributesLength_triggered()
+{
+    editor->onActionShowAttributesLength(actionShowAttributesLength->isChecked());
+}
+
+void MainWindow::on_actionShowElementTextLength_triggered()
+{
+    editor->onActionShowItemTextLength(actionShowElementTextLength->isChecked());
+}
+
+void MainWindow::on_actionCloseThisAllBrothers_triggered()
+{
+    editor->onActionCloseThisAllBrothers();
+}
+
+void MainWindow::on_actionHideBrothers_triggered()
+{
+    editor->onActionHideBrothers();
+}
+
+void MainWindow::on_actionShowCurrentElementTextBase64_triggered()
+{
+    editor->onActionShowCurrentItemTextBase64(actionShowCurrentElementTextBase64->isChecked());
+}
+
+void MainWindow::on_actionShowBase64_triggered()
+{
+    editor->onActionShowBase64(actionShowBase64->isChecked());
+}
+
+void MainWindow::on_actionShowElementSize_triggered()
+{
+    editor->onActionShowItemSize(actionShowElementSize->isChecked());
+}
+
+void MainWindow::on_actionConfigure_triggered()
+{
+ //   ConfigurationDialog::doOptions(this, data) ;
+}
+
+void MainWindow::on_ok_clicked()
+{
+    if(NULL != eventLoop) {
+        eventLoop->exit(1);
+    }
+}
+
+void MainWindow::on_cancel_clicked()
+{
+    if(NULL != eventLoop) {
+        eventLoop->exit(0);
+    }
+}
+
+void MainWindow::setEventLoop(QEventLoop *value)
+{
+    eventLoop = value ;
+}
+
+void MainWindow::on_actionEditInnerXML_triggered()
+{
+    editor->onActionEditInnerXML();
+}
+
+void MainWindow::on_actionEditInnerXMLBase64_triggered()
+{
+    editor->onActionEditInnerXMLBase64();
+}
+
+
+void MainWindow::on_actionEditInnerBase64Text_triggered()
+{
+    editor->onActionEditInnerBase64Text();
+}
+
+QString MainWindow::getContentAsText()
+{
+    return editor->getContentAsText();
+}
+
+void MainWindow::on_actionZoomIn_triggered()
+{
+    editor->onActionZoomIn();
+    enableZoom();
+}
+
+void MainWindow::on_actionZoomOut_triggered()
+{
+    editor->onActionZoomOut();
+    enableZoom();
+}
+
+void MainWindow::wheelEvent(QWheelEvent *event)
+{
+    if((event->modifiers() & Qt::ControlModifier) == Qt::ControlModifier) {
+        int numDegrees = event->delta() / 8;
+        if(numDegrees > 10) {
+            on_actionZoomIn_triggered();
+        } else if(numDegrees < -10) {
+            on_actionZoomOut_triggered();
+        }
+        event->accept();
+    } else {
+        event->ignore();
+    }
+}
+
+
+
+void MainWindow::on_actionCompare_triggered()
+{
+#ifdef DEBUG_COMPARE
+#define FILE_TEST_C   "~/devel/qxmledit/qxmledit/src/data/compare_base.xml"
+    loadFile(FILE_TEST_C);
+#endif
+    DomModel *model = getModel();
+    if(NULL == model) {
+        errorNoRule();
+        return ;
+    }
+//    CompareBridge::doCompare(this, model);
+}
+
+void MainWindow::on_actionReload_triggered()
+{
+    DomModel *model = getModel();
+    if(NULL == model) {
+        return;
+    }
+    QString filePath = model->fileName();
+    if(filePath.isEmpty()) {
+        return ;
+    }
+    if(!MainWindow::checkAbandonChanges()) {
+        return ;
+    }
+    loadFile(filePath);
+}
+
+void MainWindow::onRecentFile()
+{
+    QAction *actionFile = qobject_cast<QAction*>(sender());
+    if(NULL != actionFile) {
+        QString filePath = actionFile->data().toString();
+        if(!filePath.isEmpty()) {
+            if(!MainWindow::checkAbandonChanges()) {
+                return ;
+            }
+            loadFile(filePath);
+        }
+    }
+}
+
+void MainWindow::onPreferredDir()
+{
+    QAction *actionFile = qobject_cast<QAction*>(sender());
+    if(NULL != actionFile) {
+        QString dirPath = actionFile->data().toString();
+        if(!MainWindow::checkAbandonChanges()) {
+            return ;
+        }
+        QString filePath = QFileDialog::getOpenFileName(this, tr("Open File"),
+                           dirPath, tr("XML files (*.xml);;XML Schema files (*.xsd);;All files (*);;"));
+        if(!filePath.isEmpty()) {
+            loadFile(filePath);
+        }
+    }
+}
+
+void MainWindow::updateMRU(QStringList &entries, const QString &entry, QList<QAction*>actions)
+{
+    if(entry.isEmpty()) {
+        return;
+    }
+    entries.removeOne(entry);
+    entries.insert(0, entry);
+    updateEntriesMenu(entries, actions);
+    if(!Config::saveStringArray(Config::KEY_MAIN_RECENTFILES, lastFilesNames)) {
+        Utils::error(tr("Error registering last open files."));
+    }
+}
+
+void MainWindow::updateEntriesMenu(QStringList &entries, QList<QAction*>actions)
+{
+    int listSize = entries.size();
+    int nMaxActions = actions.size();
+    for(int i = 0 ; i < nMaxActions ; i ++) {
+        QAction *action = actions.at(i);
+        if(i < listSize) {
+            QString data = entries.at(i);
+            action->setData(data);
+            action->setText(data);
+            action->setVisible(true);
+        } else {
+            action->setVisible(false);
+        }
+    }
+}
+
+void MainWindow::updateRecentFilesMenu(const QString &filePath)
+{
+    updateMRU(lastFilesNames, filePath, lastFiles);
+}
+
+void MainWindow::loadRecentFilesSettings()
+{
+    lastFilesNames.clear();
+    Config::loadStringArray(Config::KEY_MAIN_RECENTFILES, lastFilesNames);
+    updateEntriesMenu(lastFilesNames, lastFiles);
+}
+
+void MainWindow::on_actionCopyPathToClipboard_triggered()
+{
+    editor->onActionCopyPathToClipboard();
+}
+
+void MainWindow::on_actionAddCurrentDirectory_triggered()
+{
+    DomModel *model = getModel();
+    if((NULL != model) && !model->fileName().isEmpty()) {
+//        if(!PreferredDirs::checkNewDir(preferredDirsNames.size(), true)) {
+//            return;
+//        }
+        QFileInfo fileInfo(model->fileName());
+        QString dirPath = fileInfo.path();
+//        if(!PreferredDirs::checkDuplicateDir(preferredDirsNames, dirPath, true)) {
+//            return ;
+//        }
+        preferredDirsNames.append(dirPath);
+        updatePreferredDirs(preferredDirsNames, preferredDirs);
+    }
+}
+
+void MainWindow::on_actionEditPreferredDirectories_triggered()
+{
+//    if(configurePreferredDirs(this, preferredDirsNames)) {
+        updatePreferredDirs(preferredDirsNames, preferredDirs);
+//    }
+}
+
+void MainWindow::updatePreferredDirs(QStringList &entries, QList<QAction*>actions)
+{
+    entries.sort();
+    updateEntriesMenu(entries, actions);
+    if(!Config::saveStringArray(Config::KEY_MAIN_PREFDIRS, preferredDirsNames)) {
+        Utils::error(tr("Error registering preferred directories."));
+    }
+}
+void MainWindow::loadPreferredDirsSettings()
+{
+    preferredDirsNames.clear();
+    Config::loadStringArray(Config::KEY_MAIN_PREFDIRS, preferredDirsNames);
+    preferredDirsNames.sort();
+    updateEntriesMenu(preferredDirsNames, preferredDirs);
+}
+
+void MainWindow::on_actionValidate_triggered()
+{
+    editor->onActionValidate();
+}
+
+void MainWindow::on_actionValidateFile_triggered()
+{
+    editor->onActionValidateFile();
+}
+
+void MainWindow::on_actionValidateNewFile_triggered()
+{
+    editor->onActionValidateNewFile();
+}
+
+void MainWindow::on_actionInsertSnippet_triggered()
+{
+//    DomModel* model = getModel();
+//    if(NULL == model) {
+//        return;
+//    }
+//    DomModel* newModel = chooseSnippets(data, this) ;
+//    if(NULL != newModel) {
+//        editor->insertSnippet(newModel);
+//        delete newModel;
+//    }
+}
+
+void MainWindow::on_actionConfigureSnippets_triggered()
+{
+//    editSnippets(data, this);
+}
+
+void MainWindow::on_actionExecuteAutoTest_triggered()
+{
+//    Test::executeTests(this);
+}
+
+void MainWindow::on_actionTransforminSnippet_triggered()
+{
+//    if(!editor->isActionMode()) {
+//        return ;
+//    }
+
+//    DomItem *item = getSelectedItem();
+//    if(NULL != item) {
+//        QDomDocument    document;
+//        if(item->generateDom(document, document)) {
+//            QString clipboardText = document.toString(4);
+//            insertFragmentInSnippets(this, data, clipboardText) ;
+//        }
+//    }
+}
+
+void MainWindow::onPlugin()
+{
+//    QAction *actionFile = qobject_cast<QAction*>(sender());
+//    if(NULL != actionFile) {
+//        QString pluginId = actionFile->data().toString();
+//        if(!pluginId .isEmpty()) {
+//            IQXmlEditPlugIn* plugin = data->plugins()[pluginId];
+//            if(NULL != plugin) {
+//                plugin->go(this, getModel());
+//            }
+//        }
+//    }
+}
+
+bool MainWindow::buildPluginsMenu(const char *method, QMenu *parent)
+{
+//    bool isOk = true;
+//    pluginsCmds.clear();
+//    QMapIterator<QString, IQXmlEditPlugIn*> pluginsIterator(data->plugins());
+//    while(pluginsIterator.hasNext()) {
+//        pluginsIterator.next();
+//        QAction *action = new QAction(this);
+//        if(NULL != action) {
+//            pluginsCmds.append(action);
+//            connect(action, SIGNAL(triggered()), this, method);
+//            IQXmlEditPlugIn* plugin = pluginsIterator.value();
+//            action->setData(pluginsIterator.key());
+//            action->setText(plugin->name());
+//            action->setVisible(true);
+//            parent->addAction(action);
+//        } else {
+//            isOk = false ;
+//        }
+//    }
+//    return isOk ;
+}
+
+
+
+void MainWindow::setDisplayMode(const qxmledit::EDisplayMode value)
+{
+    editor->setDisplayMode(value);
+//    navigationModeIndicator->setExploreMode(value);
+}
+
+
+//---------------------- load trigger
+
+void MainWindow::on_actionXplore_triggered()
+{
+    if(!MainWindow::checkAbandonChanges()) {
+        return ;
+    }
+    QString filePath = QFileDialog::getOpenFileName(this, tr("Open File"),
+                       getModel()->fileName(), tr("XML files (*.xml);;XML Schema files (*.xsd);;All files (*);;"));
+    if(!filePath.isEmpty()) {
+        loadFileXplore(filePath);
+    }
+}
+
+void MainWindow::loadFileXplore(const QString &filePath)
+{
+    if(!filePath.isEmpty()) {
+        doLoadFileXplore(filePath);
+        updateRecentFilesMenu(filePath);
+    } else {
+        Utils::error(tr("File name empty. Unable to load it."));
+    }
+}
+
+
+void MainWindow::loadFile(const QString &filePath)
+{
+    if(!filePath.isEmpty()) {
+        QFile file(filePath);
+        if(file.open(QIODevice::ReadOnly)) {
+            QDomDocument document;
+            if(document.setContent(&file)) {
+//                data->sessionManager()->enrollFile(filePath);
+                setDocument(document, filePath, true);
+                updateRecentFilesMenu(filePath);
+                autoLoadValidation();
+            } else {
+                Utils::error(tr("Unable to parse XML"));
+            }
+            file.close();
+        } else {
+            Utils::error(QString(tr("Unable to load file.\n Error code is '%1'")).arg(file.error()));
+        }
+    } else {
+        Utils::error(tr("File name empty. Unable to load it."));
+    }
+}
+
+
+//---------------------- load data
+
+//TODO: error checking
+void MainWindow::doLoadFileXplore(const QString &filePath)
+{
+    editor->doLoadFileXplore(filePath);
+    statusBar()->showMessage(tr("Data loaded"), SHORT_TIMEOUT);
+}
+
+//TODO: error checking
+void MainWindow::onNewMessage(const QString &newMessage)
+{
+    statusBar()->showMessage(newMessage, SHORT_TIMEOUT);
+}
+
+//TODO: error checking
+void MainWindow::setDocument(QDomDocument &document, const QString &filePath, const bool isSetState)
+{
+    editor->setDocument(document, filePath, isSetState);
+    statusBar()->showMessage(tr("Data loaded"), SHORT_TIMEOUT);
+}
+
+void MainWindow::on_actionHideView_triggered()
+{
+    editor->onActionHideView(actionHideView->isChecked());
+}
+
+void MainWindow::on_actionSearchInFiles_triggered()
+{
+    searchInFiles(this);
+}
+
+void MainWindow::on_actionHelpOnQXmlEdit_triggered()
+{
+//    QString resourceHelp = data->getDocsDir() + "/" + HELP_FILE ;
+//    QDesktopServices::openUrl(QUrl::fromLocalFile(resourceHelp));
+}
+
+bool MainWindow::isValidXsd()
+{
+    DomModel * model = getModel();
+    if(NULL != model) {
+        return model->isValidXsd();
+    }
+    return false;
+}
+
+void MainWindow::on_actionViewAsXsd_triggered()
+{
+    editor->onActionViewAsXsd();
+}
+
+DomModel *MainWindow::getModel()
+{
+    return editor->getModel();
+}
+
+
+//void MainWindow::loadSchema(const QString &schemaURL)
+//{
+//    ui.editor->loadSchema(schemaURL);
+//} TODO: controllare se spostato
+
+void MainWindow::schemaLoadComplete(const QString &newLabel)
+{
+    setSchemaLabel(newLabel);
+    statusBar()->update();
+}
+
+void MainWindow::on_actionAllowedSchemaElements_triggered()
+{
+    editor->onActionAllowedSchemaItems();
+}
+
+/** Substitute the element text
+  */
+void MainWindow::on_actionPasteAndSubstituteText_triggered()
+{
+    editor->onActionPasteAndSubstituteText();
+}
+
+
+void MainWindow::on_actionNewUsingXMLSchema_triggered()
+{
+    if(!verifyAbandonChanges()) {
+        return ;
+    }
+    bool isOk = false;
+    QString schemaURL;
+//    schemaURL = chooseSchemaFile(this, isOk) ;
+    if(isOk) {
+        editor->onActionNewUsingXMLSchema(schemaURL);
+    }
+}
+
+bool MainWindow::verifyAbandonChanges()
+{
+    DomModel *model = getModel();
+    if(!model->isEmpty(false) && model->isModified()) {
+        if(QMessageBox::Yes != QMessageBox::question(this, APP_TITLE,
+                tr("Abandon changes?"),
+                QMessageBox::Yes | QMessageBox::No)) {
+            return false ;
+        }
+    }
+    return true ;
+}
+
+QWidget *MainWindow::getMainWidget()
+{
+    return this ;
+}
+
+QString MainWindow::getAppTitle()
+{
+    return APP_TITLE ;
+}
+
+
+void MainWindow::on_actionTransformInComment_triggered()
+{
+    editor->onActionTransformInComment();
+}
+
+void MainWindow::on_actionExtractElementsFromComment_triggered()
+{
+    editor->onActionExtractItemsFromComment();
+}
+
+void MainWindow::autoLoadValidation()
+{
+    editor->autoLoadValidation();
+}
+
+void MainWindow::setSchemaLabel(const QString &newLabel)
+{
+//    labelSchema->setText(newLabel);
+}
+
+
+void MainWindow::on_actionInsertNoNamespaceSchemaReferenceAttributes_triggered()
+{
+    editor->onActionInsertNoNamespaceSchemaReferenceAttributes();
+}
+
+void MainWindow::on_actionInsertSchemaReferenceAttributes_triggered()
+{
+    editor->onActionInsertSchemaReferenceAttributes();
+}
+
+void MainWindow::on_actionExtractFragmentsFromFile_triggered()
+{
+//    if(!verifyAbandonChanges()) {
+//        return ;
+//    }
+//    ExtractResults *results = new  ExtractResults();
+//    if(NULL == results) {
+//        Utils::errorOutOfMem(this);
+//        return ;
+//    }
+//    extractFragments(results, this);
+//    if(!(results->isError() || results->isAborted())) {
+//        if(results->_optimizeSpeed) {
+//            delete results ;
+//            return ;
+//        }
+//        if(results->numFragments() == 0) {
+//            Utils::message(tr("No fragments found"));
+//            delete results ;
+//            return ;
+//        }
+//        cleanExtractResults();
+//        _extractResult = results ;
+//        editor->setNavigationDataAndEnable(1, _extractResult->numFragments());
+//        showNavigationBox();
+//    } else {
+//        delete results ;
+//    }
+}
+
+void MainWindow::showNavigationBox()
+{
+    editor->showNavigationBox();
+}
+
+void MainWindow::navigateToPage(const int page)
+{
+    /********************************** test code **************************
+    Utils::todo(QString("Navigate to %1").arg(page));
+    setWindowTitle(QString::number(page));
+    ***********************************************************************/
+    loadCurrentPage(page);
+}
+
+void MainWindow::loadCurrentPage(const int page)
+{
+//    if(NULL != _extractResult) {
+//        StringOperationResult result;
+//        _extractResult->loadFragment(page, result);
+//        if(!result.isError()) {
+//            editor->loadText(result.result(), false, true);
+//            // printf("xml is:'%s'\n", result.result().toAscii().data());
+//        } else {
+//            Utils::error(this, tr("Error loading data."));
+//        }
+//    }
+}
+
+
+void MainWindow::error(const QString& message)
+{
+    Utils::error(this, message);
+}
+
+void MainWindow::warning(const QString& message)
+{
+    Utils::warning(this, message);
+}
+
+void MainWindow::message(const QString& message)
+{
+    Utils::message(this, message);
+}
+
+bool MainWindow::askYN(const QString & message)
+{
+    return Utils::askYN(this, message);
+}
+
+QTreeWidget *MainWindow::getMainTreeWidget()
+{
+    return editor->getMainTreeWidget();
+}
+
+XmlEditWidget *MainWindow::getEditor()
+{
+    return editor ;
+}
+
+void MainWindow::on_actionHideAllLeafChildren_triggered()
+{
+    editor->onActionHideAllLeafChildren();
+}
+
+void MainWindow::on_actionHideLeafChildren_triggered()
+{
+    evaluateSingleItemLeaves(editor->onActionHideLeafChildren());
+}
+
+void MainWindow::on_actionShowLeafChildren_triggered()
+{
+    evaluateSingleItemLeaves(editor->onActionShowLeafChildren());
+}
+
+void MainWindow::on_actionShowAllLeafChildren_triggered()
+{
+    editor->onActionShowAllLeafChildren();
+}
+
+void MainWindow::on_actionColumnView_triggered()
+{
+//    DomModel *model = getModel();
+//    if(NULL != model) {
+//        ColumnarView::showModal(this, model);
+//    }
+}
+
+
+
+void MainWindow::on_actionUndo_triggered()
+{
+    editor->undo();
+}
+
+void MainWindow::on_actionRedo_triggered()
+{
+    editor->redo();
+}
+
+void MainWindow::onUndoStateUpdated(const bool isUndo, const bool isRedo)
+{
+    updateUndoState(isUndo, isRedo);
+}
+
+void MainWindow::updateUndoState(const bool isUndo, const bool isRedo)
+{
+    actionUndo->setEnabled(isUndo) ;
+    actionRedo->setEnabled(isRedo) ;
+}
+
+
+void MainWindow::on_actionNewWindow_triggered()
+{
+    MainWindow *newWindow = new MainWindow();//false, application, data);
+    if(NULL != newWindow) {
+//        newWindow->isAutoDelete = true ;
+        newWindow->show();
+    } else {
+        Utils::error(tr("Error opening a new window."));
+    }
+
+}
+
+void MainWindow::on_actionViewData_triggered()
+{
+//    DataVisualization::viewData(this, "");
+}
+
+void MainWindow::loadVisFile(const QString &fileName)
+{
+//    DataVisualization::viewData(this, fileName);
+}
+
+void MainWindow::on_actionBase64Tools_triggered()
+{
+//    data->uiServices()->doBase64Dialog();
+}
+
+void MainWindow::on_actionEncodingTools_triggered()
+{
+//    data->uiServices()->doEncodingDialog();
 }
 
 void MainWindow::fileNewAct()

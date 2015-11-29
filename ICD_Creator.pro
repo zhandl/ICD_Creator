@@ -87,7 +87,9 @@ SOURCES += main.cpp\
     validatormessagehandler.cpp \
     validationresults.cpp \
     texteditutils.cpp \
-    alloweditemsinsert.cpp
+    alloweditemsinsert.cpp \
+    searchinfiles.cpp \
+    scansax.cpp
 
 HEADERS  += mainwindow.h \
     domitem.h \
@@ -159,7 +161,9 @@ HEADERS  += mainwindow.h \
     validatormessagehandler.h \
     validationresults.h \
     texteditutils.h \
-    alloweditemsinsert.h
+    alloweditemsinsert.h \
+    searchinfiles.h \
+    scansax.h
 
 FORMS += \
     xsdeditor/xsdwindow.ui \

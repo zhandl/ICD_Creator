@@ -49,9 +49,47 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
+    QEventLoop *eventLoop;
+    int maxLastFiles;
+    int maxPrefDirs;
+    QList<QAction*> lastFiles;
+    QList<QAction*> preferredDirs;
+    QList<QAction*> pluginsCmds;
+
+    QStringList lastFilesNames;
+    QStringList preferredDirsNames;
+
 public:
     MainWindow(QWidget *parent = 0);
     ~MainWindow();
+
+    void loadFile(const QString &filePath);
+
+    void openTest();
+    void setEventLoop(QEventLoop *eventLoop);
+    QString getContentAsText();
+
+    DomModel *getModel();
+
+    void autoLoadValidation();
+
+    void error(const QString &message);
+    void warning(const QString &message);
+    void message(const QString &message);
+    bool askYN(const QString &message);
+
+    QTreeWidget *getMainTreeWidget();
+    XmlEditWidget *getEditor();
+
+    virtual QWidget *getMainWidget();
+    virtual QString getAppTitle();
+    virtual QString editNodeElementAsXML(const bool isBase64Coded, DomItem *pItem, const QString &text, const bool isCData, bool &isCDataOut, bool &isOk);
+
+    void loadVisFile(const QString &fileName);
+
+
+private:
+
 
     QAction *actionNew;
     QAction *actionQuit;
@@ -159,7 +197,6 @@ public:
     QStatusBar *statusbar;
     QToolBar *toolBar;
 
-private:
     QStringList lnClass;
     QStringList fcEnum;
     QStringList cdc;
@@ -336,6 +373,186 @@ signals:
     void deleteNode(QModelIndex);
 
 private slots:
+
+    void on_actionNew_triggered();
+    void on_actionOpen_triggered();
+    void on_actionSave_triggered();
+    void on_actionSaveAs_triggered();
+    void on_actionAbout_triggered();
+    void on_actionPaste_triggered();
+    void on_actionCopy_triggered();
+    void on_actionCut_triggered();
+    void on_actionExpandAll_triggered();
+    void on_actionShowAttrLine_triggered();
+    void on_actionAppendComment_triggered();
+    void on_actionAddComment_triggered();
+    void on_actionAppendProcessingInstruction_triggered();
+    void on_actionAddProcessingInstruction_triggered();
+    void on_actionResizeToContents_triggered();
+    void on_actionAddChildElement_triggered();
+    void on_actionAppendChildElement_triggered();
+    void on_actionEdit_triggered();
+    void on_actionFind_triggered();
+    void on_actionDelete_triggered();
+    void on_actionMoveUp_triggered();
+    void on_actionMoveDown_triggered();
+    void on_actionGo_To_Parent_triggered();
+    void on_actionGo_to_Previous_Brother_triggered();
+    void on_actionGo_to_Next_Brother_triggered();
+    void on_actionShowChildIndex_triggered();
+    void on_actionCloseThisAllBrothers_triggered();
+    void on_actionNewFromClipboard_triggered();
+    void on_actionQuit_triggered();
+    void on_actionCompactView_triggered();
+    void on_actionHideBrothers_triggered();
+    void on_actionFixedSizeAttributes_triggered();
+    void on_actionShowAttributesLength_triggered();
+    void on_actionShowCurrentElementTextBase64_triggered();
+    void on_actionShowBase64_triggered();
+    void on_actionConfigure_triggered();
+    void on_actionEditInnerXML_triggered();
+    void on_actionEditInnerXMLBase64_triggered();
+    void on_actionEditInnerBase64Text_triggered();
+    void on_actionZoomIn_triggered();
+    void on_actionZoomOut_triggered();
+    void on_actionCompare_triggered();
+    void on_actionReload_triggered();
+    void on_actionCopyPathToClipboard_triggered();
+    void on_actionAddCurrentDirectory_triggered();
+    void on_actionEditPreferredDirectories_triggered();
+    void on_actionValidate_triggered();
+    void on_actionValidateFile_triggered();
+    void on_actionValidateNewFile_triggered();
+    void on_actionInsertSnippet_triggered();
+    void on_actionConfigureSnippets_triggered();
+    void on_actionExecuteAutoTest_triggered();
+    void on_actionTransforminSnippet_triggered();
+    void on_actionShowElementTextLength_triggered();
+    void on_actionShowElementSize_triggered();
+    void on_actionXplore_triggered();
+    void on_actionHideView_triggered();
+    void on_actionSearchInFiles_triggered();
+    void on_actionHelpOnQXmlEdit_triggered();
+    void on_actionViewAsXsd_triggered();
+    void on_actionAllowedSchemaElements_triggered();
+    void on_actionPasteAndSubstituteText_triggered();
+    void on_actionNewUsingXMLSchema_triggered();
+    void on_actionTransformInComment_triggered();
+    void on_actionExtractElementsFromComment_triggered();
+    void on_actionInsertNoNamespaceSchemaReferenceAttributes_triggered();
+    void on_actionInsertSchemaReferenceAttributes_triggered();
+    void on_actionExtractFragmentsFromFile_triggered();
+//    void on_actionWelcomeDialog_triggered();
+    void on_actionSaveACopyAs_triggered();
+    void on_actionHideLeafChildren_triggered();
+    void on_actionHideAllLeafChildren_triggered();
+    void on_actionShowLeafChildren_triggered();
+    void on_actionShowAllLeafChildren_triggered();
+    void on_actionColumnView_triggered();
+
+    void on_actionUndo_triggered();
+    void on_actionRedo_triggered();
+
+    void on_actionNewWindow_triggered();
+    void on_actionViewData_triggered();
+
+    void on_actionBase64Tools_triggered();
+    void on_actionEncodingTools_triggered();
+
+    //----- other slots ------------------
+
+    void onDocumentIsModified(const bool isModified);
+//    void onSessionEnablingChanged();
+//    void onHandleSessionState();
+
+    void treeContextMenu(const QPoint& position);
+
+    void on_ok_clicked();
+    void on_cancel_clicked();
+
+    void onRecentFile();
+    void onPreferredDir();
+    void onPlugin();
+    void navigateToPage(const int page);
+    void schemaLoadComplete(const QString &newLabel);
+    void onComputeSelectionState();
+    void onNewMessage(const QString &newMessage);
+    void setClipBoardActionsState(const bool isAction);
+    void onShowStatusMessage(const QString &message, const bool isLongTimeout);
+//    void onSessionfileLoadRequest(const QString& path);
+//    void onSessionFolderOpenRequest(const QString& path);
+//    void onShowSessionManagement();
+    void onUndoStateUpdated(const bool isUndo, const bool isRedo);
+
+    //------------------- slots
+
+    void autoTest();
+
+    bool finishSetUpUi();
+    bool buildPluginsMenu(const char *method, QMenu *parent);
+
+    QString askFileName(const QString &actualName);
+    void errorNoRule();
+
+    void setFileTitle();
+
+    void closeEvent(QCloseEvent *event);
+    void startUIState();
+    void resetTree();
+//    void calcColumnState();
+
+    void enableZoom();
+
+    void dragEnterEvent(QDragEnterEvent *event);
+    void dropEvent(QDropEvent *event);
+
+//    void computeSelectionState();
+    void openFileUsingDialog(const QString folderPath);
+
+    DomItem *getSelectedItem();
+
+    void setDocument(QDomDocument &document, const QString &filePath, const bool isSetState);
+
+    bool checkAbandonChanges();
+
+    QAction *createAnAction(QMenu *menu, const QString &label, const QString &tag, const QString &tooltip);
+
+    void deleteSchema();
+
+    void repaint();
+    void display();
+
+    void wheelEvent(QWheelEvent *event);
+    bool buildLastObjects(const int maxObjects, QList<QAction*> &cmdList, const char *method, QMenu *parent);
+    void updateRecentFilesMenu(const QString &filePath);
+    void updatePreferredDirs(QStringList &entries, QList<QAction*>actions);
+    void updateMRU(QStringList &entries, const QString &entry, QList<QAction*>actions);
+    void updateEntriesMenu(QStringList &entries, QList<QAction*>actions);
+
+    void loadRecentFilesSettings();
+    void loadPreferredDirsSettings();
+
+//    void validateWithFile(const QString &filePath);
+
+    void doLoadFileXplore(const QString &filePath);
+    void loadFileXplore(const QString &filePath);
+
+    void setDisplayMode(const qxmledit::EDisplayMode value);
+//    void doLoadFileBlindMode(QDomDocument &document, const QString &filePath);
+//    void loadFileBlindMode(const QString &filePath);
+
+    bool isValidXsd();
+    bool verifyAbandonChanges();
+
+    void setSchemaLabel(const QString &newLabel);
+    void cleanExtractResults();
+    void showNavigationBox();
+//    void welcomeDialog();
+//    void findTextOperation(const bool isFindOrCount);
+    void evaluateSingleItemLeaves(DomItem *item);
+    void loadCurrentPage(const int page);
+    void updateUndoState(const bool isUndo, const bool isRedo);
+
     void fileNewAct();
     void fileOpenAct();
     void fileSaveAct();
@@ -467,6 +684,10 @@ private slots:
     void hideAttributes(const QModelIndex&);
     void changeAttributes(const QModelIndex&, int, int);
 
+protected:
+    virtual void changeEvent(QEvent *e);
 };
 
+
+void searchInFiles(QWidget * parent);
 #endif // MAINWINDOW_H

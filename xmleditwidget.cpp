@@ -18,7 +18,7 @@
 #define CS_ATTRIBUTE_NAME "N"
 #define CS_ATTRIBUTE_VALUE "V"
 
-const char *APP_TITLE = QT_TR_NOOP("icdCreatorLib");
+const char *APP_TITLE = QT_TR_NOOP("ICD Creator");
 
 XmlEditWidget::XmlEditWidget(QWidget *parent) :
     QWidget(parent),
