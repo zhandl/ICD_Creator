@@ -4,6 +4,7 @@
 #include <QClipboard>
 #include <QXmlSchema>
 #include <QXmlSchemaValidator>
+#include <QDebug>
 
 #include "mainwindow.h"
 
@@ -12,254 +13,113 @@
 #include "qxmledit.h"
 #include "schemavalidator.h"
 #include "SchemaInterface.h"
+#include "aboutdialog.h"
+#include "balsamiqsrc/balsamiqplugin.h"
+#include "xsdeditor/xsdplugin.h"
+#include "compare.h"
+#include "preferreddirs.h"
+#include "configurationdialog.h"
+#include "snippet_interface.h"
+#include "test.h"
 
 #define MAX_LAST_FILES  (20)
-#define SHORT_TIMEOUT  1000
-#define LONG_TIMEOUT   5000
+#define SHORT_TIMEOUT  2000
+#define LONG_TIMEOUT   10000
+
+void doOptions(QWidget * const parentWindow, QXmlEditData* data);
+//void executeTests(QWidget *parent);
+//void extractFragments(ExtractResults *extractResult, QWidget *parent);
+void ShowTextInDialoog(QWidget *parent, const QString &text);
+
+#define CS_ELEMENT_TEXT "E"
+#define CS_ELEMENT_TAG "T"
+#define CS_ATTRIBUTE_NAME "N"
+#define CS_ATTRIBUTE_VALUE "V"
 
 extern const char *APP_TITLE;
 
-MainWindow::MainWindow(QWidget *parent)
+int MainWindow::pluginCode = 0;
+
+MainWindow::MainWindow(const bool setIsSlave, QApplication *newApp, QXmlEditData *newData, QWidget *parent)
     : QMainWindow(parent)
 {
-//    CreateActions();
+    isAutoDelete = false;
+    started = false ;
+    internalStateOk = false;
 
     maxLastFiles = MAX_LAST_FILES;
     maxPrefDirs = QXmlEditParameters::NUM_PREF_DIRS;
 
+    app = newApp;
+    data = newData;
+    isSlave = setIsSlave;
+
+    pluginCode = 0;
+    BalsamiqPlugin *plugin = new BalsamiqPlugin();
+
+    labelSchema = NULL;
+
+    if(NULL == plugin) {
+        Utils::error(tr("Unable to load Balsamiq plugin"));
+    } else {
+        pluginCode ++;
+        _plugins.insert(QString(pluginCode), plugin);
+    }
+
+    XsdPlugin *xsdPlugin = new XsdPlugin();
+    _xsdPlugin = xsdPlugin;
+    if(NULL == xsdPlugin) {
+        Utils::error(tr("Unable to load XSD Plugin"));
+    } else {
+        pluginCode ++;
+        _plugins.insert(QString(pluginCode), xsdPlugin);
+    }
+
     CreateMenus();
+    internalStateOk = finishSetUpUi();
+    if(!internalStateOk) {
+        Utils::error(tr("Error preparing user interface."));
+    }
+    if(!editor->isReady()) {
+        Utils::error(tr("Error preparing edit widget."));
+    }
+
+    loadRecentFilesSettings();
+    loadPreferredDirsSettings();
+    setAcceptDrops(true);
+    setUnifiedTitleAndToolBarOnMac(true);
 
     QString windowTitle = APP_TITLE;
     setWindowTitle(windowTitle);
+
+//    autoTest();
+
+    started = true ;
 }
 
 MainWindow::~MainWindow()
 {
 }
 
-void MainWindow::CreateActions()
-{
-    qFileNew = new QAction(tr("&New"), this);
-    qFileNew->setShortcut(QKeySequence::New);
-    qFileNew->setStatusTip(tr("Create a new file"));
-    connect(qFileNew, SIGNAL(triggered()), this, SLOT(fileNewAct()));
-
-    qFileOpen = new QAction(tr("&Open..."), this);
-    qFileOpen->setShortcut(QKeySequence::Open);
-    qFileOpen->setToolTip(tr("Open an existing file"));
-    connect(qFileOpen, SIGNAL(triggered()), this, SLOT(fileOpenAct()));
-
-    qFileSave = new QAction(tr("&Save"), this);
-    qFileSave->setShortcut(QKeySequence::Save);
-    qFileSave->setToolTip(tr("Save this file"));
-    connect(qFileSave, SIGNAL(triggered()), this, SLOT(fileSaveAct()));
-
-    qDeleteItem = new QItemAction(tr("删除"),this);
-    connect(qDeleteItem, SIGNAL(clicked(QModelIndex)), this, SLOT(deleteItem(const QModelIndex&)));
-
-    qAddHeader = new QItemAction(tr("插入Header字段"),this);
-    connect(qAddHeader, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addHeader(const QModelIndex&)));
-
-    qAddCommunication = new QItemAction(tr("插入Communication字段"), this);
-    connect(qAddCommunication, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addCommunication(const QModelIndex&)));
-
-    qAddSubstation = new QItemAction(tr("插入Substation字段"), this);
-    connect(qAddSubstation, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addSubstation(const QModelIndex&)));
-
-    qAddIED = new QItemAction(tr("插入IED字段"), this);
-    connect(qAddIED, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addIED(const QModelIndex&)));
-
-    qAddDataTypeTemplates = new QItemAction(tr("插入DataTypeTemplates字段"), this);
-    connect(qAddDataTypeTemplates, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addDataTypeTemplates(const QModelIndex&)));
-
-    qAddText = new QItemAction(tr("插入Text字段"),this);
-    connect(qAddText, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addTextAct(const QModelIndex&)));
-
-    qAddTextContent = new QItemAction(tr("插入Text内容"),this);
-    connect(qAddTextContent, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addTextContentAct(const QModelIndex&)));
-
-    qAddHistory = new QItemAction(this);
-    qAddHistory->setText(tr("插入History字段"));
-    connect(qAddHistory, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addHistoryAct(const QModelIndex&)));
-
-    qAddHitem = new QItemAction(tr("插入Hitem项"),this);
-    connect(qAddHitem, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addHitemAct(const QModelIndex&)));
-
-    qAddVoltageLevel = new QItemAction(tr("插入VoltageLevel项"),this);
-    connect(qAddVoltageLevel, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addVoltageLevel(QModelIndex)));
-
-    qAddFunction = new QItemAction(tr("插入Function项"),this);
-    connect(qAddFunction, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addFunction(QModelIndex)));
-
-    qAddPowerTransformer = new QItemAction(tr("插入PowerTransformer项"), this);
-    connect(qAddPowerTransformer, SIGNAL(clicked(QModelIndex)), this, SLOT(addPowerTransformer(QModelIndex)));
-
-    qAddGeneralEquipment = new QItemAction(tr("插入GeneralEquipment项"), this);
-    connect(qAddGeneralEquipment , SIGNAL(clicked(QModelIndex)), this, SLOT(addGeneralEquipment(QModelIndex)));
-
-    qAddLNode = new QItemAction(tr("插入LNode项"), this);
-    connect(qAddLNode , SIGNAL(clicked(QModelIndex)), this, SLOT(addLNode(QModelIndex)));
-
-    qAddServices = new QItemAction(tr("插入Services字段"), this);
-    connect(qAddServices, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addServices(const QModelIndex&)));
-
-    qAddAccessPoint = new QItemAction(tr("插入AccessPoint字段"), this);
-    connect(qAddAccessPoint, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addAccessPoint(const QModelIndex&)));
-
-    qAddDynAssociation = new QItemAction(tr("插入DynAssociation"),this);
-    connect(qAddDynAssociation, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addDynAssociation(const QModelIndex&)));
-    qAddSettingGroups = new QItemAction(tr("插入SettingGroups"), this);
-    connect(qAddSettingGroups, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addSettingGroups(const QModelIndex&)));
-    qAddGetDirectory = new QItemAction(tr("插入GetDirectory"), this);
-    connect(qAddGetDirectory, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addGetDirectory(const QModelIndex&)));
-    qAddGetDataObjectDefinition = new QItemAction(tr("插入DataObjectDefinition"), this);
-    connect(qAddGetDataObjectDefinition, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addGetDataObjectDefinition(const QModelIndex&)));
-    qAddDataObjectDirectory = new QItemAction(tr("插入DataObjectDirectory"), this);
-    connect(qAddDataObjectDirectory, SIGNAL(clicked(QModelIndex)), this, SLOT(addDataObjectDirectory(QModelIndex)));
-    qAddGetDataSetValue = new QItemAction(tr("插入GetDataSetValue"), this);
-    connect(qAddGetDataSetValue, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addGetDataSetValue(const QModelIndex&)));
-    qAddSetDataSetValue = new QItemAction(tr("插入SetDataSetValue"), this);
-    connect(qAddSetDataSetValue, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addSetDataSetValue(const QModelIndex&)));
-    qAddDataSetDirectory = new QItemAction(tr("插入DataSetDirectory"),this);
-    connect(qAddDataSetDirectory, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addDataSetDirectory(const QModelIndex&)));
-    qAddConfDataSet = new QItemAction(tr("插入ConfDataSet"),this);
-    connect(qAddConfDataSet, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addConfDataSet(const QModelIndex&)));
-    qAddDynDataSet = new QItemAction(tr("插入DynDataSet"),this);
-    connect(qAddDynDataSet, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addDynDataSet(const QModelIndex&)));
-    qAddReadWrite = new QItemAction(tr("插入ReadWrite"),this);
-    connect(qAddReadWrite, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addReadWrite(const QModelIndex&)));
-    qAddTimerActivatedControl = new QItemAction(tr("插入TimerActivatedControl"),this);
-    connect(qAddTimerActivatedControl, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addTimerActivatedControl(const QModelIndex&)));
-    qAddConfReportControl = new QItemAction(tr("插入ConfReportControl"),this);
-    connect(qAddConfReportControl, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addConfReportControl(const QModelIndex&)));
-    qAddGetCBValues = new QItemAction(tr("插入GetCBValues"),this);
-    connect(qAddGetCBValues, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addGetCBValues(const QModelIndex&)));
-    qAddConfLogControl = new QItemAction(tr("插入ConfLogControl"),this);
-    connect(qAddConfLogControl, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addConfLogControl(const QModelIndex&)));
-    qAddReportSettings = new QItemAction(tr("插入ReportSettings"),this);
-    connect(qAddReportSettings, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addReportSettings(const QModelIndex&)));
-    qAddLogSettings = new QItemAction(tr("插入LogSettings"),this);
-    connect(qAddLogSettings, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addLogSettings(const QModelIndex&)));
-    qAddGSESettings = new QItemAction(tr("插入GSESettings"),this);
-    connect(qAddGSESettings, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addGSESettings(const QModelIndex&)));
-    qAddSMVSettings = new QItemAction(tr("插入SMVSettings"),this);
-    connect(qAddSMVSettings, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addSMVSettings(const QModelIndex&)));
-    qAddGSEDir = new QItemAction(tr("插入GSEDir"),this);
-    connect(qAddGSEDir, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addGSEDir(const QModelIndex&)));
-    qAddGOOSE = new QItemAction(tr("插入GOOSE"),this);
-    connect(qAddGOOSE, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addGOOSE(const QModelIndex&)));
-    qAddGSSE = new QItemAction(tr("插入GSSE"),this);
-    connect(qAddGSSE, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addGSSE(const QModelIndex&)));
-    qAddFileHandling = new QItemAction(tr("插入FileHandling"),this);
-    connect(qAddFileHandling, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addFileHandling(const QModelIndex&)));
-    qAddConfLNs = new QItemAction(tr("插入ConfLNs"),this);
-    connect(qAddConfLNs, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addConfLNs(const QModelIndex&)));
-    qAddSGEdit = new QItemAction(tr("插入SGEdit"),this);
-    connect(qAddSGEdit, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addSGEdit(const QModelIndex&)));
-    qAddConfSG = new QItemAction(tr("插入ConfSG"),this);
-    connect(qAddConfSG, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addConfSG(const QModelIndex&)));
-
-    qAddServer = new QItemAction(tr("插入Server"),this);
-    connect(qAddServer, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addServer(const QModelIndex&)));
-    qAddLN = new QItemAction(tr("插入LN"),this);
-    connect(qAddLN, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addLN(const QModelIndex&)));
-
-    qAddAuthentication = new QItemAction(tr("插入Authentication"),this);
-    connect(qAddAuthentication, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addAuthentication(const QModelIndex&)));
-    qAddLDevice = new QItemAction(tr("插入LDevice"),this);
-    connect(qAddLDevice, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addLDevice(const QModelIndex&)));
-    qAddAssociation = new QItemAction(tr("插入Association"),this);
-    connect(qAddAssociation, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addAssociation(const QModelIndex&)));
-
-    qAddLN0 = new QItemAction(tr("插入LN0"),this);
-    connect(qAddLN0, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addLN0(const QModelIndex&)));
-    qAddAccessControl = new QItemAction(tr("插入AccessControl"),this);
-    connect(qAddAccessControl, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addAccessControl(const QModelIndex&)));
-
-    qAddGSEControl = new QItemAction(tr("插入GSEControl"),this);
-    connect(qAddGSEControl, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addGSEControl(const QModelIndex&)));
-    qAddSampleValueControl = new QItemAction(tr("插入SampleValueControl"),this);
-    connect(qAddSampleValueControl, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addSampleValueControl(const QModelIndex&)));
-    qAddSettingControl = new QItemAction(tr("插入SettingControl"),this);
-    connect(qAddSettingControl, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addSettingControl(const QModelIndex&)));
-    qAddSCLControl = new QItemAction(tr("插入SCLControl"),this);
-    connect(qAddSCLControl, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addSCLControl(const QModelIndex&)));
-    qAddLog = new QItemAction(tr("插入Log"),this);
-    connect(qAddLog, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addLog(const QModelIndex&)));
-
-    qAddDataSet = new QItemAction(tr("插入DataSet"),this);
-    connect(qAddDataSet, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addDataSet(const QModelIndex&)));
-    qAddReportControl = new QItemAction(tr("插入ReportControl"),this);
-    connect(qAddReportControl, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addReportControl(const QModelIndex&)));
-    qAddLogControl = new QItemAction(tr("插入LogControl"),this);
-    connect(qAddLogControl, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addLogControl(const QModelIndex&)));
-    qAddDOI = new QItemAction(tr("插入DOI"),this);
-    connect(qAddDOI, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addDOI(const QModelIndex&)));
-    qAddInputs = new QItemAction(tr("插入Inputs"),this);
-    connect(qAddInputs, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addInputs(const QModelIndex&)));
-
-    qAddIEDName = new QItemAction(tr("插入IEDName"),this);
-    connect(qAddIEDName, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addIEDName(const QModelIndex&)));
-
-    qAddSmvOpts = new QItemAction(tr("插入SmvOpts"),this);
-    connect(qAddSmvOpts, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addSmvOpts(const QModelIndex&)));
-
-    qAddFCDA = new QItemAction(tr("插入FCDA"),this);
-    connect(qAddFCDA, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addFCDA(const QModelIndex&)));
-
-    qAddOptFields = new QItemAction(tr("插入OptFields"),this);
-    connect(qAddOptFields, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addOptFields(const QModelIndex&)));
-    qAddRptEnabled = new QItemAction(tr("插入RptEnabled"),this);
-    connect(qAddRptEnabled, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addRptEnabled(const QModelIndex&)));
-    qAddTrgOps = new QItemAction(tr("插入TrgOps"),this);
-    connect(qAddTrgOps, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addTrgOps(const QModelIndex&)));
-
-    qAddClientLN = new QItemAction(tr("插入ClientLN"),this);
-    connect(qAddClientLN, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addClientLN(const QModelIndex&)));
-
-    qAddSDI = new QItemAction(tr("插入SDI"),this);
-    connect(qAddSDI, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addSDI(const QModelIndex&)));
-    qAddDAI = new QItemAction(tr("插入DAI"),this);
-    connect(qAddDAI, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addDAI(const QModelIndex&)));
-
-    qAddVal = new QItemAction(tr("插入Val"),this);
-    connect(qAddVal, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addVal(const QModelIndex&)));
-    qAddValContent = new QItemAction(tr("插入Val值"),this);
-    connect(qAddValContent, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addValContent(const QModelIndex&)));
-
-    qAddExtRef = new QItemAction(tr("插入ExtRef"),this);
-    connect(qAddExtRef, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addExtRef(const QModelIndex&)));
-
-
-    qAddLNodeType = new QItemAction(tr("插入LNodeType"),this);
-    connect(qAddLNodeType, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addLNodeType(const QModelIndex&)));
-    qAddDOType = new QItemAction(tr("插入DOType"),this);
-    connect(qAddDOType, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addDOType(const QModelIndex&)));
-    qAddDAType = new QItemAction(tr("插入DAType"),this);
-    connect(qAddDAType, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addDAType(const QModelIndex&)));
-    qAddEnumType = new QItemAction(tr("插入EnumType"),this);
-    connect(qAddEnumType, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addEnumType(const QModelIndex&)));
-
-    qAddDO = new QItemAction(tr("插入DO"),this);
-    connect(qAddDO, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addDO(const QModelIndex&)));
-    qAddSDO = new QItemAction(tr("插入SDO"),this);
-    connect(qAddSDO, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addSDO(const QModelIndex&)));
-    qAddDA = new QItemAction(tr("插入DA"),this);
-    connect(qAddDA, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addDA(const QModelIndex&)));
-    qAddBDA = new QItemAction(tr("插入BDA"),this);
-    connect(qAddBDA, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addBDA(const QModelIndex&)));
-    qAddEnumVal = new QItemAction(tr("插入EnumVal"),this);
-    connect(qAddEnumVal, SIGNAL(clicked(const QModelIndex&)), this, SLOT(addEnumVal(const QModelIndex&)));
-
-    qMoveUp = new QItemAction(tr("上移"), this);
-    connect(qMoveUp, SIGNAL(clicked(QModelIndex)), this, SLOT(ItemMoveUp(QModelIndex)));
-
-    qMoveDown = new QItemAction(tr("下移"), this);
-    connect(qMoveDown, SIGNAL(clicked(QModelIndex)), this, SLOT(ItemMoveDown(QModelIndex)));
-
-    qRefresh = new QAction(tr("刷新"),this);
-    connect(qRefresh, SIGNAL(triggered()), this, SLOT(refresh()));
-}
+//QString MainWindow::editNodeElementAsXML(const bool isBase64Coded, DomItem *pElement, const QString & /*text*/, const bool /*isCData*/, bool &isCDataOut, bool &isOk)
+//{
+//    QString result;
+//    MainWindow mainWindow(true, app, data) ;
+//    mainWindow.setWindowModality(Qt::ApplicationModal);
+//    mainWindow.editor->loadText(pElement->getAsSimpleText(isBase64Coded));
+//    mainWindow.editor->setCDATA(pElement->isCDATA());
+//    QEventLoop eventLoop;
+//    mainWindow.setEventLoop(&eventLoop);
+//    mainWindow.show();
+//    if(eventLoop.exec() > 0) {
+//        result = mainWindow.getContentAsText();
+//        isCDataOut = editor->isCDATA();
+//        isOk = true;
+//    } else {
+//        isOk = false;
+//    }
+//    return result;
+//}
 
 void MainWindow::CreateMenus()
 {
@@ -295,7 +155,7 @@ BasicType << "BOOLEAN" << "INT8" << "INT16" << "INT24" << "INT32" << "INT128" <<
 
     if(objectName().isEmpty())
         setObjectName(QString::fromUtf8("Mainwindow"));
-    resize(906, 725);
+//    resize(906, 725);
     QIcon icon;
     icon.addFile(QString::fromUtf8(":/icon/images/icon.png"), QSize(), QIcon::Normal, QIcon::Off);
     setWindowIcon(icon);
@@ -305,7 +165,6 @@ BasicType << "BOOLEAN" << "INT8" << "INT16" << "INT24" << "INT32" << "INT128" <<
     QIcon icon1;
     icon1.addFile(QString::fromUtf8(":/new/images/document-new.png"), QSize(), QIcon::Normal, QIcon::Off);
     actionNew->setIcon(icon1);
-//    connect(actionNew, SIGNAL(triggered()), this, SLOT(onAc)
 
     actionQuit = new QAction(this);
     actionQuit->setObjectName(QString::fromUtf8("actionQuit"));
@@ -386,6 +245,10 @@ BasicType << "BOOLEAN" << "INT8" << "INT16" << "INT24" << "INT32" << "INT128" <<
 
     actionDelete = new QAction(this);
     actionDelete->setObjectName(QString::fromUtf8("actionDelete"));
+    QIcon icon100;
+    icon100.addFile(QString::fromUtf8(":/images/edit-delete"), QSize(), QIcon::Normal, QIcon::Off);
+    actionDelete->setIcon(icon100);
+//    actionDelete->setIcon(QIcon(tr(":/images/images/edit-delete.png")));
 
     actionMoveUp = new QAction(this);
     actionMoveUp->setObjectName(QString::fromUtf8("actionMoveUp"));
@@ -448,26 +311,9 @@ BasicType << "BOOLEAN" << "INT8" << "INT16" << "INT24" << "INT32" << "INT128" <<
     actionShowAttributesLength->setObjectName(QString::fromUtf8("actionShowAttributesLength"));
     actionShowAttributesLength->setCheckable(true);
 
-    actionShowBase64 = new QAction(this);
-    actionShowBase64->setObjectName(QString::fromUtf8("actionShowBase64"));
-    actionShowBase64->setCheckable(true);
-
-    actionShowCurrentElementTextBase64 = new QAction(this);
-    actionShowCurrentElementTextBase64->setObjectName(QString::fromUtf8("actionShowCurrentElementTextBase64"));
-    actionShowCurrentElementTextBase64->setCheckable(true);
-
     actionConfigure = new QAction(this);
     actionConfigure->setObjectName(QString::fromUtf8("actionConfigure"));
     actionConfigure->setMenuRole(QAction::PreferencesRole);
-
-    actionEditInnerXML = new QAction(this);
-    actionEditInnerXML->setObjectName(QString::fromUtf8("actionEditInnerXML"));
-
-    actionEditInnerXMLBase64 = new QAction(this);
-    actionEditInnerXMLBase64->setObjectName(QString::fromUtf8("actionEditInnerXMLBase64"));
-
-    actionEditInnerBase64Text = new QAction(this);
-    actionEditInnerBase64Text->setObjectName(QString::fromUtf8("actionEditInnerBase64Text"));
 
     actionZoomIn = new QAction(this);
     actionZoomIn->setObjectName(QString::fromUtf8("actionZoomIn"));
@@ -553,9 +399,6 @@ BasicType << "BOOLEAN" << "INT8" << "INT16" << "INT24" << "INT32" << "INT128" <<
     actionAllowedSchemaElements = new QAction(this);
     actionAllowedSchemaElements->setObjectName(QString::fromUtf8("actionAllowedSchemaElements"));
 
-    actionPasteAndSubstituteText = new QAction(this);
-    actionPasteAndSubstituteText->setObjectName(QString::fromUtf8("actionPasteAndSubstituteText"));
-
     actionNewUsingXMLSchema = new QAction(this);
     actionNewUsingXMLSchema->setObjectName(QString::fromUtf8("actionNewUsingXMLSchema"));
 
@@ -576,9 +419,6 @@ BasicType << "BOOLEAN" << "INT8" << "INT16" << "INT24" << "INT32" << "INT128" <<
     QIcon icon19;
     icon19.addFile(QString::fromUtf8(":/tools/images/split.png"), QSize(), QIcon::Normal, QIcon::Off);
     actionExtractFragmentsFromFile->setIcon(icon19);
-
-    actionWelcomeDialog = new QAction(this);
-    actionWelcomeDialog->setObjectName(QString::fromUtf8("actionWelcomeDialog"));
 
     actionSaveACopyAs = new QAction(this);
     actionSaveACopyAs->setObjectName(QString::fromUtf8("actionSaveACopyAs"));
@@ -607,54 +447,11 @@ BasicType << "BOOLEAN" << "INT8" << "INT16" << "INT24" << "INT32" << "INT128" <<
     actionViewAsXsd = new QAction(this);
     actionViewAsXsd->setObjectName(QString::fromUtf8("actionViewAsXsd"));
 
-    actionColumnView = new QAction(this);
-    actionColumnView->setObjectName(QString::fromUtf8("actionColumnView"));
-    QIcon icon22;
-    icon22.addFile(QString::fromUtf8(":/commands/view_columns"), QSize(), QIcon::Normal, QIcon::Off);
-    actionColumnView->setIcon(icon22);
-
-    actionShowCurrentSessionPanel = new QAction(this);
-    actionShowCurrentSessionPanel->setObjectName(QString::fromUtf8("actionShowCurrentSessionPanel"));
-    actionShowCurrentSessionPanel->setCheckable(true);
-    QIcon icon23;
-    icon23.addFile(QString::fromUtf8(":/sessions/images/sessions_view.png"), QSize(), QIcon::Normal, QIcon::Off);
-    actionShowCurrentSessionPanel->setIcon(icon23);
-
-    actionNewSession = new QAction(this);
-    actionNewSession->setObjectName(QString::fromUtf8("actionNewSession"));
-
-    actionPauseSession = new QAction(this);
-    actionPauseSession->setObjectName(QString::fromUtf8("actionPauseSession"));
-
-    actionResumeSession = new QAction(this);
-    actionResumeSession->setObjectName(QString::fromUtf8("actionResumeSession"));
-
-    actionCloseSession = new QAction(this);
-    actionCloseSession->setObjectName(QString::fromUtf8("actionCloseSession"));
-
-    actionManageSessions = new QAction(this);
-    actionManageSessions->setObjectName(QString::fromUtf8("actionManageSessions"));
-
-    actionSessionDetails = new QAction(this);
-    actionSessionDetails->setObjectName(QString::fromUtf8("actionSessionDetails"));
-
     actionUndo = new QAction(this);
     actionUndo->setObjectName(QString::fromUtf8("actionUndo"));
 
     actionRedo = new QAction(this);
     actionRedo->setObjectName(QString::fromUtf8("actionRedo"));
-
-    actionNewWindow = new QAction(this);
-    actionNewWindow->setObjectName(QString::fromUtf8("actionNewWindow"));
-
-    actionViewData = new QAction(this);
-    actionViewData->setObjectName(QString::fromUtf8("actionViewData"));
-    QIcon icon24;
-    icon24.addFile(QString::fromUtf8(":/tools/images/view-structure-icon.png"), QSize(), QIcon::Normal, QIcon::Off);
-    actionViewData->setIcon(icon24);
-
-    actionBase64Tools = new QAction(this);
-    actionBase64Tools->setObjectName(QString::fromUtf8("actionBase64Tools"));
 
     actionEncodingTools = new QAction(this);
     actionEncodingTools->setObjectName(QString::fromUtf8("actionEncodingTools"));
@@ -736,7 +533,6 @@ BasicType << "BOOLEAN" << "INT8" << "INT16" << "INT24" << "INT32" << "INT128" <<
     menuEdit->addAction(actionCopyPathToClipboard);
     menuEdit->addAction(actionConfigure);
     menuEdit->addAction(actionConfigureSnippets);
-    menuFile->addAction(actionNewWindow);
     menuFile->addAction(actionNew);
     menuFile->addAction(actionNewFromClipboard);
     menuFile->addAction(actionNewUsingXMLSchema);
@@ -763,10 +559,6 @@ BasicType << "BOOLEAN" << "INT8" << "INT16" << "INT24" << "INT32" << "INT128" <<
     menu_XML->addAction(menuXML_Schema->menuAction());
     menu_XML->addSeparator();
     menu_XML->addAction(actionEdit);
-    menu_XML->addAction(actionEditInnerXMLBase64);
-    menu_XML->addAction(actionEditInnerXML);
-    menu_XML->addAction(actionEditInnerBase64Text);
-    menu_XML->addAction(actionPasteAndSubstituteText);
     menu_XML->addAction(actionTransforminSnippet);
     menu_XML->addSeparator();
     menu_XML->addAction(actionMoveUp);
@@ -779,12 +571,7 @@ BasicType << "BOOLEAN" << "INT8" << "INT16" << "INT24" << "INT32" << "INT128" <<
     menuXML_Schema->addAction(actionInsertSchemaReferenceAttributes);
     menuTools->addAction(actionPlugins);
     menuTools->addAction(actionSearchInFiles);
-    menuTools->addAction(actionExtractFragmentsFromFile);
-    menuTools->addAction(actionViewData);
-    menuTools->addAction(actionBase64Tools);
     menuTools->addAction(actionEncodingTools);
-    menuView->addAction(actionShowCurrentSessionPanel);
-    menuView->addAction(actionColumnView);
     menuView->addAction(actionHideView);
     menuView->addAction(actionResizeToContents);
     menuView->addAction(actionExpandAll);
@@ -799,8 +586,6 @@ BasicType << "BOOLEAN" << "INT8" << "INT16" << "INT24" << "INT32" << "INT128" <<
     menuView->addAction(actionShowAttributesLength);
     menuView->addAction(actionShowElementTextLength);
     menuView->addAction(actionShowElementSize);
-    menuView->addAction(actionShowBase64);
-    menuView->addAction(actionShowCurrentElementTextBase64);
     menuView->addAction(actionHideLeafChildren);
     menuView->addAction(actionShowLeafChildren);
     menuView->addSeparator();
@@ -815,9 +600,6 @@ BasicType << "BOOLEAN" << "INT8" << "INT16" << "INT24" << "INT32" << "INT128" <<
     toolBar->addAction(actionCopy);
     toolBar->addAction(actionPaste);
     toolBar->addSeparator();
-    toolBar->addAction(actionShowCurrentSessionPanel);
-    toolBar->addAction(actionColumnView);
-    toolBar->addSeparator();
     toolBar->addAction(actionFind);
     toolBar->addAction(actionValidate);
     toolBar->addSeparator();
@@ -830,6 +612,7 @@ BasicType << "BOOLEAN" << "INT8" << "INT16" << "INT24" << "INT32" << "INT128" <<
     retranslateUi();
 
     QMetaObject::connectSlotsByName(this);
+
 
 }
 
@@ -934,29 +717,9 @@ void MainWindow::retranslateUi()
 #ifndef QT_NO_TOOLTIP
     actionShowAttributesLength->setToolTip(QApplication::translate("MainWindow", "Show Attributes Length", 0, QApplication::UnicodeUTF8));
 #endif // QT_NO_TOOLTIP
-    actionShowBase64->setText(QApplication::translate("MainWindow", "Show Text as Base 64 Coded", 0, QApplication::UnicodeUTF8));
-#ifndef QT_NO_TOOLTIP
-    actionShowBase64->setToolTip(QApplication::translate("MainWindow", "Show Text as Base 64 Coded", 0, QApplication::UnicodeUTF8));
-#endif // QT_NO_TOOLTIP
-    actionShowCurrentElementTextBase64->setText(QApplication::translate("MainWindow", "Show Current Element Text Base 64", 0, QApplication::UnicodeUTF8));
-#ifndef QT_NO_TOOLTIP
-    actionShowCurrentElementTextBase64->setToolTip(QApplication::translate("MainWindow", "Show Current Element Text Base 64", 0, QApplication::UnicodeUTF8));
-#endif // QT_NO_TOOLTIP
     actionConfigure->setText(QApplication::translate("MainWindow", "Confi&gure...", 0, QApplication::UnicodeUTF8));
 #ifndef QT_NO_TOOLTIP
     actionConfigure->setToolTip(QApplication::translate("MainWindow", "Configure", 0, QApplication::UnicodeUTF8));
-#endif // QT_NO_TOOLTIP
-    actionEditInnerXML->setText(QApplication::translate("MainWindow", "Edit Inner XML...", 0, QApplication::UnicodeUTF8));
-#ifndef QT_NO_TOOLTIP
-    actionEditInnerXML->setToolTip(QApplication::translate("MainWindow", "Edit inner XML", 0, QApplication::UnicodeUTF8));
-#endif // QT_NO_TOOLTIP
-    actionEditInnerXMLBase64->setText(QApplication::translate("MainWindow", "Edit Inner XML Base 64 Coded...", 0, QApplication::UnicodeUTF8));
-#ifndef QT_NO_TOOLTIP
-    actionEditInnerXMLBase64->setToolTip(QApplication::translate("MainWindow", "Edit inner XML Base 64 Coded", 0, QApplication::UnicodeUTF8));
-#endif // QT_NO_TOOLTIP
-    actionEditInnerBase64Text->setText(QApplication::translate("MainWindow", "Edit inner Base 64 Text...", 0, QApplication::UnicodeUTF8));
-#ifndef QT_NO_TOOLTIP
-    actionEditInnerBase64Text->setToolTip(QApplication::translate("MainWindow", "Edit inner Base 64 Text", 0, QApplication::UnicodeUTF8));
 #endif // QT_NO_TOOLTIP
     actionZoomIn->setText(QApplication::translate("MainWindow", "Zoom In", 0, QApplication::UnicodeUTF8));
 #ifndef QT_NO_TOOLTIP
@@ -1048,10 +811,6 @@ void MainWindow::retranslateUi()
 #ifndef QT_NO_TOOLTIP
     actionAllowedSchemaElements->setToolTip(QApplication::translate("MainWindow", "Allowed Schema Elements", 0, QApplication::UnicodeUTF8));
 #endif // QT_NO_TOOLTIP
-    actionPasteAndSubstituteText->setText(QApplication::translate("MainWindow", "Edit Inner Text as One Node...", 0, QApplication::UnicodeUTF8));
-#ifndef QT_NO_TOOLTIP
-    actionPasteAndSubstituteText->setToolTip(QApplication::translate("MainWindow", "Paste and substitute element text", 0, QApplication::UnicodeUTF8));
-#endif // QT_NO_TOOLTIP
     actionNewUsingXMLSchema->setText(QApplication::translate("MainWindow", "New Using XML Schema...", 0, QApplication::UnicodeUTF8));
 #ifndef QT_NO_TOOLTIP
     actionNewUsingXMLSchema->setToolTip(QApplication::translate("MainWindow", "Creates a new XML Document using a XML Schema", 0, QApplication::UnicodeUTF8));
@@ -1071,14 +830,6 @@ void MainWindow::retranslateUi()
     actionInsertSchemaReferenceAttributes->setText(QApplication::translate("MainWindow", "Insert Schema Reference Attributes", 0, QApplication::UnicodeUTF8));
 #ifndef QT_NO_TOOLTIP
     actionInsertSchemaReferenceAttributes->setToolTip(QApplication::translate("MainWindow", "Insert Schema Reference Attributes", 0, QApplication::UnicodeUTF8));
-#endif // QT_NO_TOOLTIP
-    actionExtractFragmentsFromFile->setText(QApplication::translate("MainWindow", "Extract Fragments From a File...", 0, QApplication::UnicodeUTF8));
-#ifndef QT_NO_TOOLTIP
-    actionExtractFragmentsFromFile->setToolTip(QApplication::translate("MainWindow", "Extract XML fragments from a huge file...", 0, QApplication::UnicodeUTF8));
-#endif // QT_NO_TOOLTIP
-    actionWelcomeDialog->setText(QApplication::translate("MainWindow", "Welcome Dialog...", 0, QApplication::UnicodeUTF8));
-#ifndef QT_NO_TOOLTIP
-    actionWelcomeDialog->setToolTip(QApplication::translate("MainWindow", "Show the welcome dialog.", 0, QApplication::UnicodeUTF8));
 #endif // QT_NO_TOOLTIP
     actionSaveACopyAs->setText(QApplication::translate("MainWindow", "Save a Copy As...", 0, QApplication::UnicodeUTF8));
 #ifndef QT_NO_TOOLTIP
@@ -1101,38 +852,6 @@ void MainWindow::retranslateUi()
     actionShowLeafChildren->setToolTip(QApplication::translate("MainWindow", "Show the leaf nodes of the current node that was previously hidden.", 0, QApplication::UnicodeUTF8));
 #endif // QT_NO_TOOLTIP
     actionViewAsXsd->setText(QApplication::translate("MainWindow", "View As Xsd", 0, QApplication::UnicodeUTF8));
-    actionColumnView->setText(QApplication::translate("MainWindow", "Columnar View...", 0, QApplication::UnicodeUTF8));
-#ifndef QT_NO_TOOLTIP
-    actionColumnView->setToolTip(QApplication::translate("MainWindow", "View as columns.", 0, QApplication::UnicodeUTF8));
-#endif // QT_NO_TOOLTIP
-    actionShowCurrentSessionPanel->setText(QApplication::translate("MainWindow", "Show Current Session Panel", 0, QApplication::UnicodeUTF8));
-#ifndef QT_NO_TOOLTIP
-    actionShowCurrentSessionPanel->setToolTip(QApplication::translate("MainWindow", "Opens the session panel.", 0, QApplication::UnicodeUTF8));
-#endif // QT_NO_TOOLTIP
-    actionNewSession->setText(QApplication::translate("MainWindow", "New...", 0, QApplication::UnicodeUTF8));
-#ifndef QT_NO_TOOLTIP
-    actionNewSession->setToolTip(QApplication::translate("MainWindow", "Creates a new session.", 0, QApplication::UnicodeUTF8));
-#endif // QT_NO_TOOLTIP
-    actionPauseSession->setText(QApplication::translate("MainWindow", "Pause", 0, QApplication::UnicodeUTF8));
-#ifndef QT_NO_TOOLTIP
-    actionPauseSession->setToolTip(QApplication::translate("MainWindow", "Pauses the current session.", 0, QApplication::UnicodeUTF8));
-#endif // QT_NO_TOOLTIP
-    actionResumeSession->setText(QApplication::translate("MainWindow", "Resume", 0, QApplication::UnicodeUTF8));
-#ifndef QT_NO_TOOLTIP
-    actionResumeSession->setToolTip(QApplication::translate("MainWindow", "Resume the current session.", 0, QApplication::UnicodeUTF8));
-#endif // QT_NO_TOOLTIP
-    actionCloseSession->setText(QApplication::translate("MainWindow", "Close", 0, QApplication::UnicodeUTF8));
-#ifndef QT_NO_TOOLTIP
-    actionCloseSession->setToolTip(QApplication::translate("MainWindow", "Closes the current session.", 0, QApplication::UnicodeUTF8));
-#endif // QT_NO_TOOLTIP
-    actionManageSessions->setText(QApplication::translate("MainWindow", "Manage...", 0, QApplication::UnicodeUTF8));
-#ifndef QT_NO_TOOLTIP
-    actionManageSessions->setToolTip(QApplication::translate("MainWindow", "Manage the sessions.", 0, QApplication::UnicodeUTF8));
-#endif // QT_NO_TOOLTIP
-    actionSessionDetails->setText(QApplication::translate("MainWindow", "Details...", 0, QApplication::UnicodeUTF8));
-#ifndef QT_NO_TOOLTIP
-    actionSessionDetails->setToolTip(QApplication::translate("MainWindow", "Details about the current session.", 0, QApplication::UnicodeUTF8));
-#endif // QT_NO_TOOLTIP
     actionUndo->setText(QApplication::translate("MainWindow", "Undo", 0, QApplication::UnicodeUTF8));
 #ifndef QT_NO_TOOLTIP
     actionUndo->setToolTip(QApplication::translate("MainWindow", "Undo last action.", 0, QApplication::UnicodeUTF8));
@@ -1143,18 +862,7 @@ void MainWindow::retranslateUi()
     actionRedo->setToolTip(QApplication::translate("MainWindow", "Redo last action.", 0, QApplication::UnicodeUTF8));
 #endif // QT_NO_TOOLTIP
     actionRedo->setShortcut(QApplication::translate("MainWindow", "Ctrl+Shift+Z", 0, QApplication::UnicodeUTF8));
-    actionNewWindow->setText(QApplication::translate("MainWindow", "New Window", 0, QApplication::UnicodeUTF8));
-#ifndef QT_NO_TOOLTIP
-    actionNewWindow->setToolTip(QApplication::translate("MainWindow", "Opens a new window.", 0, QApplication::UnicodeUTF8));
-#endif // QT_NO_TOOLTIP
-    actionViewData->setText(QApplication::translate("MainWindow", "View data...", 0, QApplication::UnicodeUTF8));
-#ifndef QT_NO_TOOLTIP
-    actionViewData->setToolTip(QApplication::translate("MainWindow", "Navigates a data file.", 0, QApplication::UnicodeUTF8));
-#endif // QT_NO_TOOLTIP
-    actionBase64Tools->setText(QApplication::translate("MainWindow", "Base 64 Tools...", 0, QApplication::UnicodeUTF8));
-#ifndef QT_NO_TOOLTIP
-    actionBase64Tools->setToolTip(QApplication::translate("MainWindow", "Base 64 tools", 0, QApplication::UnicodeUTF8));
-#endif // QT_NO_TOOLTIP
+
     actionEncodingTools->setText(QApplication::translate("MainWindow", "Encoding Tools...", 0, QApplication::UnicodeUTF8));
 #ifndef QT_NO_TOOLTIP
     actionEncodingTools->setToolTip(QApplication::translate("MainWindow", "Encoding Tools.", 0, QApplication::UnicodeUTF8));
@@ -1169,15 +877,6 @@ void MainWindow::retranslateUi()
     menuView->setTitle(QApplication::translate("MainWindow", "&View", 0, QApplication::UnicodeUTF8));
     toolBar->setWindowTitle(QApplication::translate("MainWindow", "toolBar", 0, QApplication::UnicodeUTF8));
 
-}
-
-QString MainWindow::editNodeElementAsXML(const bool isBase64Coded, DomItem *pItem, const QString &text, const bool isCData, bool &isCDataOut, bool &isOk)
-{
-    return tr("");
-}
-
-void MainWindow::cleanExtractResults()
-{
 }
 
 void MainWindow::deleteSchema()
@@ -1223,7 +922,7 @@ bool MainWindow::finishSetUpUi()
         return false;
     }
 //    editor->setData(appl);
-    if(editor->init()) {
+    if(!editor->init()) {
         Utils::error(this, tr("XML Editor initialization failed"));
         return false;
     }
@@ -1236,7 +935,6 @@ bool MainWindow::finishSetUpUi()
     connect(editor, SIGNAL(viewAsXsdRequested()), this, SLOT(on_actionViewAsXsd_triggered()));
     connect(editor, SIGNAL(schemaLabelChanged(QString)), this, SLOT(schemaLoadComplete(QString)));
     connect(editor, SIGNAL(dataReadyMessage(QString)), this, SLOT(onNewMessage(QString)));
-    connect(editor, SIGNAL(loadCurrentPage(int)), this, SLOT(navigateToPage(int)));
     connect(editor, SIGNAL(showStatusMessage(QString,bool)), this, SLOT(onShowStatusMessage(QString,bool)));
     connect(editor, SIGNAL(undoStateUpdated(bool,bool)), this, SLOT(onUndoStateUpdated(bool,bool)));
 
@@ -1245,8 +943,6 @@ bool MainWindow::finishSetUpUi()
     actionShowChildIndex->setCheckable(true);
     actionCompactView->setCheckable(true);
     actionHideBrothers->setCheckable(true);
-    actionShowBase64->setCheckable(true);
-    actionShowCurrentElementTextBase64->setCheckable(true);
     actionShowElementSize->setCheckable(true);
 
     actionFixedSizeAttributes->setCheckable(true);
@@ -1260,7 +956,7 @@ bool MainWindow::finishSetUpUi()
     actionCompactView->setChecked(paintInfo->compactView());
     actionFixedSizeAttributes->setChecked(paintInfo->userFixedLengthFont());
     actionShowAttributesLength->setChecked(paintInfo->showAttributesLength());
-    actionShowBase64->setChecked(paintInfo->showUnBase64());
+//    actionShowBase64->setChecked(paintInfo->showUnBase64());
     actionShowElementSize->setChecked(paintInfo->showItemSize());
     actionHideView->setChecked(paintInfo->hideView());
 
@@ -1268,7 +964,7 @@ bool MainWindow::finishSetUpUi()
 
     connect(editor, SIGNAL(treeContextMenuRequested(QPoint)), this, SLOT(treeContextMenu(QPoint)));
 
-    menu_XML->setTearOffEnabled(true);
+    menu_XML->setTearOffEnabled(false);
 
     bool isOk = true;
     QToolButton *editTextButton = new QToolButton(this);
@@ -1276,16 +972,20 @@ bool MainWindow::finishSetUpUi()
     if((NULL == editTextButton) || (editTextMenu == NULL)) {
         isOk = true;
     } else {
-        editTextMenu->addAction(actionPasteAndSubstituteText);
-        editTextMenu->addAction(actionEditInnerBase64Text);
-        editTextMenu->addAction(actionEditInnerXML);
-        editTextMenu->addAction(actionEditInnerXMLBase64);
         editTextButton->setMenu(editTextMenu);
         editTextButton->setPopupMode(QToolButton::InstantPopup);
         editTextButton->setIcon(QIcon(":/commands/modify"));
         toolBar->insertWidget(actionHelpOnQXmlEdit, editTextButton);
         toolBar->insertSeparator(actionHelpOnQXmlEdit);
     }
+
+    labelSchema = new QLabel(statusBar());
+    if(NULL == labelSchema) {
+        Utils::error(tr("Error creating user interface"));
+        return false;
+    }
+    setSchemaLabel(tr(""));
+    statusBar()->addPermanentWidget(labelSchema);
 
     actionLastFiles->setVisible(false);
     QMenu *recentFiles = new QMenu(this);
@@ -1377,24 +1077,17 @@ void MainWindow::treeContextMenu(const QPoint& position)
         contextMenu.addAction(actionPaste);
     }
     contextMenu.addSeparator() ;
+
     if(isActionMode) {
-        contextMenu.addAction(actionPasteAndSubstituteText);
-        contextMenu.addAction(actionEditInnerBase64Text);
-    }
-//    if(!isSlave && isActionMode) {
-    if(isActionMode) {
-        contextMenu.addAction(actionEditInnerXML);
-    }
-    if(isActionMode) {
-        contextMenu.addAction(actionEditInnerXMLBase64);
         contextMenu.addAction(actionTransforminSnippet);
         contextMenu.addSeparator() ;
         contextMenu.addAction(actionMoveUp);
         contextMenu.addAction(actionMoveDown);
+        contextMenu.addAction(actionDelete);
     }
-    DomItem *element = getSelectedItem();
-    if(NULL != element) {
-        if(element->areChildrenLeavesHidden(element->getUI())) {
+    DomItem *item = getSelectedItem();
+    if(NULL != item) {
+        if(item->areChildrenLeavesHidden(item->getUI())) {
             contextMenu.addAction(actionShowLeafChildren);
         } else {
             contextMenu.addAction(actionHideLeafChildren);
@@ -1403,17 +1096,7 @@ void MainWindow::treeContextMenu(const QPoint& position)
 
 #ifdef XSD_INTEGRATION
     if(NULL != editor->schema()) {
-        //SchemaValidator validator;
-        // TODO: redo
-        /*QStringList options = validator.checkInsertionPoint(_schemaRoot, regola, getSelectedItem());
-        QMenu *menu = new QMenu(&contextMenu);
-        if(NULL != menu) {
-            ui.actionAllowedSchemaElements->setMenu(menu);
-            foreach( QString item, options ) {
-                QAction *action = new QAction( item, &contextMenu );
-                menu->addAction( action );
-            }
-        }*/
+
         contextMenu.addSeparator() ;
         contextMenu.addAction(actionAllowedSchemaElements);
     }
@@ -1421,7 +1104,7 @@ void MainWindow::treeContextMenu(const QPoint& position)
     contextMenu.exec(editor->getMainTreeWidget()->mapToGlobal(position));
 }
 
-// Solo il salva come...
+// only save as...
 void MainWindow::onDocumentIsModified(const bool isModified)
 {
     TRACEQ(QString("MainWindow::onDocumentIsModified(%1)").arg(isModified));
@@ -1438,7 +1121,7 @@ void MainWindow::onDocumentIsModified(const bool isModified)
     setWindowModified(isModified);
 }
 
-//cambia la sel clipb.
+//
 void MainWindow::setClipBoardActionsState(const bool isAction)
 {
     actionPaste->setEnabled(isAction && editor->isActionMode());
@@ -1453,7 +1136,7 @@ void MainWindow::onComputeSelectionState()
     bool selectSpecialsDown = false;
     bool isNormalViewState = true;
     bool canAddChild = false;
-    bool isShownAsBase64 = false ;
+//    bool isShownAsBase64 = false ;
     qxmledit::EDisplayMode displayMode = editor->displayMode();
     bool isExplore = (displayMode != qxmledit::NORMAL) && (displayMode != qxmledit::SCAN) ;
     int numberSelected = editor->getMainTreeWidget()->selectedItems().size();
@@ -1468,10 +1151,7 @@ void MainWindow::onComputeSelectionState()
             canAddChild = true;
         isNormalViewState = item->isNormalViewState();
         isSomeItemSelected = true ;
-        isShownAsBase64 = item->isShownBase64();
-        //if il primo item
-        //disabilita accoda, mvup e down
-        //altrimenti se il selected si trova al primo o ultimo posto della catena deselezmv up o down
+
     } else {
         if(model->isEmpty(true))
             canAddChild = true;
@@ -1504,10 +1184,6 @@ void MainWindow::onComputeSelectionState()
     actionAppendProcessingInstruction->setEnabled(selectSpecials && !isExplore);
     actionAddProcessingInstruction->setEnabled(!isExplore);
     actionDelete->setEnabled(isSomeItemSelected && !isExplore);
-    actionEditInnerBase64Text->setEnabled(isSomeItemSelected && !isExplore);
-//    actionEditInnerXML->setEnabled(isSomeItemSelected && !isSlave && !isExplore);
-    actionEditInnerXML->setEnabled(isSomeItemSelected);
-    actionEditInnerXMLBase64->setEnabled(isSomeItemSelected && !isExplore);
     actionEdit->setEnabled(isSomeItemSelected);
     actionMoveUp->setEnabled(selectSpecialsUp && !isExplore);
     actionMoveDown->setEnabled(selectSpecialsDown && !isExplore);
@@ -1519,15 +1195,10 @@ void MainWindow::onComputeSelectionState()
 
     actionHideBrothers->setEnabled(isSomeItemSelected);
     actionHideBrothers->setChecked(!isNormalViewState);
-    actionShowCurrentElementTextBase64->setEnabled(isSomeItemSelected && !isExplore);
-    actionShowCurrentElementTextBase64->setChecked(isShownAsBase64);
     actionReload->setEnabled((NULL != model) && !model->fileName().isEmpty());
     enableZoom();
     actionCopyPathToClipboard->setEnabled((NULL != model) && !model->fileName().isEmpty());
     actionAddCurrentDirectory->setEnabled((NULL != model) && !model->fileName().isEmpty());
-    // TODO: test
-    //ui.testNext->setEnabled((NULL!=regola)?regola->nextBookmark()>=0:false);
-    //ui.testPrev->setEnabled((NULL!=regola)?regola->previousBookmark()>=0:false);
 
     actionValidate->setEnabled((NULL != model) && !isExplore);
 
@@ -1542,7 +1213,6 @@ void MainWindow::onComputeSelectionState()
 
     actionInsertNoNamespaceSchemaReferenceAttributes->setEnabled((NULL != model) && !isExplore);
     actionInsertSchemaReferenceAttributes->setEnabled((NULL != model) && !isExplore);
-    //TODO: always???? ui.actionExtractFragmentsFromFile->setEnabled(XXX);
 
     actionNewUsingXMLSchema->setEnabled(true);
     actionNewUsingXMLSchema->setVisible(true);
@@ -1597,7 +1267,7 @@ void MainWindow::openFileUsingDialog(const QString folderPath)
     QString filePath = QFileDialog::getOpenFileName(
                            this, tr("Open File"),
                            folderPath,
-                           tr("XML files (*.xml);;XML Schema files (*.xsd);;All files (*);;")
+                           tr("ICD files (*.icd);;SCD files (*.scd);;XML files (*.xml);;XML Schema files (*.xsd);;All files (*);;")
                        );
     if(!filePath.isEmpty()) {
         loadFile(filePath);
@@ -1661,10 +1331,10 @@ void MainWindow::on_actionSaveACopyAs_triggered()
     if(newFilePath.isEmpty()) {
         return ;
     }
-//    if(!model->write(newFilePath, false)) {
-//        error(tr("Error saving data. Old file is still intact."));
-//        return ;
-//    }
+    if(!model->write(newFilePath)) {
+        error(tr("Error saving data. Old file is still intact."));
+        return ;
+    }
     updateRecentFilesMenu(newFilePath);
     model->setModified(modifiedStatus);
     statusBar()->showMessage(tr("File saved"), SHORT_TIMEOUT);
@@ -1688,13 +1358,13 @@ void MainWindow::on_actionSave_triggered()
         return ;
     }
 
-    // scrivi il nuovo con il nome vecchio+estensione
+    // set new extension name
     QString newFilePath = model->fileName() + ".new_new~"  ;
     if(!model->write(newFilePath)) {
         error(tr("Error saving data. Old file is still intact."));
         return ;
     }
-    // rinomina il vecchio
+    // backup the old file
     QString backupFilePath = model->fileName() + "~"  ;
     if(QFile::exists(backupFilePath)) {
         if(!QFile::remove(backupFilePath)) {
@@ -1706,7 +1376,7 @@ void MainWindow::on_actionSave_triggered()
         error(tr("Error renaming old file. You can access written data at file '%1'. Old data are untouched").arg(newFilePath));
         return ;
     }
-    // rinomina il nuovo nel nome vecchio
+    // rename the new file
     if(!QFile::rename(newFilePath, model->fileName())) {
         error(tr("Error renaming new file. You can access written data at file '%1'. You can find old data in the backup file").arg(newFilePath));
         return ;
@@ -1778,15 +1448,15 @@ void MainWindow::on_actionPaste_triggered()
 
 void MainWindow::on_actionAbout_triggered()
 {
-//    QList<AuthorInfo*> authors = authorsInfo() ;
-//    AboutDialog about(this,
-//                      AuthorInfo::appName, AuthorInfo::version, AuthorInfo::copyright,
-//                      AuthorInfo::license,
-//                      AuthorInfo::other,
-//                      authors);
-//    about.setModal(true);
-//    about.exec() ;
-//    deleteAuthorsInfo(authors);
+    QList<AuthorInfo*> authors = authorsInfo() ;
+    AboutDialog about(this,
+                      AuthorInfo::appName, AuthorInfo::version, AuthorInfo::copyright,
+                      AuthorInfo::license,
+                      AuthorInfo::other,
+                      authors);
+    about.setModal(true);
+    about.exec() ;
+    deleteAuthorsInfo(authors);
 }
 
 
@@ -1798,7 +1468,7 @@ void MainWindow::onShowStatusMessage(const QString &message, const bool isLongTi
 void MainWindow::setFileTitle()
 {
     QString windowTitle = APP_TITLE;
-//    if(!isSlave)
+    if(!isSlave)
     {
         windowTitle.append(" - ");
         if(!getModel()->fileName().isEmpty()) {
@@ -1818,16 +1488,15 @@ void MainWindow::closeEvent(QCloseEvent * event)
         return ;
     }
     event->accept();
-//    if(isAutoDelete) {
+    if(isAutoDelete) {
         deleteLater();
-//    }
+    }
 }
 
 void MainWindow::on_actionQuit_triggered()
 {
     if(MainWindow::checkAbandonChanges()) {
-//        application->quit();
-        close();
+        app->quit();
     }
 }
 
@@ -1965,16 +1634,6 @@ void MainWindow::on_actionHideBrothers_triggered()
     editor->onActionHideBrothers();
 }
 
-void MainWindow::on_actionShowCurrentElementTextBase64_triggered()
-{
-    editor->onActionShowCurrentItemTextBase64(actionShowCurrentElementTextBase64->isChecked());
-}
-
-void MainWindow::on_actionShowBase64_triggered()
-{
-    editor->onActionShowBase64(actionShowBase64->isChecked());
-}
-
 void MainWindow::on_actionShowElementSize_triggered()
 {
     editor->onActionShowItemSize(actionShowElementSize->isChecked());
@@ -1982,7 +1641,7 @@ void MainWindow::on_actionShowElementSize_triggered()
 
 void MainWindow::on_actionConfigure_triggered()
 {
- //   ConfigurationDialog::doOptions(this, data) ;
+    ConfigurationDialog::doOptions(this, data);
 }
 
 void MainWindow::on_ok_clicked()
@@ -2002,22 +1661,6 @@ void MainWindow::on_cancel_clicked()
 void MainWindow::setEventLoop(QEventLoop *value)
 {
     eventLoop = value ;
-}
-
-void MainWindow::on_actionEditInnerXML_triggered()
-{
-    editor->onActionEditInnerXML();
-}
-
-void MainWindow::on_actionEditInnerXMLBase64_triggered()
-{
-    editor->onActionEditInnerXMLBase64();
-}
-
-
-void MainWindow::on_actionEditInnerBase64Text_triggered()
-{
-    editor->onActionEditInnerBase64Text();
 }
 
 QString MainWindow::getContentAsText()
@@ -2065,7 +1708,7 @@ void MainWindow::on_actionCompare_triggered()
         errorNoRule();
         return ;
     }
-//    CompareBridge::doCompare(this, model);
+    Compare::doCompare(this, model);
 }
 
 void MainWindow::on_actionReload_triggered()
@@ -2165,14 +1808,14 @@ void MainWindow::on_actionAddCurrentDirectory_triggered()
 {
     DomModel *model = getModel();
     if((NULL != model) && !model->fileName().isEmpty()) {
-//        if(!PreferredDirs::checkNewDir(preferredDirsNames.size(), true)) {
-//            return;
-//        }
+        if(!PreferredDirs::checkNewDir(preferredDirsNames.size(), true)) {
+            return;
+        }
         QFileInfo fileInfo(model->fileName());
         QString dirPath = fileInfo.path();
-//        if(!PreferredDirs::checkDuplicateDir(preferredDirsNames, dirPath, true)) {
-//            return ;
-//        }
+        if(!PreferredDirs::checkDuplicateDir(preferredDirsNames, dirPath, true)) {
+            return ;
+        }
         preferredDirsNames.append(dirPath);
         updatePreferredDirs(preferredDirsNames, preferredDirs);
     }
@@ -2180,9 +1823,9 @@ void MainWindow::on_actionAddCurrentDirectory_triggered()
 
 void MainWindow::on_actionEditPreferredDirectories_triggered()
 {
-//    if(configurePreferredDirs(this, preferredDirsNames)) {
+    if(configurePreferredDirs(this, preferredDirsNames)) {
         updatePreferredDirs(preferredDirsNames, preferredDirs);
-//    }
+    }
 }
 
 void MainWindow::updatePreferredDirs(QStringList &entries, QList<QAction*>actions)
@@ -2218,78 +1861,78 @@ void MainWindow::on_actionValidateNewFile_triggered()
 
 void MainWindow::on_actionInsertSnippet_triggered()
 {
-//    DomModel* model = getModel();
-//    if(NULL == model) {
-//        return;
-//    }
-//    DomModel* newModel = chooseSnippets(data, this) ;
-//    if(NULL != newModel) {
-//        editor->insertSnippet(newModel);
-//        delete newModel;
-//    }
+    DomModel* model = getModel();
+    if(NULL == model) {
+        return;
+    }
+    DomModel* newModel = chooseSnippets(data, this) ;
+    if(NULL != newModel) {
+        editor->insertSnippet(newModel);
+        delete newModel;
+    }
 }
 
 void MainWindow::on_actionConfigureSnippets_triggered()
 {
-//    editSnippets(data, this);
+    editSnippets(data, this);
 }
 
 void MainWindow::on_actionExecuteAutoTest_triggered()
 {
-//    Test::executeTests(this);
+    Test::executeTests(this);
 }
 
 void MainWindow::on_actionTransforminSnippet_triggered()
 {
-//    if(!editor->isActionMode()) {
-//        return ;
-//    }
+    if(!editor->isActionMode()) {
+        return ;
+    }
 
-//    DomItem *item = getSelectedItem();
-//    if(NULL != item) {
-//        QDomDocument    document;
-//        if(item->generateDom(document, document)) {
-//            QString clipboardText = document.toString(4);
-//            insertFragmentInSnippets(this, data, clipboardText) ;
-//        }
-//    }
+    DomItem *item = getSelectedItem();
+    if(NULL != item) {
+        QDomDocument    document;
+        if(item->generateDom(document, document)) {
+            QString clipboardText = document.toString(4);
+            insertFragmentInSnippets(this, data, clipboardText) ;
+        }
+    }
 }
 
 void MainWindow::onPlugin()
 {
-//    QAction *actionFile = qobject_cast<QAction*>(sender());
-//    if(NULL != actionFile) {
-//        QString pluginId = actionFile->data().toString();
-//        if(!pluginId .isEmpty()) {
-//            IQXmlEditPlugIn* plugin = data->plugins()[pluginId];
-//            if(NULL != plugin) {
-//                plugin->go(this, getModel());
-//            }
-//        }
-//    }
+    QAction *actionFile = qobject_cast<QAction*>(sender());
+    if(NULL != actionFile) {
+        QString pluginId = actionFile->data().toString();
+        if(!pluginId .isEmpty()) {
+            IQXmlEditPlugIn* plugin = _plugins[pluginId];
+            if(NULL != plugin) {
+                plugin->go(this, getModel());
+            }
+        }
+    }
 }
 
 bool MainWindow::buildPluginsMenu(const char *method, QMenu *parent)
 {
-//    bool isOk = true;
-//    pluginsCmds.clear();
-//    QMapIterator<QString, IQXmlEditPlugIn*> pluginsIterator(data->plugins());
-//    while(pluginsIterator.hasNext()) {
-//        pluginsIterator.next();
-//        QAction *action = new QAction(this);
-//        if(NULL != action) {
-//            pluginsCmds.append(action);
-//            connect(action, SIGNAL(triggered()), this, method);
-//            IQXmlEditPlugIn* plugin = pluginsIterator.value();
-//            action->setData(pluginsIterator.key());
-//            action->setText(plugin->name());
-//            action->setVisible(true);
-//            parent->addAction(action);
-//        } else {
-//            isOk = false ;
-//        }
-//    }
-//    return isOk ;
+    bool isOk = true;
+    pluginsCmds.clear();
+    QMapIterator<QString, IQXmlEditPlugIn*> pluginsIterator(_plugins);
+    while(pluginsIterator.hasNext()) {
+        pluginsIterator.next();
+        QAction *action = new QAction(this);
+        if(NULL != action) {
+            pluginsCmds.append(action);
+            connect(action, SIGNAL(triggered()), this, method);
+            IQXmlEditPlugIn* plugin = pluginsIterator.value();
+            action->setData(pluginsIterator.key());
+            action->setText(plugin->name());
+            action->setVisible(true);
+            parent->addAction(action);
+        } else {
+            isOk = false ;
+        }
+    }
+    return isOk ;
 }
 
 
@@ -2297,7 +1940,6 @@ bool MainWindow::buildPluginsMenu(const char *method, QMenu *parent)
 void MainWindow::setDisplayMode(const qxmledit::EDisplayMode value)
 {
     editor->setDisplayMode(value);
-//    navigationModeIndicator->setExploreMode(value);
 }
 
 
@@ -2333,7 +1975,6 @@ void MainWindow::loadFile(const QString &filePath)
         if(file.open(QIODevice::ReadOnly)) {
             QDomDocument document;
             if(document.setContent(&file)) {
-//                data->sessionManager()->enrollFile(filePath);
                 setDocument(document, filePath, true);
                 updateRecentFilesMenu(filePath);
                 autoLoadValidation();
@@ -2424,12 +2065,6 @@ void MainWindow::on_actionAllowedSchemaElements_triggered()
     editor->onActionAllowedSchemaItems();
 }
 
-/** Substitute the element text
-  */
-void MainWindow::on_actionPasteAndSubstituteText_triggered()
-{
-    editor->onActionPasteAndSubstituteText();
-}
 
 
 void MainWindow::on_actionNewUsingXMLSchema_triggered()
@@ -2486,7 +2121,7 @@ void MainWindow::autoLoadValidation()
 
 void MainWindow::setSchemaLabel(const QString &newLabel)
 {
-//    labelSchema->setText(newLabel);
+    labelSchema->setText(newLabel);
 }
 
 
@@ -2499,65 +2134,6 @@ void MainWindow::on_actionInsertSchemaReferenceAttributes_triggered()
 {
     editor->onActionInsertSchemaReferenceAttributes();
 }
-
-void MainWindow::on_actionExtractFragmentsFromFile_triggered()
-{
-//    if(!verifyAbandonChanges()) {
-//        return ;
-//    }
-//    ExtractResults *results = new  ExtractResults();
-//    if(NULL == results) {
-//        Utils::errorOutOfMem(this);
-//        return ;
-//    }
-//    extractFragments(results, this);
-//    if(!(results->isError() || results->isAborted())) {
-//        if(results->_optimizeSpeed) {
-//            delete results ;
-//            return ;
-//        }
-//        if(results->numFragments() == 0) {
-//            Utils::message(tr("No fragments found"));
-//            delete results ;
-//            return ;
-//        }
-//        cleanExtractResults();
-//        _extractResult = results ;
-//        editor->setNavigationDataAndEnable(1, _extractResult->numFragments());
-//        showNavigationBox();
-//    } else {
-//        delete results ;
-//    }
-}
-
-void MainWindow::showNavigationBox()
-{
-    editor->showNavigationBox();
-}
-
-void MainWindow::navigateToPage(const int page)
-{
-    /********************************** test code **************************
-    Utils::todo(QString("Navigate to %1").arg(page));
-    setWindowTitle(QString::number(page));
-    ***********************************************************************/
-    loadCurrentPage(page);
-}
-
-void MainWindow::loadCurrentPage(const int page)
-{
-//    if(NULL != _extractResult) {
-//        StringOperationResult result;
-//        _extractResult->loadFragment(page, result);
-//        if(!result.isError()) {
-//            editor->loadText(result.result(), false, true);
-//            // printf("xml is:'%s'\n", result.result().toAscii().data());
-//        } else {
-//            Utils::error(this, tr("Error loading data."));
-//        }
-//    }
-}
-
 
 void MainWindow::error(const QString& message)
 {
@@ -2609,16 +2185,6 @@ void MainWindow::on_actionShowAllLeafChildren_triggered()
     editor->onActionShowAllLeafChildren();
 }
 
-void MainWindow::on_actionColumnView_triggered()
-{
-//    DomModel *model = getModel();
-//    if(NULL != model) {
-//        ColumnarView::showModal(this, model);
-//    }
-}
-
-
-
 void MainWindow::on_actionUndo_triggered()
 {
     editor->undo();
@@ -2640,57 +2206,12 @@ void MainWindow::updateUndoState(const bool isUndo, const bool isRedo)
     actionRedo->setEnabled(isRedo) ;
 }
 
-
-void MainWindow::on_actionNewWindow_triggered()
-{
-    MainWindow *newWindow = new MainWindow();//false, application, data);
-    if(NULL != newWindow) {
-//        newWindow->isAutoDelete = true ;
-        newWindow->show();
-    } else {
-        Utils::error(tr("Error opening a new window."));
-    }
-
-}
-
-void MainWindow::on_actionViewData_triggered()
-{
-//    DataVisualization::viewData(this, "");
-}
-
-void MainWindow::loadVisFile(const QString &fileName)
-{
-//    DataVisualization::viewData(this, fileName);
-}
-
-void MainWindow::on_actionBase64Tools_triggered()
-{
-//    data->uiServices()->doBase64Dialog();
-}
-
 void MainWindow::on_actionEncodingTools_triggered()
 {
 //    data->uiServices()->doEncodingDialog();
 }
 
-void MainWindow::fileNewAct()
-{
 
-
-}
-
-void MainWindow::fileOpenAct()
-{
-
-
-}
-
-
-void MainWindow::fileSaveAct()
-{
-
-
-}
 
 
 void MainWindow::CreateNewICD(QDomDocument *doc)
@@ -2916,5194 +2437,3 @@ void MainWindow::CreateNewICD(QDomDocument *doc)
      DataTypeTemplates.appendChild(LNodeType);
 }
 
-void MainWindow::showPopMenu(const QModelIndex& currentItem)
-{
-//    QMenu *qPopMenu = new QMenu(this);
-//    QModelIndex *currentItem = new QModelIndex();
-
-//    currentItem = index;
-
-//    if(currentItem.data().isNull() && newFileName == NULL)
-//        return;
-
-//    if(currentItem.data().isNull() && newFileName != NULL)
-//    {
-//        qPopMenu->addAction(qRefresh);
-//        qPopMenu->exec(QCursor::pos());
-//        return;
-//    }
-
-//    DomItem *Item = static_cast<DomItem*>(currentItem.internalPointer());
-//    QDomNode currentNode = Item->node();
-
-//    if(currentItem.data().toString() == tr("SCL"))
-//    {
-//        qAddHeader->setIndex(currentItem);
-//        qPopMenu->addAction(qAddHeader);
-//        qAddSubstation->setIndex(currentItem);
-//        qPopMenu->addAction(qAddSubstation);
-//        qAddCommunication->setIndex(currentItem);
-//        qPopMenu->addAction(qAddCommunication);
-//        qAddIED->setIndex(currentItem);
-//        qPopMenu->addAction(qAddIED);
-//        qAddDataTypeTemplates->setIndex(currentItem);
-//        qPopMenu->addAction(qAddDataTypeTemplates);
-
-//        for(int i=0; i<currentNode.childNodes().count(); i++)
-//        {
-//            if(currentNode.childNodes().at(i).toElement().tagName() == tr("Header"))
-//            {
-//                qAddHeader->setDisabled(1);
-//                break;
-//            }
-//        }
-//        for(int i=0; i<currentNode.childNodes().count(); i++)
-//        {
-//            if(currentNode.childNodes().at(i).toElement().tagName() == tr("Communication"))
-//            {
-//                qAddCommunication->setDisabled(1);
-//                break;
-//            }
-//        }
-//        for(int i=0; i<currentNode.childNodes().count(); i++)
-//        {
-//            if(currentNode.childNodes().at(i).toElement().tagName() == tr("DataTypeTemplates"))
-//            {
-//                qAddDataTypeTemplates->setDisabled(1);
-//                break;
-//            }
-//        }
-
-//    }
-
-//    if(currentItem.data().toString() == tr("Header"))
-//    {
-//        qAddText->setDisabled(0);
-//        qAddText->setIndex(currentItem);
-//        qPopMenu->addAction(qAddText);
-//        qAddHistory->setDisabled(0);
-//        qAddHistory->setIndex(currentItem);
-//        qPopMenu->addAction(qAddHistory);
-//        qDebug()<<currentNode.childNodes().count();
-//        for(int i=0; i<currentNode.childNodes().count(); i++)
-//        {
-//            if(currentNode.childNodes().at(i).toElement().tagName() == tr("Text"))
-//            {
-//                qAddText->setDisabled(1);
-//                break;
-//            }
-//        }
-//        for(int i=0; i<currentNode.childNodes().count(); i++)
-//        {
-//            if(currentNode.childNodes().at(i).toElement().tagName() == tr("History"))
-//            {
-//                qAddHistory->setDisabled(1);
-//                break;
-//            }
-//        }
-
-//    }
-//    if(currentItem.data().toString() == tr("History"))
-//    {
-//        qDebug()<<tr("Add Hitem Menu");
-//        qAddHitem->setIndex(currentItem);
-//        qPopMenu->addAction(qAddHitem);
-//    }
-//    if(currentItem.data().toString() == tr("Text"))
-//    {
-//        qAddTextContent->setIndex(currentItem);
-//        qPopMenu->addAction(qAddTextContent);
-//    }
-
-//    if(currentItem.data().toString() == tr("Substation"))
-//    {
-//        qAddVoltageLevel->setIndex(currentItem);
-//        qPopMenu->addAction(qAddVoltageLevel);
-//        qAddFunction->setIndex(currentItem);
-//        qPopMenu->addAction(qAddFunction);
-//        qAddPowerTransformer->setIndex(currentItem);
-//        qPopMenu->addAction(qAddPowerTransformer);
-//        qAddGeneralEquipment->setIndex(currentItem);
-//        qPopMenu->addAction(qAddGeneralEquipment);
-//        qAddLNode->setIndex(currentItem);
-//        qPopMenu->addAction(qAddLNode);
-
-//    }
-
-//    if(currentItem.data().toString() == tr("IED"))
-//    {
-//        qAddServices->setDisabled(0);
-//        for(int i=0; i<currentNode.childNodes().count(); i++)
-//        {
-//            if(currentNode.childNodes().at(i).toElement().tagName() == tr("Services"))
-//            {
-//                qAddServices->setDisabled(1);
-//                break;
-//            }
-//        }
-//        qAddServices->setIndex(currentItem);
-//        qPopMenu->addAction(qAddServices);
-//        qAddAccessPoint->setIndex(currentItem);
-//        qPopMenu->addAction(qAddAccessPoint);
-//    }
-
-//    if(currentItem.data().toString() == tr("Services"))
-//    {
-//        qAddDynAssociation->setIndex(currentItem);
-//        qPopMenu->addAction(qAddDynAssociation);
-
-//        qAddSettingGroups->setIndex(currentItem);
-//        qPopMenu->addAction(qAddSettingGroups);
-
-//        qAddGetDirectory->setIndex(currentItem);
-//        qPopMenu->addAction(qAddGetDirectory);
-//        qAddGetDataObjectDefinition->setIndex(currentItem);
-//        qPopMenu->addAction(qAddGetDataObjectDefinition);
-//        qAddDataObjectDirectory->setIndex(currentItem);
-//        qPopMenu->addAction(qAddDataObjectDirectory);
-//        qAddGetDataSetValue->setIndex(currentItem);
-//        qPopMenu->addAction(qAddGetDataSetValue);
-//        qAddSetDataSetValue->setIndex(currentItem);
-//        qPopMenu->addAction(qAddSetDataSetValue);
-//        qAddDataSetDirectory->setIndex(currentItem);
-//        qPopMenu->addAction(qAddDataSetDirectory);
-//        qAddConfDataSet->setIndex(currentItem);
-//        qPopMenu->addAction(qAddConfDataSet);
-//        qAddDynDataSet->setIndex(currentItem);
-//        qPopMenu->addAction(qAddDynDataSet);
-//        qAddReadWrite->setIndex(currentItem);
-//        qPopMenu->addAction(qAddReadWrite);
-//        qAddTimerActivatedControl->setIndex(currentItem);
-//        qPopMenu->addAction(qAddTimerActivatedControl);
-//        qAddConfReportControl->setIndex(currentItem);
-//        qPopMenu->addAction(qAddConfReportControl);
-//        qAddGetCBValues->setIndex(currentItem);
-//        qPopMenu->addAction(qAddGetCBValues);
-//        qAddConfLogControl->setIndex(currentItem);
-//        qPopMenu->addAction(qAddConfLogControl);
-//        qAddReportSettings->setIndex(currentItem);
-//        qPopMenu->addAction(qAddReportSettings);
-//        qAddLogSettings->setIndex(currentItem);
-//        qPopMenu->addAction(qAddLogSettings);
-//        qAddGSESettings->setIndex(currentItem);
-//        qPopMenu->addAction(qAddGSESettings);
-//        qAddSMVSettings->setIndex(currentItem);
-//        qPopMenu->addAction(qAddSMVSettings);
-//        qAddGSEDir->setIndex(currentItem);
-//        qPopMenu->addAction(qAddGSEDir);
-//        qAddGOOSE->setIndex(currentItem);
-//        qPopMenu->addAction(qAddGOOSE);
-//        qAddGSSE->setIndex(currentItem);
-//        qPopMenu->addAction(qAddGSSE);
-//        qAddFileHandling->setIndex(currentItem);
-//        qPopMenu->addAction(qAddFileHandling);
-//        qAddConfLNs->setIndex(currentItem);
-//        qPopMenu->addAction(qAddConfLNs);
-
-//        qAddDynAssociation->setDisabled(0);
-//        qAddSettingGroups->setDisabled(0);
-//        qAddGetDirectory->setDisabled(0);
-//        qAddGetDataObjectDefinition->setDisabled(0);
-//        qAddDataObjectDirectory->setDisabled(0);
-//        qAddGetDataSetValue->setDisabled(0);
-//        qAddSetDataSetValue->setDisabled(0);
-//        qAddDataSetDirectory->setDisabled(0);
-//        qAddConfDataSet->setDisabled(0);
-//        qAddDynDataSet->setDisabled(0);
-//        qAddReadWrite->setDisabled(0);
-//        qAddTimerActivatedControl->setDisabled(0);
-//        qAddConfReportControl->setDisabled(0);
-//        qAddGetCBValues->setDisabled(0);
-//        qAddConfLogControl->setDisabled(0);
-//        qAddReportSettings->setDisabled(0);
-//        qAddLogSettings->setDisabled(0);
-//        qAddGSESettings->setDisabled(0);
-//        qAddSMVSettings->setDisabled(0);
-//        qAddGSEDir->setDisabled(0);
-
-//        for(int i=0; i<currentNode.childNodes().count(); i++)
-//        {
-//            if(currentNode.childNodes().at(i).toElement().tagName() == tr("DynAssociation"))
-//            {
-//                qAddDynAssociation->setDisabled(1);
-//                break;
-//            }
-//        }
-//        for(int i=0; i<currentNode.childNodes().count(); i++)
-//        {
-//            if(currentNode.childNodes().at(i).toElement().tagName() == tr("SettingGroups"))
-//            {
-//                qAddSettingGroups->setDisabled(1);
-//                break;
-//            }
-//        }
-//        for(int i=0; i<currentNode.childNodes().count(); i++)
-//        {
-//            if(currentNode.childNodes().at(i).toElement().tagName() == tr("GetDirectory"))
-//            {
-//                qAddGetDirectory->setDisabled(1);
-//                break;
-//            }
-//        }
-//        for(int i=0; i<currentNode.childNodes().count(); i++)
-//        {
-//            if(currentNode.childNodes().at(i).toElement().tagName() == tr("GetDataObjectDefinition"))
-//            {
-//                qAddGetDataObjectDefinition->setDisabled(1);
-//                break;
-//            }
-//        }
-//        for(int i=0; i<currentNode.childNodes().count(); i++)
-//        {
-//            if(currentNode.childNodes().at(i).toElement().tagName() == tr("DataObjectDirectory"))
-//            {
-//                qAddDataObjectDirectory->setDisabled(1);
-//                break;
-//            }
-//        }
-//        for(int i=0; i<currentNode.childNodes().count(); i++)
-//        {
-//            if(currentNode.childNodes().at(i).toElement().tagName() == tr("GetDataSetValue"))
-//            {
-//                qAddGetDataSetValue->setDisabled(1);
-//                break;
-//            }
-//        }
-//        for(int i=0; i<currentNode.childNodes().count(); i++)
-//        {
-//            if(currentNode.childNodes().at(i).toElement().tagName() == tr("SetDataSetValue"))
-//            {
-//                qAddSetDataSetValue->setDisabled(1);
-//                break;
-//            }
-//        }
-//        for(int i=0; i<currentNode.childNodes().count(); i++)
-//        {
-//            if(currentNode.childNodes().at(i).toElement().tagName() == tr("DataSetDirectory"))
-//            {
-//                qAddDataSetDirectory->setDisabled(1);
-//                break;
-//            }
-//        }
-//        for(int i=0; i<currentNode.childNodes().count(); i++)
-//        {
-//            if(currentNode.childNodes().at(i).toElement().tagName() == tr("ConfDataSet"))
-//            {
-//                qAddConfDataSet->setDisabled(1);
-//                break;
-//            }
-//        }
-//        for(int i=0; i<currentNode.childNodes().count(); i++)
-//        {
-//            if(currentNode.childNodes().at(i).toElement().tagName() == tr("DynDataSet"))
-//            {
-//                qAddDynDataSet->setDisabled(1);
-//                break;
-//            }
-//        }
-//        for(int i=0; i<currentNode.childNodes().count(); i++)
-//        {
-//            if(currentNode.childNodes().at(i).toElement().tagName() == tr("ReadWrite"))
-//            {
-//                qAddReadWrite->setDisabled(1);
-//                break;
-//            }
-//        }
-//        for(int i=0; i<currentNode.childNodes().count(); i++)
-//        {
-//            if(currentNode.childNodes().at(i).toElement().tagName() == tr("TimerActivatedControl"))
-//            {
-//                qAddTimerActivatedControl->setDisabled(1);
-//                break;
-//            }
-//        }
-//        for(int i=0; i<currentNode.childNodes().count(); i++)
-//        {
-//            if(currentNode.childNodes().at(i).toElement().tagName() == tr("ConfReportControl"))
-//            {
-//                qAddConfReportControl->setDisabled(1);
-//                break;
-//            }
-//        }
-//        for(int i=0; i<currentNode.childNodes().count(); i++)
-//        {
-//            if(currentNode.childNodes().at(i).toElement().tagName() == tr("GetCBValues"))
-//            {
-//                qAddGetCBValues->setDisabled(1);
-//                break;
-//            }
-//        }
-//        for(int i=0; i<currentNode.childNodes().count(); i++)
-//        {
-//            if(currentNode.childNodes().at(i).toElement().tagName() == tr("ConfLogControl"))
-//            {
-//                qAddConfLogControl->setDisabled(1);
-//                break;
-//            }
-//        }
-//        for(int i=0; i<currentNode.childNodes().count(); i++)
-//        {
-//            if(currentNode.childNodes().at(i).toElement().tagName() == tr("ReportSettings"))
-//            {
-//                qAddReportSettings->setDisabled(1);
-//                break;
-//            }
-//        }
-//        for(int i=0; i<currentNode.childNodes().count(); i++)
-//        {
-//            if(currentNode.childNodes().at(i).toElement().tagName() == tr("LogSettings"))
-//            {
-//                qAddLogSettings->setDisabled(1);
-//                break;
-//            }
-//        }
-//        for(int i=0; i<currentNode.childNodes().count(); i++)
-//        {
-//            if(currentNode.childNodes().at(i).toElement().tagName() == tr("GSESettings"))
-//            {
-//                qAddGSESettings->setDisabled(1);
-//                break;
-//            }
-//        }
-//        for(int i=0; i<currentNode.childNodes().count(); i++)
-//        {
-//            if(currentNode.childNodes().at(i).toElement().tagName() == tr("SMVSettings"))
-//            {
-//                qAddSMVSettings->setDisabled(1);
-//                break;
-//            }
-//        }
-//        for(int i=0; i<currentNode.childNodes().count(); i++)
-//        {
-//            if(currentNode.childNodes().at(i).toElement().tagName() == tr("GSEDir"))
-//            {
-//                qAddGSEDir->setDisabled(1);
-//                break;
-//            }
-//        }
-//        for(int i=0; i<currentNode.childNodes().count(); i++)
-//        {
-//            if(currentNode.childNodes().at(i).toElement().tagName() == tr("GOOSE"))
-//            {
-//                qAddGOOSE->setDisabled(1);
-//                break;
-//            }
-//        }
-//        for(int i=0; i<currentNode.childNodes().count(); i++)
-//        {
-//            if(currentNode.childNodes().at(i).toElement().tagName() == tr("GSSE"))
-//            {
-//                qAddGSSE->setDisabled(1);
-//                break;
-//            }
-//        }
-//        for(int i=0; i<currentNode.childNodes().count(); i++)
-//        {
-//            if(currentNode.childNodes().at(i).toElement().tagName() == tr("FileHandling"))
-//            {
-//                qAddFileHandling->setDisabled(1);
-//                break;
-//            }
-//        }
-//        for(int i=0; i<currentNode.childNodes().count(); i++)
-//        {
-//            if(currentNode.childNodes().at(i).toElement().tagName() == tr("ConfLNs"))
-//            {
-//                qAddConfLNs->setDisabled(1);
-//                break;
-//            }
-//        }
-//    }
-//    if(currentItem.data().toString() == tr("SettingGroups"))
-//    {
-//        for(int i=0; i<currentNode.childNodes().count(); i++)
-//        {
-//            if(currentNode.childNodes().at(i).toElement().tagName() == tr("SGEdit"))
-//            {
-//                qAddSGEdit->setDisabled(1);
-//                break;
-//            }
-//        }
-//        for(int i=0; i<currentNode.childNodes().count(); i++)
-//        {
-//            if(currentNode.childNodes().at(i).toElement().tagName() == tr("ConfSG"))
-//            {
-//                qAddConfSG->setDisabled(1);
-//                break;
-//            }
-//        }
-//        qAddSGEdit->setIndex(currentItem);
-//        qPopMenu->addAction(qAddSGEdit);
-//        qAddConfSG->setIndex(currentItem);
-//        qPopMenu->addAction(qAddConfSG);
-//    }
-//    if(currentItem.data().toString() == tr("SettingGroups"))
-//    {
-//        for(int i=0; i<currentNode.childNodes().count(); i++)
-//        {
-//            if(currentNode.childNodes().at(i).toElement().tagName() == tr("Server"))
-//            {
-//                qAddSGEdit->setDisabled(1);
-//                break;
-//            }
-//        }
-//        qAddSGEdit->setIndex(currentItem);
-//        qPopMenu->addAction(qAddSGEdit);
-//        qAddConfSG->setIndex(currentItem);
-//        qPopMenu->addAction(qAddConfSG);
-//    }
-
-//    if(currentItem.data().toString() == tr("AccessPoint"))
-//    {
-//        for(int i=0; i<currentNode.childNodes().count(); i++)
-//        {
-//            if(currentNode.childNodes().at(i).toElement().tagName() == tr("Server"))
-//            {
-//                qAddServer->setDisabled(1);
-//                break;
-//            }
-//        }
-//        qAddServer->setIndex(currentItem);
-//        qPopMenu->addAction(qAddServer);
-//        qAddLN->setIndex(currentItem);
-//        qPopMenu->addAction(qAddLN);
-//    }
-
-//    if(currentItem.data().toString() == tr("Server"))
-//    {
-//        for(int i=0; i<currentNode.childNodes().count(); i++)
-//        {
-//            if(currentNode.childNodes().at(i).toElement().tagName() == tr("Authentication"))
-//            {
-//                qAddAuthentication->setDisabled(1);
-//                break;
-//            }
-//        }
-
-//        qAddAuthentication->setIndex(currentItem);
-//        qPopMenu->addAction(qAddAuthentication);
-//        qAddLDevice->setIndex(currentItem);
-//        qPopMenu->addAction(qAddLDevice);
-//        qAddAssociation->setIndex(currentItem);
-//        qPopMenu->addAction(qAddAssociation);
-//    }
-
-//    if(currentItem.data().toString() == tr("LDevice"))
-//    {
-//        for(int i=0; i<currentNode.childNodes().count(); i++)
-//        {
-//            if(currentNode.childNodes().at(i).toElement().tagName() == tr("LN0"))
-//            {
-//                qAddLN0->setDisabled(1);
-//                break;
-//            }
-//        }
-//        for(int i=0; i<currentNode.childNodes().count(); i++)
-//        {
-//            if(currentNode.childNodes().at(i).toElement().tagName() == tr("AccessControl"))
-//            {
-//                qAddAccessControl->setDisabled(1);
-//                break;
-//            }
-//        }
-
-//        qAddLN0->setIndex(currentItem);
-//        qPopMenu->addAction(qAddLN0);
-//        qAddLN->setIndex(currentItem);
-//        qPopMenu->addAction(qAddLN);
-//        qAddAccessControl->setIndex(currentItem);
-//        qPopMenu->addAction(qAddAccessControl);
-//    }
-
-//    if(currentItem.data().toString() == tr("LN0"))
-//    {
-//        for(int i=0; i<currentNode.childNodes().count(); i++)
-//        {
-//            if(currentNode.childNodes().at(i).toElement().tagName() == tr("SettingControl"))
-//            {
-//                qAddSettingControl->setDisabled(1);
-//                break;
-//            }
-//        }
-//        for(int i=0; i<currentNode.childNodes().count(); i++)
-//        {
-//            if(currentNode.childNodes().at(i).toElement().tagName() == tr("SCLControl"))
-//            {
-//                qAddSCLControl->setDisabled(1);
-//                break;
-//            }
-//        }
-//        for(int i=0; i<currentNode.childNodes().count(); i++)
-//        {
-//            if(currentNode.childNodes().at(i).toElement().tagName() == tr("Log"))
-//            {
-//                qAddLog->setDisabled(1);
-//                break;
-//            }
-//        }
-//        for(int i=0; i<currentNode.childNodes().count(); i++)
-//        {
-//            if(currentNode.childNodes().at(i).toElement().tagName() == tr("Inputs"))
-//            {
-//                qAddInputs->setDisabled(1);
-//                break;
-//            }
-//        }
-
-//        qAddGSEControl->setIndex(currentItem);
-//        qPopMenu->addAction(qAddGSEControl);
-//        qAddSampleValueControl->setIndex(currentItem);
-//        qPopMenu->addAction(qAddSampleValueControl);
-//        qAddSettingControl->setIndex(currentItem);
-//        qPopMenu->addAction(qAddSettingControl);
-//        qAddSCLControl->setIndex(currentItem);
-//        qPopMenu->addAction(qAddSCLControl);
-//        qAddLog->setIndex(currentItem);
-//        qPopMenu->addAction(qAddLog);
-
-//        qAddDataSet->setIndex(currentItem);
-//        qPopMenu->addAction(qAddDataSet);
-//        qAddReportControl->setIndex(currentItem);
-//        qPopMenu->addAction(qAddReportControl);
-//        qAddLogControl->setIndex(currentItem);
-//        qPopMenu->addAction(qAddLogControl);
-//        qAddDOI->setIndex(currentItem);
-//        qPopMenu->addAction(qAddDOI);
-//        qAddInputs->setIndex(currentItem);
-//        qPopMenu->addAction(qAddInputs);
-//    }
-
-//    if(currentItem.data().toString() == tr("LN"))
-//    {
-//        for(int i=0; i<currentNode.childNodes().count(); i++)
-//        {
-//            if(currentNode.childNodes().at(i).toElement().tagName() == tr("Inputs"))
-//            {
-//                qAddInputs->setDisabled(1);
-//                break;
-//            }
-//        }
-
-//        qAddDataSet->setIndex(currentItem);
-//        qPopMenu->addAction(qAddDataSet);
-//        qAddReportControl->setIndex(currentItem);
-//        qPopMenu->addAction(qAddReportControl);
-//        qAddLogControl->setIndex(currentItem);
-//        qPopMenu->addAction(qAddLogControl);
-//        qAddDOI->setIndex(currentItem);
-//        qPopMenu->addAction(qAddDOI);
-//        qAddInputs->setIndex(currentItem);
-//        qPopMenu->addAction(qAddInputs);
-//    }
-
-//    if(currentItem.data().toString() == tr("GSEControl"))
-//    {
-//        qAddIEDName->setIndex(currentItem);
-//        qPopMenu->addAction(qAddIEDName);
-//    }
-
-//    if(currentItem.data().toString() == tr("SampleValueControl"))
-//    {
-//        for(int i=0; i<currentNode.childNodes().count(); i++)
-//        {
-//            if(currentNode.childNodes().at(i).toElement().tagName() == tr("SmvOpts"))
-//            {
-//                qAddInputs->setDisabled(1);
-//                break;
-//            }
-//        }
-
-//        qAddSmvOpts->setIndex(currentItem);
-//        qPopMenu->addAction(qAddSmvOpts);
-//        qAddIEDName->setIndex(currentItem);
-//        qPopMenu->addAction(qAddIEDName);
-//    }
-
-//    if(currentItem.data().toString().contains(tr("DataSet")))
-//    {
-//        qAddFCDA->setIndex(currentItem);
-//        qPopMenu->addAction(qAddFCDA);
-//    }
-
-//    if(currentItem.data().toString().contains(tr("ReportControl")))
-//    {
-//        for(int i=0; i<currentNode.childNodes().count(); i++)
-//        {
-//            if(currentNode.childNodes().at(i).toElement().tagName() == tr("OptFields"))
-//            {
-//                qAddSGEdit->setDisabled(1);
-//                break;
-//            }
-//        }
-//        for(int i=0; i<currentNode.childNodes().count(); i++)
-//        {
-//            if(currentNode.childNodes().at(i).toElement().tagName() == tr("RptEnabled"))
-//            {
-//                qAddConfSG->setDisabled(1);
-//                break;
-//            }
-//        }
-//        for(int i=0; i<currentNode.childNodes().count(); i++)
-//        {
-//            if(currentNode.childNodes().at(i).toElement().tagName() == tr("TrgOps"))
-//            {
-//                qAddConfSG->setDisabled(1);
-//                break;
-//            }
-//        }
-//        qAddOptFields->setIndex(currentItem);
-//        qPopMenu->addAction(qAddOptFields);
-//        qAddRptEnabled->setIndex(currentItem);
-//        qPopMenu->addAction(qAddRptEnabled);
-//        qAddTrgOps->setIndex(currentItem);
-//        qPopMenu->addAction(qAddTrgOps);
-//    }
-
-//    if(currentItem.data().toString().contains(tr("DOI")))
-//    {
-
-//        qAddSDI->setIndex(currentItem);
-//        qPopMenu->addAction(qAddSDI);
-//        qAddDAI->setIndex(currentItem);
-//        qPopMenu->addAction(qAddDAI);
-//    }
-
-//    if(currentItem.data().toString().contains(tr("SDI")))
-//    {
-
-//        qAddSDI->setIndex(currentItem);
-//        qPopMenu->addAction(qAddSDI);
-//        qAddDAI->setIndex(currentItem);
-//        qPopMenu->addAction(qAddDAI);
-//    }
-
-//    if(currentItem.data().toString().contains(tr("DAI")))
-//    {
-//        qAddVal->setIndex(currentItem);
-//        qPopMenu->addAction(qAddVal);
-//    }
-
-//    if(currentItem.data().toString().contains(tr("Val")))
-//    {
-//        qAddValContent->setIndex(currentItem);
-//        qPopMenu->addAction(qAddValContent);
-//    }
-
-//    if(currentItem.data().toString().contains(tr("Inputs")))
-//    {
-//        qAddExtRef->setIndex(currentItem);
-//        qPopMenu->addAction(qAddExtRef);
-//    }
-
-//    if(currentItem.data().toString() == tr("DataTypeTemplates"))
-//    {
-//        qAddLNodeType->setIndex(currentItem);
-//        qPopMenu->addAction(qAddLNodeType);
-//        qAddDOType->setIndex(currentItem);
-//        qPopMenu->addAction(qAddDOType);
-//        qAddDAType->setIndex(currentItem);
-//        qPopMenu->addAction(qAddDAType);
-//        qAddEnumType->setIndex(currentItem);
-//        qPopMenu->addAction(qAddEnumType);
-//    }
-
-//    if(currentItem.data().toString().contains(tr("LNodeType")))
-//    {
-//        qAddDO->setIndex(currentItem);
-//        qPopMenu->addAction(qAddDO);
-//    }
-
-//    if(currentItem.data().toString().contains(tr("DOType")))
-//    {
-//        qAddSDO->setIndex(currentItem);
-//        qPopMenu->addAction(qAddSDO);
-//        qAddDA->setIndex(currentItem);
-//        qPopMenu->addAction(qAddDA);
-//    }
-
-//    if(currentItem.data().toString().contains(tr("DAType")))
-//    {
-//        qAddBDA->setIndex(currentItem);
-//        qPopMenu->addAction(qAddBDA);
-//    }
-
-//    if(currentItem.data().toString().contains(tr("EnumType")))
-//    {
-//        qAddEnumVal->setIndex(currentItem);
-//        qPopMenu->addAction(qAddEnumVal);
-//    }
-
-//    if(currentItem.data().toString() == tr("DA"))
-//    {
-//        qAddVal->setIndex(currentItem);
-//        qPopMenu->addAction(qAddVal);
-//    }
-
-//    if(currentItem.data().toString() == tr("BDA"))
-//    {
-//        qAddVal->setIndex(currentItem);
-//        qPopMenu->addAction(qAddVal);
-//    }
-
-//    if(currentItem.data().toString() != tr("SCL"))
-//    {
-//        qDeleteItem->setIndex(currentItem);
-//        qPopMenu->addAction(qDeleteItem);
-
-//        qMoveUp->setIndex(currentItem);
-//        qPopMenu->addAction(qMoveUp);
-
-
-//        qMoveDown->setIndex(currentItem);
-//        qPopMenu->addAction(qMoveDown);
-//    }
-
-//    qDebug()<<"this row number is"<<currentItem.row();
-//    if(currentItem.row()==0)
-//        qMoveUp->setEnabled(0);
-//    else
-//        qMoveUp->setEnabled(1);
-
-//    if(!currentItem.sibling(currentItem.row()+1, 0).isValid())
-//        qMoveDown->setEnabled(0);
-//    else
-//        qMoveDown->setEnabled(1);
-
-//    if(newFileName == NULL)
-//    {
-//        qPopMenu->setDisabled(1);
-//    }
-
-//    qPopMenu->exec(QCursor::pos());
-}
-//
-void MainWindow::addHistoryAct(const QModelIndex& currentIndex)
-{
-}
-
-
-void MainWindow::addHeader(const QModelIndex& currentIndex)
-{
-}
-
-void MainWindow::addSubstation(const QModelIndex& currentIndex)
-{
-}
-
-void MainWindow::addCommunication(const QModelIndex& currentIndex)
-{
-}
-
-void MainWindow::addIED(const QModelIndex& currentIndex)
-{
-}
-
-void MainWindow::addDataTypeTemplates(const QModelIndex& currentIndex)
-{
-
-}
-
-void MainWindow::addTextAct(const QModelIndex& currentIndex)
-{
-}
-
-void MainWindow::addTextContentAct(const QModelIndex& currentIndex)
-{
-
-}
-
-void MainWindow::addHitemAct(const QModelIndex& currentIndex)
-{
-//    qDebug()<<tr("Add Hitem Action");
-//    QModelIndex *currentIndex = new QModelIndex();
-//        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - Hitem"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(6,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("(*)version")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(1,0,new QTableWidgetItem(tr("(*)revision")));
-//    AttrTable->item(1,0)->setFlags(AttrTable->item(1,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(2,0,new QTableWidgetItem(tr("(*)when")));
-//    AttrTable->item(2,0)->setFlags(AttrTable->item(2,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(3,0,new QTableWidgetItem(tr("who")));
-//    AttrTable->item(3,0)->setFlags(AttrTable->item(3,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(3,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(4,0,new QTableWidgetItem(tr("what")));
-//    AttrTable->item(4,0)->setFlags(AttrTable->item(4,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(4,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(5,0,new QTableWidgetItem(tr("why")));
-//    AttrTable->item(5,0)->setFlags(AttrTable->item(5,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(5,0)->setCheckState(Qt::Unchecked);
-
-//    AttrTable->setItem(0,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setItem(1,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setItem(2,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setItem(3,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setItem(4,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setItem(5,1,new QTableWidgetItem(tr("")));
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    while(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        bool VersionCollide = 0;
-//        qDebug()<<tr("Attr Dialog Confirm");
-//        QDomElement qNewElement = doc->createElement(tr("Hitem"));
-//        if(AttrTable->item(0,1)->text()==tr(""))
-//        {
-//            QMessageBox::warning(NULL,tr("警告"),tr("version项为必需项，不能为空!"));
-//            continue;
-//        }
-//        if(AttrTable->item(1,1)->text()==tr(""))
-//        {
-//            QMessageBox::warning(NULL,tr("警告"),tr("revision项为必需项，不能为空!"));
-//            continue;
-//        }
-//        if(AttrTable->item(2,1)->text()==tr(""))
-//        {
-//            QMessageBox::warning(NULL,tr("警告"),tr("when项为必需项，不能为空!"));
-//            continue;
-//        }
-
-//        for(int i=0; i<currentNode.childNodes().count(); i++)
-//        {
-//            QDomNamedNodeMap oldAttr = currentNode.childNodes().at(i).attributes();
-//            qDebug()<<oldAttr.namedItem(tr("version")).nodeValue();
-//            if(oldAttr.namedItem(tr("version")).nodeValue() == AttrTable->item(0,1)->text()
-//             && oldAttr.namedItem(tr("revision")).nodeValue() == AttrTable->item(1,1)->text())
-//            {
-//                QMessageBox::warning(NULL,tr("警告"),tr("version, revision不能重复!"));
-//                VersionCollide = 1;
-//                break;
-//            }
-//        }
-
-//        if(VersionCollide)
-//            continue;
-
-//        qNewElement.setAttribute(tr("version"), AttrTable->item(0,1)->text());
-//        qNewElement.setAttribute(tr("revision"), AttrTable->item(1,1)->text());
-//        qNewElement.setAttribute(tr("when"), AttrTable->item(2,1)->text());
-//        if(AttrTable->item(3,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("who"), AttrTable->item(3,1)->text());
-//        if(AttrTable->item(4,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("what"), AttrTable->item(4,1)->text());
-//        if(AttrTable->item(5,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("why"), AttrTable->item(5,1)->text());
-
-//        currentNode.appendChild(qNewElement);
-//        DomItem newItem = DomItem(qNewElement, 0, 0);
-//        currentItem->insertChildren(currentItem->childNum(), newItem);
-//    //        currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-//        break;
-//        qDebug()<<currentItem->node().toElement().tagName();
-//    }
-}
-
-void MainWindow::addVoltageLevel(const QModelIndex& currentIndex)
-{
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - VoltageLevel"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(2,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("(*)name")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & ~Qt::ItemIsEditable);
-//    AttrTable->setItem(1,0,new QTableWidgetItem(tr("desc")));
-//    AttrTable->item(1,0)->setFlags(AttrTable->item(1,0)->flags() & ~Qt::ItemIsEditable);
-//    AttrTable->item(1,0)->setCheckState(Qt::Unchecked);
-
-//    AttrTable->setItem(0,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setItem(1,1,new QTableWidgetItem(tr("")));
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    while(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        QDomElement qNewElement = doc->createElement(tr("VoltageLevel"));
-//        if(AttrTable->item(0,1)->text()==tr(""))
-//        {
-//            QMessageBox::warning(NULL,tr("警告"),tr("name项为必需项，不能为空!"));
-//            continue;
-//        }
-
-//        qNewElement.setAttribute(tr("name"), AttrTable->item(0,1)->text());
-//        if(AttrTable->item(1,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("desc"), AttrTable->item(1,1)->text());
-
-//        currentNode.appendChild(qNewElement);
-//        DomItem newItem = DomItem(qNewElement, 0, 0);
-//        currentItem->insertChildren(currentItem->childNum(), newItem);
-//    //        currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-//        break;
-//    }
-}
-
-void MainWindow::addFunction(const QModelIndex& currentIndex)
-{
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - Function"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(2,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("(*)name")));
-//    AttrTable->item(0,0)->setFlags(Qt::ItemIsEnabled);
-//    AttrTable->setItem(1,0,new QTableWidgetItem(tr("desc")));
-//    AttrTable->item(1,0)->setFlags(Qt::ItemIsEnabled);
-//    AttrTable->item(1,0)->setCheckState(Qt::Unchecked);
-
-//    AttrTable->setItem(0,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setItem(1,1,new QTableWidgetItem(tr("")));
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    while(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        QDomElement qNewElement = doc->createElement(tr("Function"));
-//        if(AttrTable->item(0,1)->text()==tr(""))
-//        {
-//            QMessageBox::warning(NULL,tr("警告"),tr("name项为必需项，不能为空!"));
-//            continue;
-//        }
-
-//        qNewElement.setAttribute(tr("name"), AttrTable->item(0,1)->text());
-//        if(AttrTable->item(1,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("desc"), AttrTable->item(1,1)->text());
-
-//        currentNode.appendChild(qNewElement);
-//        DomItem newItem = DomItem(qNewElement, 0, 0);
-//        currentItem->insertChildren(currentItem->childNum(), newItem);
-//    //        currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-//        break;
-//    }
-}
-
-void MainWindow::addPowerTransformer(const QModelIndex& currentIndex)
-{
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - PowerTransformer"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(4,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("(*)type")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & ~Qt::ItemIsEditable);
-//    AttrTable->setItem(1,0,new QTableWidgetItem(tr("vitual")));
-//    AttrTable->item(1,0)->setFlags(AttrTable->item(1,0)->flags() & ~Qt::ItemIsEditable);
-//    AttrTable->item(1,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(2,0,new QTableWidgetItem(tr("(*)name")));
-//    AttrTable->item(2,0)->setFlags(AttrTable->item(2,0)->flags() & ~Qt::ItemIsEditable);
-//    AttrTable->setItem(3,0,new QTableWidgetItem(tr("desc")));
-//    AttrTable->item(3,0)->setFlags(AttrTable->item(3,0)->flags() & ~Qt::ItemIsEditable);
-//    AttrTable->item(3,0)->setCheckState(Qt::Unchecked);
-
-//    AttrTable->setItem(0,1,new QTableWidgetItem(tr("PTR")));
-//    AttrTable->item(0,1)->setFlags(AttrTable->item(0,1)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setCellWidget(1,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(1,1)))->addItems(QStringList()<<tr("true")<<tr("false"));
-//    ((QComboBox*)(AttrTable->cellWidget(1,1)))->setCurrentIndex(1);
-//    AttrTable->setItem(2,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setItem(3,1,new QTableWidgetItem(tr("")));
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    while(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        QDomElement qNewElement = doc->createElement(tr("PowerTransformer"));
-//        if(AttrTable->item(2,1)->text()==tr(""))
-//        {
-//            QMessageBox::warning(NULL,tr("警告"),tr("name项为必需项，不能为空!"));
-//            continue;
-//        }
-
-//        qNewElement.setAttribute(tr("type"), AttrTable->item(0,1)->text());
-//        if(AttrTable->item(1,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("vitural"), ((QComboBox*)(AttrTable->cellWidget(1,1)))->currentText());
-//        qNewElement.setAttribute(tr("name"), AttrTable->item(2,1)->text());
-//        if(AttrTable->item(3,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("desc"), AttrTable->item(3,1)->text());
-
-//        currentNode.appendChild(qNewElement);
-//        DomItem newItem = DomItem(qNewElement, 0, 0);
-//        currentItem->insertChildren(currentItem->childNum(), newItem);
-//    //        currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-//        break;
-//    }
-}
-
-void MainWindow::addGeneralEquipment(const QModelIndex& currentIndex)
-{
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - GeneralEquipment"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(4,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("(*)type")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & ~Qt::ItemIsEditable);
-//    AttrTable->setItem(1,0,new QTableWidgetItem(tr("vitual")));
-//    AttrTable->item(1,0)->setFlags(AttrTable->item(1,0)->flags() & ~Qt::ItemIsEditable);
-//    AttrTable->item(1,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(2,0,new QTableWidgetItem(tr("(*)name")));
-//    AttrTable->item(2,0)->setFlags(AttrTable->item(2,0)->flags() & ~Qt::ItemIsEditable);
-//    AttrTable->setItem(3,0,new QTableWidgetItem(tr("desc")));
-//    AttrTable->item(3,0)->setFlags(AttrTable->item(3,0)->flags() & ~Qt::ItemIsEditable);
-//    AttrTable->item(3,0)->setCheckState(Qt::Unchecked);
-
-//    AttrTable->setCellWidget(0,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(0,1)))->addItems(QStringList()<<tr("AXN")<<tr("BAT")<<tr("MOT"));
-//    AttrTable->setCellWidget(1,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(1,1)))->addItems(QStringList()<<tr("true")<<tr("false"));
-//    ((QComboBox*)(AttrTable->cellWidget(1,1)))->setCurrentIndex(1);
-//    AttrTable->setItem(2,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setItem(3,1,new QTableWidgetItem(tr("")));
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    while(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        QDomElement qNewElement = doc->createElement(tr("GeneralEquipment"));
-//        if(((QComboBox*)(AttrTable->cellWidget(0,1)))->currentText()==tr(""))
-//        {
-//            QMessageBox::warning(NULL,tr("警告"),tr("type项为必需项，不能为空!"));
-//            continue;
-//        }
-//        if(AttrTable->item(2,1)->text()==tr(""))
-//        {
-//            QMessageBox::warning(NULL,tr("警告"),tr("name项为必需项，不能为空!"));
-//            continue;
-//        }
-
-//        qNewElement.setAttribute(tr("type"), ((QComboBox*)(AttrTable->cellWidget(0,1)))->currentText());
-//        if(AttrTable->item(1,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("vitural"), ((QComboBox*)(AttrTable->cellWidget(1,1)))->currentText());
-//        qNewElement.setAttribute(tr("name"), AttrTable->item(2,1)->text());
-//        if(AttrTable->item(3,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("desc"), AttrTable->item(3,1)->text());
-
-//        currentNode.appendChild(qNewElement);
-//        DomItem newItem = DomItem(qNewElement, 0, 0);
-//        currentItem->insertChildren(currentItem->childNum(), newItem);
-//    //        currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-//        break;
-//    }
-
-}
-
-void MainWindow::addLNode(const QModelIndex& currentIndex)
-{
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - LNode"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(7,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("lnInst")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(0,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(1,0,new QTableWidgetItem(tr("(*)lnClass")));
-//    AttrTable->item(1,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(2,0,new QTableWidgetItem(tr("iedName")));
-//    AttrTable->item(2,0)->setFlags(AttrTable->item(2,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(2,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(3,0,new QTableWidgetItem(tr("ldInst")));
-//    AttrTable->item(3,0)->setFlags(AttrTable->item(3,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(3,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(4,0,new QTableWidgetItem(tr("prefix")));
-//    AttrTable->item(4,0)->setFlags(AttrTable->item(4,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(4,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(5,0,new QTableWidgetItem(tr("lnType")));
-//    AttrTable->item(5,0)->setFlags(AttrTable->item(5,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(5,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(6,0,new QTableWidgetItem(tr("desc")));
-//    AttrTable->item(6,0)->setFlags(AttrTable->item(6,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(6,0)->setCheckState(Qt::Unchecked);
-
-//    AttrTable->setItem(0,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setCellWidget(1,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(1,1)))->addItems(lnClass);
-//    AttrTable->setItem(2,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setItem(3,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setItem(4,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setItem(5,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setItem(6,1,new QTableWidgetItem(tr("")));
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    if(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        QDomElement qNewElement = doc->createElement(tr("LNode"));
-//        if(AttrTable->item(0,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("lnInst"), AttrTable->item(0,1)->text());
-//        qNewElement.setAttribute(tr("lnClass"), ((QComboBox*)(AttrTable->cellWidget(1,1)))->currentText());
-//        if(AttrTable->item(2,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("iedName"), AttrTable->item(2,1)->text());
-//        if(AttrTable->item(3,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("ldInst"), AttrTable->item(3,1)->text());
-//        if(AttrTable->item(4,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("prefix"), AttrTable->item(4,1)->text());
-//        if(AttrTable->item(5,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("lnType"), AttrTable->item(5,1)->text());
-//        if(AttrTable->item(6,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("desc"), AttrTable->item(6,1)->text());
-
-
-//        currentNode.appendChild(qNewElement);
-//        DomItem newItem = DomItem(qNewElement, 0, 0);
-//        currentItem->insertChildren(currentItem->childNum(), newItem);
-//    //        currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-//    }
-}
-
-void MainWindow::addBay(const QModelIndex& currentIndex)
-{
-
-}
-
-void MainWindow::addSubFunction(const QModelIndex& currentIndex)
-{
-
-}
-
-void MainWindow::addConductingEquipment(const QModelIndex& currentIndex)
-{
-
-}
-
-void MainWindow::addSubEquipment(const QModelIndex& currentIndex)
-{
-
-}
-
-void MainWindow::addVoltage(const QModelIndex& currentIndex)
-{
-
-}
-
-void MainWindow::addConnectivityNode(const QModelIndex& currentIndex)
-{
-
-}
-
-void MainWindow::addTerminal(const QModelIndex& currentIndex)
-{
-
-}
-
-void MainWindow::addServices(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-//    qDebug()<<currentNode.toElement().tagName();
-
-//    QModelIndex parentIndex = currentIndex.parent();
-
-//    QDomElement qNewElement = doc->createElement(tr("Services"));
-//    currentNode.appendChild(qNewElement);
-//    DomItem newItem = DomItem(qNewElement, 0, 0);
-//    currentItem->insertChildren(currentItem->childNum(), newItem);
-////        currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//    view->setExpanded(parentIndex,0);
-//    view->setExpanded(parentIndex,1);
-//    view->setExpanded(currentIndex,1);
-}
-
-void MainWindow::addAccessPoint(const QModelIndex& currentIndex)
-{
-//    qDebug()<<tr("Add AccessPoint Action");
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - AccessPoint"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(4,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("(*)name")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(1,0,new QTableWidgetItem(tr("desc")));
-//    AttrTable->item(1,0)->setFlags(AttrTable->item(1,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(1,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(2,0,new QTableWidgetItem(tr("route")));
-//    AttrTable->item(2,0)->setFlags(AttrTable->item(2,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(2,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(3,0,new QTableWidgetItem(tr("clock")));
-//    AttrTable->item(3,0)->setFlags(AttrTable->item(3,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(3,0)->setCheckState(Qt::Unchecked);
-
-//    AttrTable->setItem(0,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setItem(1,1,new QTableWidgetItem(tr("")));
-////    AttrTable->setCellWidget(2,1,new QCalendarWidget(this));
-//    AttrTable->setItem(2,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setItem(3,1,new QTableWidgetItem(tr("")));
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    while(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        qDebug()<<tr("Attr Dialog Confirm");
-//        QDomElement qNewElement = doc->createElement(tr("AccessPoint"));
-
-//        if(AttrTable->item(0,1)->text()==tr(""))
-//        {
-//            QMessageBox::warning(NULL,tr("警告"),tr("name项为必需项，不能为空!"));
-//            continue;
-//        }
-
-//        qNewElement.setAttribute(tr("name"), AttrTable->item(0,1)->text());
-//        if((AttrTable->item(1,0))->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("desc"), AttrTable->item(1,1)->text());
-//        if((AttrTable->item(2,0))->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("route"), AttrTable->item(2,1)->text());
-//        if((AttrTable->item(3,0))->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("clock"), AttrTable->item(3,1)->text());
-
-//        currentNode.appendChild(qNewElement);
-//        DomItem newItem = DomItem(qNewElement, 0, 0);
-//        currentItem->insertChildren(currentItem->childNum(), newItem);
-//    //        currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-//        break;
-//    }
-}
-
-void MainWindow::addDynAssociation(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-//    qDebug()<<currentNode.toElement().tagName();
-
-//    QDomElement qNewElement = doc->createElement(tr("DynAssociation"));
-//    currentNode.appendChild(qNewElement);
-//    DomItem newItem = DomItem(qNewElement, 0, 0);
-//    currentItem->insertChildren(currentItem->childNum(), newItem);
-////        currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//    QModelIndex parentIndex = currentIndex.parent();
-//    view->setExpanded(parentIndex,0);
-//    view->setExpanded(parentIndex,1);
-//    view->setExpanded(currentIndex,1);
-}
-
-void MainWindow::addSettingGroups(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////    //        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-//    qDebug()<<currentNode.toElement().tagName();
-
-//    QDomElement qNewElement = doc->createElement(tr("SettingGroups"));
-//    currentNode.appendChild(qNewElement);
-//    DomItem newItem = DomItem(qNewElement, 0, 0);
-//    currentItem->insertChildren(currentItem->childNum(), newItem);
-////        currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//    QModelIndex parentIndex = currentIndex.parent();
-//    view->setExpanded(parentIndex,0);
-//    view->setExpanded(parentIndex,1);
-//    view->setExpanded(currentIndex,1);
-}
-
-void MainWindow::addGetDirectory(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-//    qDebug()<<currentNode.toElement().tagName();
-
-//    QDomElement qNewElement = doc->createElement(tr("GetDirectory"));
-//    currentNode.appendChild(qNewElement);
-//    DomItem newItem = DomItem(qNewElement, 0, 0);
-//    currentItem->insertChildren(currentItem->childNum(), newItem);
-////        currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//    QModelIndex parentIndex = currentIndex.parent();
-//    view->setExpanded(parentIndex,0);
-//    view->setExpanded(parentIndex,1);
-//    view->setExpanded(currentIndex,1);
-}
-
-void MainWindow::addGetDataObjectDefinition(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-//    qDebug()<<currentNode.toElement().tagName();
-
-//    QDomElement qNewElement = doc->createElement(tr("GetDataObjectDefinition"));
-//    currentNode.appendChild(qNewElement);
-//    DomItem newItem = DomItem(qNewElement, 0, 0);
-//    currentItem->insertChildren(currentItem->childNum(), newItem);
-////        currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//    QModelIndex parentIndex = currentIndex.parent();
-//    view->setExpanded(parentIndex,0);
-//    view->setExpanded(parentIndex,1);
-//    view->setExpanded(currentIndex,1);
-}
-
-void MainWindow::addDataObjectDirectory(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-//    qDebug()<<currentNode.toElement().tagName();
-
-//    QDomElement qNewElement = doc->createElement(tr("DataObjectDirectory"));
-//    currentNode.appendChild(qNewElement);
-//    DomItem newItem = DomItem(qNewElement, 0, 0);
-//    currentItem->insertChildren(currentItem->childNum(), newItem);
-////        currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//    QModelIndex parentIndex = currentIndex.parent();
-//    view->setExpanded(parentIndex,0);
-//    view->setExpanded(parentIndex,1);
-//    view->setExpanded(currentIndex,1);
-}
-
-void MainWindow::addGetDataSetValue(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-//    qDebug()<<currentNode.toElement().tagName();
-
-//    QDomElement qNewElement = doc->createElement(tr("GetDataSetValue"));
-//    currentNode.appendChild(qNewElement);
-//    DomItem newItem = DomItem(qNewElement, 0, 0);
-//    currentItem->insertChildren(currentItem->childNum(), newItem);
-////        currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//    QModelIndex parentIndex = currentIndex.parent();
-//    view->setExpanded(parentIndex,0);
-//    view->setExpanded(parentIndex,1);
-//    view->setExpanded(currentIndex,1);
-}
-
-void MainWindow::addSetDataSetValue(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-//    qDebug()<<currentNode.toElement().tagName();
-
-//    QDomElement qNewElement = doc->createElement(tr("SetDataSetValue"));
-//    currentNode.appendChild(qNewElement);
-//    DomItem newItem = DomItem(qNewElement, 0, 0);
-//    currentItem->insertChildren(currentItem->childNum(), newItem);
-////        currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//    QModelIndex parentIndex = currentIndex.parent();
-//    view->setExpanded(parentIndex,0);
-//    view->setExpanded(parentIndex,1);
-//    view->setExpanded(currentIndex,1);
-}
-
-void MainWindow::addDataSetDirectory(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-//    qDebug()<<currentNode.toElement().tagName();
-
-//    QDomElement qNewElement = doc->createElement(tr("DataSetDirectory"));
-//    currentNode.appendChild(qNewElement);
-//    DomItem newItem = DomItem(qNewElement, 0, 0);
-//    currentItem->insertChildren(currentItem->childNum(), newItem);
-////        currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//    QModelIndex parentIndex = currentIndex.parent();
-//    view->setExpanded(parentIndex,0);
-//    view->setExpanded(parentIndex,1);
-//    view->setExpanded(currentIndex,1);
-}
-
-void MainWindow::addConfDataSet(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - ConfDataSet"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(2,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("(*)max")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(1,0,new QTableWidgetItem(tr("maxAttributes")));
-//    AttrTable->item(1,0)->setFlags(AttrTable->item(1,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(1,0)->setCheckState(Qt::Unchecked);
-
-////    AttrTable->setItem(0,1,new QTableWidgetItem(tr("")));
-////    AttrTable->setCellWidget(0,1,new QLineEdit(tr("请输入数字"),this));
-//    AttrTable->setCellWidget(0,1,new QSpinBox(this));
-////    ((QSpinBox*)(AttrTable->cellWidget(0,1)))->setMinimum(0);
-////    ((QLineEdit*)(AttrTable->cellWidget(0,1)))->setValidator(new QIntValidator(1,65536,this));
-
-////    AttrTable->setCellWidget(0,1,new QComboBox(this));
-////    (QComboBox*)(AttrTable->cellWidget(0,1))->addItems(
-////    AttrTable->setItem(1,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setCellWidget(1,1,new QSpinBox(this));
-////    ((QSpinBox*)(AttrTable->cellWidget(1,1)))->setMinimum(0);
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    if(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        QDomElement qNewElement = doc->createElement(tr("ConfDataSet"));
-
-//        qNewElement.setAttribute(tr("max"), ((QSpinBox*)(AttrTable->cellWidget(0,1)))->text());
-//        if((AttrTable->item(1,0))->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("maxAttributes"), ((QSpinBox*)(AttrTable->cellWidget(1,1)))->text());
-
-//        currentNode.appendChild(qNewElement);
-//        DomItem newItem = DomItem(qNewElement, 0, 0);
-//        currentItem->insertChildren(currentItem->childNum(), newItem);
-//    //        currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-//    }
-}
-
-void MainWindow::addDynDataSet(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - DynDataSet"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(2,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("(*)max")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(1,0,new QTableWidgetItem(tr("maxAttributes")));
-//    AttrTable->item(1,0)->setFlags(AttrTable->item(1,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(1,0)->setCheckState(Qt::Unchecked);
-
-//    AttrTable->setCellWidget(0,1,new QSpinBox(this));
-//    AttrTable->setCellWidget(1,1,new QSpinBox(this));
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    if(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        QDomElement qNewElement = doc->createElement(tr("DynDataSet"));
-
-//        qNewElement.setAttribute(tr("max"), ((QSpinBox*)(AttrTable->cellWidget(0,1)))->text());
-//        if((AttrTable->item(1,0))->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("maxAttributes"), ((QSpinBox*)(AttrTable->cellWidget(1,1)))->text());
-
-//        currentNode.appendChild(qNewElement);
-//        DomItem newItem = DomItem(qNewElement, 0, 0);
-//        currentItem->insertChildren(currentItem->childNum(), newItem);
-//    //        currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-//    }
-}
-
-void MainWindow::addReadWrite(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-//    qDebug()<<currentNode.toElement().tagName();
-
-//    QDomElement qNewElement = doc->createElement(tr("ReadWrite"));
-//    currentNode.appendChild(qNewElement);
-//DomItem newItem = DomItem(qNewElement, 0, 0);
-//	currentItem->insertChildren(currentItem->childNum(), newItem);
-//// 	currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//    QModelIndex parentIndex = currentIndex.parent();
-//    view->setExpanded(parentIndex,0);
-//    view->setExpanded(parentIndex,1);
-//    view->setExpanded(currentIndex,1);
-}
-
-void MainWindow::addTimerActivatedControl(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-//    qDebug()<<currentNode.toElement().tagName();
-
-//    QDomElement qNewElement = doc->createElement(tr("TimerActivatedControl"));
-//    currentNode.appendChild(qNewElement);
-//    DomItem newItem = DomItem(qNewElement, 0, 0);
-//    currentItem->insertChildren(currentItem->childNum(), newItem);
-////        currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//    QModelIndex parentIndex = currentIndex.parent();
-//    view->setExpanded(parentIndex,0);
-//    view->setExpanded(parentIndex,1);
-//    view->setExpanded(currentIndex,1);
-}
-
-void MainWindow::addConfReportControl(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - ConfReportControl"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(1,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("(*)max")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-
-//    AttrTable->setCellWidget(0,1,new QSpinBox(this));
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    if(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        QDomElement qNewElement = doc->createElement(tr("ConfReportControl"));
-
-//        qNewElement.setAttribute(tr("max"), ((QSpinBox*)(AttrTable->cellWidget(0,1)))->text());
-
-//        currentNode.appendChild(qNewElement);
-//        DomItem newItem = DomItem(qNewElement, 0, 0);
-//        currentItem->insertChildren(currentItem->childNum(), newItem);
-//    //        currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-//    }
-}
-
-void MainWindow::addGetCBValues(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-//    qDebug()<<currentNode.toElement().tagName();
-
-//    QDomElement qNewElement = doc->createElement(tr("GetCBValues"));
-//    currentNode.appendChild(qNewElement);
-//    DomItem newItem = DomItem(qNewElement, 0, 0);
-//    currentItem->insertChildren(currentItem->childNum(), newItem);
-////        currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//    QModelIndex parentIndex = currentIndex.parent();
-//    view->setExpanded(parentIndex,0);
-//    view->setExpanded(parentIndex,1);
-//    view->setExpanded(currentIndex,1);
-}
-
-void MainWindow::addConfLogControl(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - ConfLogControl"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(1,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("(*)max")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-
-//    AttrTable->setCellWidget(0,1,new QSpinBox(this));
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    if(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        QDomElement qNewElement = doc->createElement(tr("ConfLogControl"));
-
-//        qNewElement.setAttribute(tr("max"), ((QSpinBox*)(AttrTable->cellWidget(0,1)))->text());
-
-//        currentNode.appendChild(qNewElement);
-//        DomItem newItem = DomItem(qNewElement, 0, 0);
-//        currentItem->insertChildren(currentItem->childNum(), newItem);
-//    //        currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-//    }
-}
-
-void MainWindow::addReportSettings(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - ReportSettings"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(7,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("cbname")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(0,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(1,0,new QTableWidgetItem(tr("datset")));
-//    AttrTable->item(1,0)->setFlags(AttrTable->item(1,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(1,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(2,0,new QTableWidgetItem(tr("rptID")));
-//    AttrTable->item(2,0)->setFlags(AttrTable->item(2,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(2,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(3,0,new QTableWidgetItem(tr("optFields")));
-//    AttrTable->item(3,0)->setFlags(AttrTable->item(3,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(3,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(4,0,new QTableWidgetItem(tr("bufTime")));
-//    AttrTable->item(4,0)->setFlags(AttrTable->item(4,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(4,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(5,0,new QTableWidgetItem(tr("trgOps")));
-//    AttrTable->item(5,0)->setFlags(AttrTable->item(5,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(5,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(6,0,new QTableWidgetItem(tr("intgPd")));
-//    AttrTable->item(6,0)->setFlags(AttrTable->item(6,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(6,0)->setCheckState(Qt::Unchecked);
-
-//    AttrTable->setCellWidget(0,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(0,1)))->addItems(QStringList()<<tr("Dyn")<<tr("Conf")<<tr("Fix"));
-//    ((QComboBox*)(AttrTable->cellWidget(0,1)))->setCurrentIndex(2);
-//    AttrTable->setCellWidget(1,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(1,1)))->addItems(QStringList()<<tr("Dyn")<<tr("Conf")<<tr("Fix"));
-//    ((QComboBox*)(AttrTable->cellWidget(1,1)))->setCurrentIndex(2);
-//    AttrTable->setCellWidget(2,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(2,1)))->addItems(QStringList()<<tr("Dyn")<<tr("Conf")<<tr("Fix"));
-//    ((QComboBox*)(AttrTable->cellWidget(2,1)))->setCurrentIndex(2);
-//    AttrTable->setCellWidget(3,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(3,1)))->addItems(QStringList()<<tr("Dyn")<<tr("Conf")<<tr("Fix"));
-//    ((QComboBox*)(AttrTable->cellWidget(3,1)))->setCurrentIndex(2);
-//    AttrTable->setCellWidget(4,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(4,1)))->addItems(QStringList()<<tr("Dyn")<<tr("Conf")<<tr("Fix"));
-//    ((QComboBox*)(AttrTable->cellWidget(4,1)))->setCurrentIndex(2);
-//    AttrTable->setCellWidget(5,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(5,1)))->addItems(QStringList()<<tr("Dyn")<<tr("Conf")<<tr("Fix"));
-//    ((QComboBox*)(AttrTable->cellWidget(5,1)))->setCurrentIndex(2);
-//    AttrTable->setCellWidget(6,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(6,1)))->addItems(QStringList()<<tr("Dyn")<<tr("Conf")<<tr("Fix"));
-//    ((QComboBox*)(AttrTable->cellWidget(6,1)))->setCurrentIndex(2);
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    if(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        QDomElement qNewElement = doc->createElement(tr("ReportSettings"));
-
-//        if(AttrTable->item(0,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("cbname"), ((QComboBox*)(AttrTable->cellWidget(0,1)))->currentText());
-//        if(AttrTable->item(1,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("datset"), ((QComboBox*)(AttrTable->cellWidget(1,1)))->currentText());
-//        if(AttrTable->item(2,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("rptID"), ((QComboBox*)(AttrTable->cellWidget(2,1)))->currentText());
-//        if(AttrTable->item(3,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("optFields"), ((QComboBox*)(AttrTable->cellWidget(3,1)))->currentText());
-//        if(AttrTable->item(4,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("bufTime"), ((QComboBox*)(AttrTable->cellWidget(4,1)))->currentText());
-//        if(AttrTable->item(5,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("trgOps"), ((QComboBox*)(AttrTable->cellWidget(5,1)))->currentText());
-//        if(AttrTable->item(6,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("intgPd"), ((QComboBox*)(AttrTable->cellWidget(6,1)))->currentText());
-
-//        currentNode.appendChild(qNewElement);
-//        DomItem newItem = DomItem(qNewElement, 0, 0);
-//        currentItem->insertChildren(currentItem->childNum(), newItem);
-//    //        currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-//    }
-}
-
-void MainWindow::addLogSettings(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - LogSettings"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(5,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("cbname")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(0,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(1,0,new QTableWidgetItem(tr("datset")));
-//    AttrTable->item(1,0)->setFlags(AttrTable->item(1,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(1,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(2,0,new QTableWidgetItem(tr("logEna")));
-//    AttrTable->item(2,0)->setFlags(AttrTable->item(2,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(2,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(3,0,new QTableWidgetItem(tr("trgOps")));
-//    AttrTable->item(3,0)->setFlags(AttrTable->item(3,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(3,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(4,0,new QTableWidgetItem(tr("intgPd")));
-//    AttrTable->item(4,0)->setFlags(AttrTable->item(4,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(4,0)->setCheckState(Qt::Unchecked);
-
-//    AttrTable->setCellWidget(0,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(0,1)))->addItems(QStringList()<<tr("Dyn")<<tr("Conf")<<tr("Fix"));
-//    ((QComboBox*)(AttrTable->cellWidget(0,1)))->setCurrentIndex(2);
-//    AttrTable->setCellWidget(1,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(1,1)))->addItems(QStringList()<<tr("Dyn")<<tr("Conf")<<tr("Fix"));
-//    ((QComboBox*)(AttrTable->cellWidget(1,1)))->setCurrentIndex(2);
-//    AttrTable->setCellWidget(2,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(2,1)))->addItems(QStringList()<<tr("Dyn")<<tr("Conf")<<tr("Fix"));
-//    ((QComboBox*)(AttrTable->cellWidget(2,1)))->setCurrentIndex(2);
-//    AttrTable->setCellWidget(3,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(3,1)))->addItems(QStringList()<<tr("Dyn")<<tr("Conf")<<tr("Fix"));
-//    ((QComboBox*)(AttrTable->cellWidget(3,1)))->setCurrentIndex(2);
-//    AttrTable->setCellWidget(4,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(4,1)))->addItems(QStringList()<<tr("Dyn")<<tr("Conf")<<tr("Fix"));
-//    ((QComboBox*)(AttrTable->cellWidget(4,1)))->setCurrentIndex(2);
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    if(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        QDomElement qNewElement = doc->createElement(tr("LogSettings"));
-
-//        if(AttrTable->item(0,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("cbname"), ((QComboBox*)(AttrTable->cellWidget(0,1)))->currentText());
-//        if(AttrTable->item(1,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("datset"), ((QComboBox*)(AttrTable->cellWidget(1,1)))->currentText());
-//        if(AttrTable->item(2,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("logEna"), ((QComboBox*)(AttrTable->cellWidget(2,1)))->currentText());
-//        if(AttrTable->item(3,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("trgOps"), ((QComboBox*)(AttrTable->cellWidget(3,1)))->currentText());
-//        if(AttrTable->item(4,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("intgPd"), ((QComboBox*)(AttrTable->cellWidget(4,1)))->currentText());
-
-//        currentNode.appendChild(qNewElement);
-//        DomItem newItem = DomItem(qNewElement, 0, 0);
-//        currentItem->insertChildren(currentItem->childNum(), newItem);
-//    //        currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-//    }
-}
-
-void MainWindow::addGSESettings(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - GSESettings"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(4,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("cbname")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(0,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(1,0,new QTableWidgetItem(tr("datset")));
-//    AttrTable->item(1,0)->setFlags(AttrTable->item(1,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(1,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(2,0,new QTableWidgetItem(tr("appID")));
-//    AttrTable->item(2,0)->setFlags(AttrTable->item(2,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(2,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(3,0,new QTableWidgetItem(tr("dataLabel")));
-//    AttrTable->item(3,0)->setFlags(AttrTable->item(3,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(3,0)->setCheckState(Qt::Unchecked);
-
-//    AttrTable->setCellWidget(0,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(0,1)))->addItems(QStringList()<<tr("Dyn")<<tr("Conf")<<tr("Fix"));
-//    ((QComboBox*)(AttrTable->cellWidget(0,1)))->setCurrentIndex(2);
-//    AttrTable->setCellWidget(1,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(1,1)))->addItems(QStringList()<<tr("Dyn")<<tr("Conf")<<tr("Fix"));
-//    ((QComboBox*)(AttrTable->cellWidget(1,1)))->setCurrentIndex(2);
-//    AttrTable->setCellWidget(2,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(2,1)))->addItems(QStringList()<<tr("Dyn")<<tr("Conf")<<tr("Fix"));
-//    ((QComboBox*)(AttrTable->cellWidget(2,1)))->setCurrentIndex(2);
-//    AttrTable->setCellWidget(3,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(3,1)))->addItems(QStringList()<<tr("Dyn")<<tr("Conf")<<tr("Fix"));
-//    ((QComboBox*)(AttrTable->cellWidget(3,1)))->setCurrentIndex(2);
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    if(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        QDomElement qNewElement = doc->createElement(tr("GSESettings"));
-
-//        if(AttrTable->item(0,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("cbname"), ((QComboBox*)(AttrTable->cellWidget(0,1)))->currentText());
-//        if(AttrTable->item(1,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("datset"), ((QComboBox*)(AttrTable->cellWidget(1,1)))->currentText());
-//        if(AttrTable->item(2,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("appID"), ((QComboBox*)(AttrTable->cellWidget(2,1)))->currentText());
-//        if(AttrTable->item(3,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("dataLevel"), ((QComboBox*)(AttrTable->cellWidget(3,1)))->currentText());
-
-//        currentNode.appendChild(qNewElement);
-//        DomItem newItem = DomItem(qNewElement, 0, 0);
-//        currentItem->insertChildren(currentItem->childNum(), newItem);
-//    //        currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-//    }
-}
-
-void MainWindow::addSMVSettings(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - SMVSettings"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(5,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("cbname")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(0,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(1,0,new QTableWidgetItem(tr("datset")));
-//    AttrTable->item(1,0)->setFlags(AttrTable->item(1,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(1,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(2,0,new QTableWidgetItem(tr("svID")));
-//    AttrTable->item(2,0)->setFlags(AttrTable->item(2,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(2,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(3,0,new QTableWidgetItem(tr("optFields")));
-//    AttrTable->item(3,0)->setFlags(AttrTable->item(3,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(3,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(4,0,new QTableWidgetItem(tr("smpRate")));
-//    AttrTable->item(4,0)->setFlags(AttrTable->item(4,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(4,0)->setCheckState(Qt::Unchecked);
-
-//    AttrTable->setCellWidget(0,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(0,1)))->addItems(QStringList()<<tr("Dyn")<<tr("Conf")<<tr("Fix"));
-//    ((QComboBox*)(AttrTable->cellWidget(0,1)))->setCurrentIndex(2);
-//    AttrTable->setCellWidget(1,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(1,1)))->addItems(QStringList()<<tr("Dyn")<<tr("Conf")<<tr("Fix"));
-//    ((QComboBox*)(AttrTable->cellWidget(1,1)))->setCurrentIndex(2);
-//    AttrTable->setCellWidget(2,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(2,1)))->addItems(QStringList()<<tr("Dyn")<<tr("Conf")<<tr("Fix"));
-//    ((QComboBox*)(AttrTable->cellWidget(2,1)))->setCurrentIndex(2);
-//    AttrTable->setCellWidget(3,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(3,1)))->addItems(QStringList()<<tr("Dyn")<<tr("Conf")<<tr("Fix"));
-//    ((QComboBox*)(AttrTable->cellWidget(3,1)))->setCurrentIndex(2);
-//    AttrTable->setCellWidget(4,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(4,1)))->addItems(QStringList()<<tr("Dyn")<<tr("Conf")<<tr("Fix"));
-//    ((QComboBox*)(AttrTable->cellWidget(4,1)))->setCurrentIndex(2);
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    if(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        QDomElement qNewElement = doc->createElement(tr("SMVSettings"));
-
-//        if(AttrTable->item(0,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("cbname"), ((QComboBox*)(AttrTable->cellWidget(0,1)))->currentText());
-//        if(AttrTable->item(1,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("datset"), ((QComboBox*)(AttrTable->cellWidget(1,1)))->currentText());
-//        if(AttrTable->item(2,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("svID"), ((QComboBox*)(AttrTable->cellWidget(2,1)))->currentText());
-//        if(AttrTable->item(3,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("optFields"), ((QComboBox*)(AttrTable->cellWidget(3,1)))->currentText());
-//        if(AttrTable->item(4,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("smpRate"), ((QComboBox*)(AttrTable->cellWidget(4,1)))->currentText());
-
-//        currentNode.appendChild(qNewElement);
-//        DomItem newItem = DomItem(qNewElement, 0, 0);
-//        currentItem->insertChildren(currentItem->childNum(), newItem);
-//    //        currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-//    }
-}
-
-void MainWindow::addGSEDir(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-//    qDebug()<<currentNode.toElement().tagName();
-
-//    QDomElement qNewElement = doc->createElement(tr("GSEDir"));
-//    currentNode.appendChild(qNewElement);
-//    DomItem newItem = DomItem(qNewElement, 0, 0);
-//    currentItem->insertChildren(currentItem->childNum(), newItem);
-////        currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//    QModelIndex parentIndex = currentIndex.parent();
-//    view->setExpanded(parentIndex,0);
-//    view->setExpanded(parentIndex,1);
-//    view->setExpanded(currentIndex,1);
-}
-
-void MainWindow::addGOOSE(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - GOOSE"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(1,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("(*)max")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-
-//    AttrTable->setCellWidget(0,1,new QSpinBox(this));
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    if(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        QDomElement qNewElement = doc->createElement(tr("GOOSE"));
-
-//        qNewElement.setAttribute(tr("max"), ((QSpinBox*)(AttrTable->cellWidget(0,1)))->text());
-
-//        currentNode.appendChild(qNewElement);
-//        DomItem newItem = DomItem(qNewElement, 0, 0);
-//        currentItem->insertChildren(currentItem->childNum(), newItem);
-//    //        currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-//    }
-}
-
-void MainWindow::addGSSE(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - GSSE"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(1,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("(*)max")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-
-//    AttrTable->setCellWidget(0,1,new QSpinBox(this));
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    if(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        QDomElement qNewElement = doc->createElement(tr("GSSE"));
-
-
-//        qNewElement.setAttribute(tr("max"), ((QSpinBox*)(AttrTable->cellWidget(0,1)))->text());
-
-//        currentNode.appendChild(qNewElement);
-//DomItem newItem = DomItem(qNewElement, 0, 0);
-//	currentItem->insertChildren(currentItem->childNum(), newItem);
-//// 	currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-//    }
-}
-
-void MainWindow::addFileHandling(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-//    qDebug()<<currentNode.toElement().tagName();
-
-//    QDomElement qNewElement = doc->createElement(tr("FileHandling"));
-//    currentNode.appendChild(qNewElement);
-//DomItem newItem = DomItem(qNewElement, 0, 0);
-//	currentItem->insertChildren(currentItem->childNum(), newItem);
-//// 	currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//    QModelIndex parentIndex = currentIndex.parent();
-//    view->setExpanded(parentIndex,0);
-//    view->setExpanded(parentIndex,1);
-//    view->setExpanded(currentIndex,1);
-}
-
-void MainWindow::addConfLNs(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - ConfLNs"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(2,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("fixPrefix")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(0,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(1,0,new QTableWidgetItem(tr("fixLnInst")));
-//    AttrTable->item(1,0)->setFlags(AttrTable->item(1,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(1,0)->setCheckState(Qt::Unchecked);
-
-//    AttrTable->setCellWidget(0,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(0,1)))->addItems(QStringList()<<tr("true")<<tr("false"));
-//    ((QComboBox*)(AttrTable->cellWidget(0,1)))->setCurrentIndex(1);
-//    AttrTable->setCellWidget(1,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(1,1)))->addItems(QStringList()<<tr("true")<<tr("false"));
-//    ((QComboBox*)(AttrTable->cellWidget(1,1)))->setCurrentIndex(1);
-//    AttrTable->setCellWidget(2,1,new QComboBox(this));
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    if(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        QDomElement qNewElement = doc->createElement(tr("ConfLNs"));
-
-//        if(AttrTable->item(0,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("fixPrefix"), ((QComboBox*)(AttrTable->cellWidget(0,1)))->currentText());
-//        if(AttrTable->item(1,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("fixLnInst"), ((QComboBox*)(AttrTable->cellWidget(1,1)))->currentText());
-
-//        currentNode.appendChild(qNewElement);
-//DomItem newItem = DomItem(qNewElement, 0, 0);
-//	currentItem->insertChildren(currentItem->childNum(), newItem);
-//// 	currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-//     }
-}
-
-void MainWindow::addSGEdit(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-//    qDebug()<<currentNode.toElement().tagName();
-
-//    QDomElement qNewElement = doc->createElement(tr("SGEdit"));
-//    currentNode.appendChild(qNewElement);
-//DomItem newItem = DomItem(qNewElement, 0, 0);
-//	currentItem->insertChildren(currentItem->childNum(), newItem);
-//// 	currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//    QModelIndex parentIndex = currentIndex.parent();
-//    view->setExpanded(parentIndex,0);
-//    view->setExpanded(parentIndex,1);
-//    view->setExpanded(currentIndex,1);
-}
-
-void MainWindow::addConfSG(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-//    qDebug()<<currentNode.toElement().tagName();
-
-//    QDomElement qNewElement = doc->createElement(tr("ConfSG"));
-//    currentNode.appendChild(qNewElement);
-//DomItem newItem = DomItem(qNewElement, 0, 0);
-//	currentItem->insertChildren(currentItem->childNum(), newItem);
-//// 	currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//    QModelIndex parentIndex = currentIndex.parent();
-//    view->setExpanded(parentIndex,0);
-//    view->setExpanded(parentIndex,1);
-//    view->setExpanded(currentIndex,1);
-}
-
-void MainWindow::addServer(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - Server"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(2,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("desc")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(0,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(1,0,new QTableWidgetItem(tr("timeout")));
-//    AttrTable->item(1,0)->setFlags(AttrTable->item(1,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(1,0)->setCheckState(Qt::Unchecked);
-
-//    AttrTable->setItem(0,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setCellWidget(1,1,new QSpinBox(this));
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    if(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        QDomElement qNewElement = doc->createElement(tr("Server"));
-//        if(AttrTable->item(0,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("desc"), AttrTable->item(0,1)->text());
-//        if(AttrTable->item(1,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("timeout"), ((QSpinBox*)(AttrTable->cellWidget(1,1)))->text());
-
-//        currentNode.appendChild(qNewElement);
-//DomItem newItem = DomItem(qNewElement, 0, 0);
-//	currentItem->insertChildren(currentItem->childNum(), newItem);
-//// 	currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-
-//    }
-}
-
-void MainWindow::addLN(const QModelIndex& currentIndex)
-{
-//    qDebug()<<"Add LN";
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - LN"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(5,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("(*)lnClass")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(1,0,new QTableWidgetItem(tr("(*)inst")));
-//    AttrTable->item(1,0)->setFlags(AttrTable->item(1,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(2,0,new QTableWidgetItem(tr("(*)lnType")));
-//    AttrTable->item(2,0)->setFlags(AttrTable->item(2,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(3,0,new QTableWidgetItem(tr("prefix")));
-//    AttrTable->item(3,0)->setFlags(AttrTable->item(3,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(3,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(4,0,new QTableWidgetItem(tr("desc")));
-//    AttrTable->item(4,0)->setFlags(AttrTable->item(4,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(4,0)->setCheckState(Qt::Unchecked);
-
-//    AttrTable->setCellWidget(0,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(0,1)))->addItems(lnClass);
-//    AttrTable->setCellWidget(1,1,new QSpinBox(this));
-//    AttrTable->setCellWidget(2,1,new QComboBox(this));
-//    AttrTable->setItem(3,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setItem(4,1,new QTableWidgetItem(tr("")));
-
-//    QDomNode SCLNode;
-//    if(currentNode.parentNode().parentNode().parentNode().toElement().tagName() == tr("IED"))
-//    {
-//        SCLNode = currentNode.parentNode().parentNode().parentNode().parentNode();
-//    }
-//    else if(currentNode.parentNode().parentNode().toElement().tagName() == tr("IED"))
-//        SCLNode = currentNode.parentNode().parentNode().parentNode();
-
-//    //if(IEDNode.nextSiblingElement("DataTypeTemplates"))
-
-//    QDomNode TypeNode;
-//    for(int i=0; i<SCLNode.childNodes().count(); i++)
-//    {
-//        if(SCLNode.childNodes().at(i).toElement().tagName() == tr("DataTypeTemplates"))
-//        {
-//            TypeNode = SCLNode.childNodes().at(i);
-//            qDebug()<<TypeNode.toElement().tagName();
-//            for(int i=0; i<TypeNode.childNodes().count(); i++)
-//            {
-//                if(TypeNode.childNodes().at(i).toElement().tagName() == tr("LNodeType"))
-//                {
-//                    QStringList lnType;
-//                    QDomNode LNodeTypeNode = TypeNode.childNodes().at(i);
-
-//                    qDebug()<<LNodeTypeNode.toElement().tagName();
-//                    if(LNodeTypeNode.attributes().contains(tr("id")))
-//                    {
-//                        qDebug()<<LNodeTypeNode.attributes().namedItem("id").toAttr().value();
-//                        lnType.append(LNodeTypeNode.attributes().namedItem("id").toAttr().value());
-//                    }
-//                    ((QComboBox*)(AttrTable->cellWidget(2,1)))->addItems(lnType);
-//                }
-//            }
-//        }
-//    }
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    if(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        QDomElement qNewElement = doc->createElement(tr("LN"));
-//        qNewElement.setAttribute(tr("lnClass"), ((QComboBox*)(AttrTable->cellWidget(0,1)))->currentText());
-//        qNewElement.setAttribute(tr("inst"), ((QSpinBox*)(AttrTable->cellWidget(1,1)))->text());
-//        qNewElement.setAttribute(tr("lnType"), ((QComboBox*)(AttrTable->cellWidget(2,1)))->currentText());
-//        if(AttrTable->item(3,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("prefix"), AttrTable->item(3,1)->text());
-//        if(AttrTable->item(4,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("desc"), AttrTable->item(4,1)->text());
-
-//        currentNode.appendChild(qNewElement);
-//DomItem newItem = DomItem(qNewElement, 0, 0);
-//	currentItem->insertChildren(currentItem->childNum(), newItem);
-//// 	currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-
-//    }
-}
-
-void MainWindow::addAuthentication(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - Authentication"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(5,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("none")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(0,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(1,0,new QTableWidgetItem(tr("password")));
-//    AttrTable->item(1,0)->setFlags(AttrTable->item(1,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(1,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(2,0,new QTableWidgetItem(tr("weak")));
-//    AttrTable->item(2,0)->setFlags(AttrTable->item(2,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(2,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(3,0,new QTableWidgetItem(tr("strong")));
-//    AttrTable->item(3,0)->setFlags(AttrTable->item(3,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(3,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(4,0,new QTableWidgetItem(tr("certificate")));
-//    AttrTable->item(4,0)->setFlags(AttrTable->item(4,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(4,0)->setCheckState(Qt::Unchecked);
-
-//    AttrTable->setCellWidget(0,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(0,1)))->addItems(QStringList()<<tr("true")<<tr("false"));
-//    ((QComboBox*)(AttrTable->cellWidget(0,1)))->setCurrentIndex(0);
-//    AttrTable->setCellWidget(1,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(1,1)))->addItems(QStringList()<<tr("true")<<tr("false"));
-//    ((QComboBox*)(AttrTable->cellWidget(1,1)))->setCurrentIndex(1);
-//    AttrTable->setCellWidget(2,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(2,1)))->addItems(QStringList()<<tr("true")<<tr("false"));
-//    ((QComboBox*)(AttrTable->cellWidget(2,1)))->setCurrentIndex(1);
-//    AttrTable->setCellWidget(3,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(3,1)))->addItems(QStringList()<<tr("true")<<tr("false"));
-//    ((QComboBox*)(AttrTable->cellWidget(3,1)))->setCurrentIndex(1);
-//    AttrTable->setCellWidget(4,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(4,1)))->addItems(QStringList()<<tr("true")<<tr("false"));
-//    ((QComboBox*)(AttrTable->cellWidget(4,1)))->setCurrentIndex(1);
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    if(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        QDomElement qNewElement = doc->createElement(tr("Authentication"));
-
-//        if(AttrTable->item(0,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("none"), ((QComboBox*)(AttrTable->cellWidget(0,1)))->currentText());
-//        if(AttrTable->item(1,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("password"), ((QComboBox*)(AttrTable->cellWidget(1,1)))->currentText());
-//        if(AttrTable->item(2,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("weak"), ((QComboBox*)(AttrTable->cellWidget(2,1)))->currentText());
-//        if(AttrTable->item(3,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("strong"), ((QComboBox*)(AttrTable->cellWidget(3,1)))->currentText());
-//        if(AttrTable->item(4,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("certificate"), ((QComboBox*)(AttrTable->cellWidget(4,1)))->currentText());
-
-//        currentNode.appendChild(qNewElement);
-//DomItem newItem = DomItem(qNewElement, 0, 0);
-//	currentItem->insertChildren(currentItem->childNum(), newItem);
-//// 	currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-//    }
-}
-
-void MainWindow::addLDevice(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - LDevice"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(2,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("(*)inst")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-
-//    AttrTable->setItem(1,0,new QTableWidgetItem(tr("desc")));
-//    AttrTable->item(1,0)->setFlags(AttrTable->item(1,0)->flags() & (~Qt::ItemIsEditable));
-
-//    AttrTable->setItem(0,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setItem(1,1,new QTableWidgetItem(tr("")));
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    while(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        QDomElement qNewElement = doc->createElement(tr("LDevice"));
-
-//        if(AttrTable->item(0,1)->text()==tr(""))
-//        {
-//            QMessageBox::warning(NULL,tr("警告"),tr("inst项为必需项，不能为空!"));
-//            continue;
-//        }
-
-//        qNewElement.setAttribute(tr("inst"), AttrTable->item(0,1)->text());
-//        if(AttrTable->item(1,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("desc"), AttrTable->item(1,1)->text());
-
-//        currentNode.appendChild(qNewElement);
-//DomItem newItem = DomItem(qNewElement, 0, 0);
-//	currentItem->insertChildren(currentItem->childNum(), newItem);
-//// 	currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-//        break;
-//    }
-}
-
-void MainWindow::addAssociation(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - Association"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(7,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("(*)kind")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(1,0,new QTableWidgetItem(tr("associationID")));
-//    AttrTable->item(1,0)->setFlags(AttrTable->item(1,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(1,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(2,0,new QTableWidgetItem(tr("(*)lnInst")));
-//    AttrTable->item(2,0)->setFlags(AttrTable->item(2,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(3,0,new QTableWidgetItem(tr("(*)lnClass")));
-//    AttrTable->item(3,0)->setFlags(AttrTable->item(3,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(4,0,new QTableWidgetItem(tr("prefix")));
-//    AttrTable->item(4,0)->setFlags(AttrTable->item(4,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(4,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(5,0,new QTableWidgetItem(tr("(*)iedName")));
-//    AttrTable->item(5,0)->setFlags(AttrTable->item(5,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(6,0,new QTableWidgetItem(tr("(*)ldInst")));
-//    AttrTable->item(6,0)->setFlags(AttrTable->item(6,0)->flags() & (~Qt::ItemIsEditable));
-
-//    AttrTable->setCellWidget(0,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(0,1)))->addItems(QStringList()<<tr("pre-established")<<tr("predefined"));
-//    AttrTable->setItem(1,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setItem(2,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setCellWidget(3,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(3,1)))->addItems(lnClass);
-//    AttrTable->setItem(4,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setItem(5,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setItem(6,1,new QTableWidgetItem(tr("")));
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    while(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        QDomElement qNewElement = doc->createElement(tr("Association"));
-
-//        if(AttrTable->item(2,1)->text()==tr(""))
-//        {
-//            QMessageBox::warning(NULL,tr("警告"),tr("lnInst项为必需项，不能为空!"));
-//            continue;
-//        }
-//        if(AttrTable->item(5,1)->text()==tr(""))
-//        {
-//            QMessageBox::warning(NULL,tr("警告"),tr("iedName项为必需项，不能为空!"));
-//            continue;
-//        }
-//        if(AttrTable->item(6,1)->text()==tr(""))
-//        {
-//            QMessageBox::warning(NULL,tr("警告"),tr("ldInst项为必需项，不能为空!"));
-//            continue;
-//        }
-
-//        qNewElement.setAttribute(tr("kind"), ((QComboBox*)(AttrTable->cellWidget(0,1)))->currentText());
-//        if(AttrTable->item(1,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("associationID"), AttrTable->item(1,1)->text());
-//        qNewElement.setAttribute(tr("lnInst"), AttrTable->item(2,1)->text());
-//        qNewElement.setAttribute(tr("lnClss"), ((QComboBox*)(AttrTable->cellWidget(3,1)))->currentText());
-//        if(AttrTable->item(4,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("prefix"), AttrTable->item(4,1)->text());
-//        qNewElement.setAttribute(tr("iedName"), AttrTable->item(5,1)->text());
-//        qNewElement.setAttribute(tr("ldInst"), AttrTable->item(6,1)->text());
-
-//        currentNode.appendChild(qNewElement);
-//DomItem newItem = DomItem(qNewElement, 0, 0);
-//	currentItem->insertChildren(currentItem->childNum(), newItem);
-//// 	currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-//        break;
-//    }
-}
-
-void MainWindow::addLN0(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - LN0"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(4,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("(*)lnClass")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(1,0,new QTableWidgetItem(tr("(*)inst")));
-//    AttrTable->item(1,0)->setFlags(AttrTable->item(1,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(2,0,new QTableWidgetItem(tr("(*)lnType")));
-//    AttrTable->item(2,0)->setFlags(AttrTable->item(2,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(3,0,new QTableWidgetItem(tr("desc")));
-//    AttrTable->item(3,0)->setFlags(AttrTable->item(3,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(3,0)->setCheckState(Qt::Unchecked);
-
-//    AttrTable->setItem(0,1,new QTableWidgetItem(tr("LLN0")));
-//    AttrTable->item(0,1)->setFlags(AttrTable->item(0,1)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setCellWidget(1,1,new QSpinBox(this));
-//    AttrTable->setCellWidget(2,1,new QComboBox(this));
-//    AttrTable->setItem(3,1,new QTableWidgetItem(tr("")));
-
-//    QDomNode SCLNode;
-//    if(currentNode.parentNode().parentNode().parentNode().toElement().tagName() == tr("IED"))
-//    {
-//        SCLNode = currentNode.parentNode().parentNode().parentNode().parentNode();
-//    }
-//    else if(currentNode.parentNode().parentNode().toElement().tagName() == tr("IED"))
-//        SCLNode = currentNode.parentNode().parentNode().parentNode();
-
-//    //if(IEDNode.nextSiblingElement("DataTypeTemplates"))
-
-//    QDomNode TypeNode;
-//    for(int i=0; i<SCLNode.childNodes().count(); i++)
-//    {
-//        if(SCLNode.childNodes().at(i).toElement().tagName() == tr("DataTypeTemplates"))
-//        {
-//            TypeNode = SCLNode.childNodes().at(i);
-//            qDebug()<<TypeNode.toElement().tagName();
-//            for(int i=0; i<TypeNode.childNodes().count(); i++)
-//            {
-//                if(TypeNode.childNodes().at(i).toElement().tagName() == tr("LNodeType"))
-//                {
-//                    QStringList lnType;
-//                    QDomNode LNodeTypeNode = TypeNode.childNodes().at(i);
-
-//                    qDebug()<<LNodeTypeNode.toElement().tagName();
-//                    if(LNodeTypeNode.attributes().contains(tr("id")))
-//                    {
-//                        qDebug()<<LNodeTypeNode.attributes().namedItem("id").toAttr().value();
-//                        lnType.append(LNodeTypeNode.attributes().namedItem("id").toAttr().value());
-//                    }
-//                    ((QComboBox*)(AttrTable->cellWidget(2,1)))->addItems(lnType);
-//                }
-//            }
-//        }
-//    }
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    if(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        QDomElement qNewElement = doc->createElement(tr("LN0"));
-
-//        qNewElement.setAttribute(tr("lnClass"), AttrTable->item(0,1)->text());
-//        qNewElement.setAttribute(tr("inst"), ((QSpinBox*)(AttrTable->cellWidget(1,1)))->text());
-//        qNewElement.setAttribute(tr("lnType"), ((QComboBox*)(AttrTable->cellWidget(2,1)))->currentText());
-//        if(AttrTable->item(3,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("desc"), AttrTable->item(3,1)->text());
-
-//        currentNode.appendChild(qNewElement);
-//DomItem newItem = DomItem(qNewElement, 0, 0);
-//	currentItem->insertChildren(currentItem->childNum(), newItem);
-//// 	currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-//    }
-}
-
-void MainWindow::addAccessControl(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-//    qDebug()<<currentNode.toElement().tagName();
-
-//    QDomElement qNewElement = doc->createElement(tr("AccessControl"));
-//    currentNode.appendChild(qNewElement);
-//DomItem newItem = DomItem(qNewElement, 0, 0);
-//	currentItem->insertChildren(currentItem->childNum(), newItem);
-//// 	currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//    QModelIndex parentIndex = currentIndex.parent();
-//    view->setExpanded(parentIndex,0);
-//    view->setExpanded(parentIndex,1);
-//    view->setExpanded(currentIndex,1);
-}
-
-void MainWindow::addGSEControl(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - GSEControl"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(6,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("type")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(0,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(1,0,new QTableWidgetItem(tr("(*)appID")));
-//    AttrTable->item(1,0)->setFlags(AttrTable->item(1,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(2,0,new QTableWidgetItem(tr("confRev")));
-//    AttrTable->item(2,0)->setFlags(AttrTable->item(2,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(2,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(3,0,new QTableWidgetItem(tr("(*)datSet")));
-//    AttrTable->item(3,0)->setFlags(AttrTable->item(3,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(4,0,new QTableWidgetItem(tr("(*)name")));
-//    AttrTable->item(4,0)->setFlags(AttrTable->item(4,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(5,0,new QTableWidgetItem(tr("desc")));
-//    AttrTable->item(5,0)->setFlags(AttrTable->item(5,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(5,0)->setCheckState(Qt::Unchecked);
-
-//    AttrTable->setCellWidget(0,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(0,1)))->addItems(QStringList()<<tr("GSSE")<<tr("GOOSE"));
-//    AttrTable->setItem(1,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setCellWidget(2,1,new QSpinBox(this));
-//    AttrTable->setCellWidget(3,1,new QComboBox(this));
-//    AttrTable->setItem(4,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setItem(5,1,new QTableWidgetItem(tr("")));
-
-//    QStringList DatSet;
-//    for(int i=0; i<currentNode.childNodes().count(); i++)
-//    {
-//        if(currentNode.childNodes().at(i).toElement().tagName() == tr("DataSet"))
-//        {
-//            QDomNode DataSetNode = currentNode.childNodes().at(i);
-
-//            if(DataSetNode.attributes().contains(tr("name")))
-//                DatSet.append(DataSetNode.attributes().namedItem("name").toAttr().value());
-//        }
-//    }
-//    if(DatSet.isEmpty())
-//        DatSet.append(tr(""));
-//    ((QComboBox*)(AttrTable->cellWidget(3,1)))->addItems(DatSet);
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    while(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        QDomElement qNewElement = doc->createElement(tr("GSEControl"));
-
-//        if(AttrTable->item(1,1)->text()==tr(""))
-//        {
-//            QMessageBox::warning(NULL,tr("警告"),tr("appID项为必需项，不能为空!"));
-//            continue;
-//        }
-
-//        if(AttrTable->item(4,1)->text()==tr(""))
-//        {
-//            QMessageBox::warning(NULL,tr("警告"),tr("name项为必需项，不能为空!"));
-//            continue;
-//        }
-
-//        if(AttrTable->item(0,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("type"), ((QComboBox*)(AttrTable->cellWidget(0,1)))->currentText());
-//        qNewElement.setAttribute(tr("appID"), AttrTable->item(1,1)->text());
-//        if(AttrTable->item(2,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("confRev"), ((QSpinBox*)(AttrTable->cellWidget(2,1)))->text());
-//        qNewElement.setAttribute(tr("datSet"), ((QComboBox*)(AttrTable->cellWidget(3,1)))->currentText());
-//        qNewElement.setAttribute(tr("name"), AttrTable->item(4,1)->text());
-//        if(AttrTable->item(5,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("desc"), AttrTable->item(5,1)->text());
-
-//        currentNode.appendChild(qNewElement);
-//DomItem newItem = DomItem(qNewElement, 0, 0);
-//	currentItem->insertChildren(currentItem->childNum(), newItem);
-//// 	currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-//        break;
-//    }
-}
-
-void MainWindow::addSampleValueControl(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - SampleValueControl"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(8,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("(*)smvID")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(1,0,new QTableWidgetItem(tr("multicast")));
-//    AttrTable->item(1,0)->setFlags(AttrTable->item(1,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(1,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(2,0,new QTableWidgetItem(tr("(*)smpRate")));
-//    AttrTable->item(2,0)->setFlags(AttrTable->item(2,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(3,0,new QTableWidgetItem(tr("(*)nofASDU")));
-//    AttrTable->item(3,0)->setFlags(AttrTable->item(3,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(4,0,new QTableWidgetItem(tr("confRev")));
-//    AttrTable->item(4,0)->setFlags(AttrTable->item(4,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(4,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(5,0,new QTableWidgetItem(tr("(*)datSet")));
-//    AttrTable->item(5,0)->setFlags(AttrTable->item(5,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(6,0,new QTableWidgetItem(tr("(*)name")));
-//    AttrTable->item(6,0)->setFlags(AttrTable->item(6,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(7,0,new QTableWidgetItem(tr("desc")));
-//    AttrTable->item(7,0)->setFlags(AttrTable->item(7,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(7,0)->setCheckState(Qt::Unchecked);
-
-//    AttrTable->setItem(0,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setCellWidget(1,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(1,1)))->addItems(QStringList()<<tr("true")<<tr("false"));
-//    AttrTable->setCellWidget(2,1,new QSpinBox(this));
-//    AttrTable->setCellWidget(3,1,new QSpinBox(this));
-//    AttrTable->setCellWidget(4,1,new QSpinBox(this));
-//    AttrTable->setCellWidget(5,1,new QComboBox(this));
-//    AttrTable->setItem(6,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setItem(7,1,new QTableWidgetItem(tr("")));
-
-//    QStringList DatSet;
-//    for(int i=0; i<currentNode.childNodes().count(); i++)
-//    {
-//        if(currentNode.childNodes().at(i).toElement().tagName() == tr("DataSet"))
-//        {
-//            QDomNode DataSetNode = currentNode.childNodes().at(i);
-
-//            if(DataSetNode.attributes().contains(tr("name")))
-//                DatSet.append(DataSetNode.attributes().namedItem("name").toAttr().value());
-//        }
-//    }
-//    if(DatSet.isEmpty())
-//        DatSet.append(tr(" "));
-//    ((QComboBox*)(AttrTable->cellWidget(5,1)))->addItems(DatSet);
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    while(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        QDomElement qNewElement = doc->createElement(tr("SampleValueControl"));
-
-//        if(AttrTable->item(0,1)->text()==tr(""))
-//        {
-//            QMessageBox::warning(NULL,tr("警告"),tr("smvID项为必需项，不能为空!"));
-//            continue;
-//        }
-
-//        if(AttrTable->item(6,1)->text()==tr(""))
-//        {
-//            QMessageBox::warning(NULL,tr("警告"),tr("name项为必需项，不能为空!"));
-//            continue;
-//        }
-
-
-//        qNewElement.setAttribute(tr("smvID"), AttrTable->item(0,1)->text());
-//        if(AttrTable->item(1,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("multicast"), ((QComboBox*)(AttrTable->cellWidget(1,1)))->currentText());
-//        qNewElement.setAttribute(tr("smpRate"), ((QSpinBox*)(AttrTable->cellWidget(2,1)))->text());
-//        qNewElement.setAttribute(tr("nofASDU"), ((QSpinBox*)(AttrTable->cellWidget(3,1)))->text());
-//        if(AttrTable->item(4,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("confRev"), ((QSpinBox*)(AttrTable->cellWidget(4,1)))->text());
-//        qNewElement.setAttribute(tr("datSet"), ((QComboBox*)(AttrTable->cellWidget(5,1)))->currentText());
-//        qNewElement.setAttribute(tr("name"), AttrTable->item(6,1)->text());
-//        if(AttrTable->item(7,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("desc"), AttrTable->item(7,1)->text());
-
-//        currentNode.appendChild(qNewElement);
-//DomItem newItem = DomItem(qNewElement, 0, 0);
-//	currentItem->insertChildren(currentItem->childNum(), newItem);
-//// 	currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-//        break;
-//    }
-}
-
-void MainWindow::addSettingControl(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - SettingControl"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(3,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("(*)numOfSGs")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(1,0,new QTableWidgetItem(tr("actSG")));
-//    AttrTable->item(1,0)->setFlags(AttrTable->item(1,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(1,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(2,0,new QTableWidgetItem(tr("desc")));
-//    AttrTable->item(2,0)->setFlags(AttrTable->item(2,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(2,0)->setCheckState(Qt::Unchecked);
-
-//    AttrTable->setCellWidget(0,1,new QSpinBox(this));
-//    AttrTable->setCellWidget(1,1,new QSpinBox(this));
-//    ((QSpinBox*)(AttrTable->cellWidget(1,1)))->setValue(1);
-//    AttrTable->setItem(2,1,new QTableWidgetItem(tr("")));
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    if(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        QDomElement qNewElement = doc->createElement(tr("SettingControl"));
-
-//        qNewElement.setAttribute(tr("numOfSGs"), ((QSpinBox*)(AttrTable->cellWidget(0,1)))->text());
-//        if(AttrTable->item(1,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("actSG"), ((QSpinBox*)(AttrTable->cellWidget(1,1)))->text());
-//        if(AttrTable->item(2,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("desc"), AttrTable->item(2,1)->text());
-
-//        currentNode.appendChild(qNewElement);
-//DomItem newItem = DomItem(qNewElement, 0, 0);
-//	currentItem->insertChildren(currentItem->childNum(), newItem);
-//// 	currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-
-//    }
-}
-
-void MainWindow::addSCLControl(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - SettingControl"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(1,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("desc")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(0,0)->setCheckState(Qt::Unchecked);
-
-//    AttrTable->setItem(0,1,new QTableWidgetItem(tr("")));
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    if(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        QDomElement qNewElement = doc->createElement(tr("SettingControl"));
-
-//        if(AttrTable->item(0,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("desc"), AttrTable->item(0,1)->text());
-
-//        currentNode.appendChild(qNewElement);
-//DomItem newItem = DomItem(qNewElement, 0, 0);
-//	currentItem->insertChildren(currentItem->childNum(), newItem);
-//// 	currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-//    }
-}
-
-void MainWindow::addLog(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-//    qDebug()<<currentNode.toElement().tagName();
-
-//    QDomElement qNewElement = doc->createElement(tr("Log"));
-//    currentNode.appendChild(qNewElement);
-//DomItem newItem = DomItem(qNewElement, 0, 0);
-//	currentItem->insertChildren(currentItem->childNum(), newItem);
-//// 	currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//    QModelIndex parentIndex = currentIndex.parent();
-//    view->setExpanded(parentIndex,0);
-//    view->setExpanded(parentIndex,1);
-//    view->setExpanded(currentIndex,1);
-
-}
-
-void MainWindow::addDataSet(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - DataSet"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(2,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("(*)name")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(1,0,new QTableWidgetItem(tr("desc")));
-//    AttrTable->item(1,0)->setFlags(AttrTable->item(1,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(1,0)->setCheckState(Qt::Unchecked);
-
-//    AttrTable->setItem(0,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setItem(1,1,new QTableWidgetItem(tr("")));
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    while(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        QDomElement qNewElement = doc->createElement(tr("DataSet"));
-
-//        if(AttrTable->item(0,1)->text()==tr(""))
-//        {
-//            QMessageBox::warning(NULL,tr("警告"),tr("name项为必需项，不能为空!"));
-//            continue;
-//        }
-
-//        qNewElement.setAttribute(tr("name"), AttrTable->item(0,1)->text());
-//        if(AttrTable->item(1,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("desc"), AttrTable->item(1,1)->text());
-
-//        currentNode.appendChild(qNewElement);
-//DomItem newItem = DomItem(qNewElement, 0, 0);
-//	currentItem->insertChildren(currentItem->childNum(), newItem);
-//// 	currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-
-//        break;
-//    }
-}
-
-void MainWindow::addReportControl(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - ReportControl"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(8,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("(*)rptID")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(1,0,new QTableWidgetItem(tr("(*)confRev")));
-//    AttrTable->item(1,0)->setFlags(AttrTable->item(1,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(2,0,new QTableWidgetItem(tr("buffered")));
-//    AttrTable->item(2,0)->setFlags(AttrTable->item(2,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(2,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(3,0,new QTableWidgetItem(tr("bufTime")));
-//    AttrTable->item(3,0)->setFlags(AttrTable->item(3,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(3,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(4,0,new QTableWidgetItem(tr("intgPd")));
-//    AttrTable->item(4,0)->setFlags(AttrTable->item(4,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(4,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(5,0,new QTableWidgetItem(tr("(*)datSet")));
-//    AttrTable->item(5,0)->setFlags(AttrTable->item(5,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(6,0,new QTableWidgetItem(tr("(*)name")));
-//    AttrTable->item(6,0)->setFlags(AttrTable->item(6,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(7,0,new QTableWidgetItem(tr("desc")));
-//    AttrTable->item(7,0)->setFlags(AttrTable->item(7,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(7,0)->setCheckState(Qt::Unchecked);
-
-//    AttrTable->setItem(0,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setCellWidget(1,1,new QSpinBox(this));
-//    AttrTable->setCellWidget(2,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(2,1)))->addItems(QStringList()<<tr("true")<<tr("false"));
-//    ((QComboBox*)(AttrTable->cellWidget(2,1)))->setCurrentIndex(1);
-//    AttrTable->setCellWidget(3,1,new QSpinBox(this));
-//    AttrTable->setCellWidget(4,1,new QSpinBox(this));
-//    AttrTable->setCellWidget(5,1,new QComboBox(this));
-//    AttrTable->setItem(6,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setItem(7,1,new QTableWidgetItem(tr("")));
-
-//    QStringList DatSet;
-//    for(int i=0; i<currentNode.childNodes().count(); i++)
-//    {
-//        if(currentNode.childNodes().at(i).toElement().tagName() == tr("DataSet"))
-//        {
-//            QDomNode DataSetNode = currentNode.childNodes().at(i);
-
-//            if(DataSetNode.attributes().contains(tr("name")))
-//                DatSet.append(DataSetNode.attributes().namedItem("name").toAttr().value());
-//        }
-//    }
-//    if(DatSet.isEmpty())
-//        DatSet.append(tr(" "));
-//    ((QComboBox*)(AttrTable->cellWidget(5,1)))->addItems(DatSet);
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    while(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        QDomElement qNewElement = doc->createElement(tr("ReportControl"));
-
-//        if(AttrTable->item(0,1)->text()==tr(""))
-//        {
-//            QMessageBox::warning(NULL,tr("警告"),tr("rptID项为必需项，不能为空!"));
-//            continue;
-//        }
-
-//        if(AttrTable->item(6,1)->text()==tr(""))
-//        {
-//            QMessageBox::warning(NULL,tr("警告"),tr("name项为必需项，不能为空!"));
-//            continue;
-//        }
-
-//        qNewElement.setAttribute(tr("rptID"), AttrTable->item(0,1)->text());
-//        qNewElement.setAttribute(tr("confRev"), ((QSpinBox*)(AttrTable->cellWidget(1,1)))->text());
-//        if(AttrTable->item(2,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("buffered"), ((QSpinBox*)(AttrTable->cellWidget(2,1)))->text());
-//        if(AttrTable->item(3,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("bufTime"), ((QSpinBox*)(AttrTable->cellWidget(3,1)))->text());
-//        if(AttrTable->item(4,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("intgPd"), ((QSpinBox*)(AttrTable->cellWidget(4,1)))->text());
-//        qNewElement.setAttribute(tr("datSet"), ((QComboBox*)(AttrTable->cellWidget(5,1)))->currentText());
-//        qNewElement.setAttribute(tr("name"), AttrTable->item(6,1)->text());
-//        if(AttrTable->item(7,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("desc"), AttrTable->item(7,1)->text());
-
-//        currentNode.appendChild(qNewElement);
-//DomItem newItem = DomItem(qNewElement, 0, 0);
-//	currentItem->insertChildren(currentItem->childNum(), newItem);
-//// 	currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-//        break;
-//    }
-}
-
-void MainWindow::addLogControl(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - LogControl"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(7,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("(*)logName")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(1,0,new QTableWidgetItem(tr("logEna")));
-//    AttrTable->item(1,0)->setFlags(AttrTable->item(1,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(1,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(2,0,new QTableWidgetItem(tr("reasonCode")));
-//    AttrTable->item(2,0)->setFlags(AttrTable->item(2,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(2,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(3,0,new QTableWidgetItem(tr("intgPd")));
-//    AttrTable->item(3,0)->setFlags(AttrTable->item(3,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(3,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(4,0,new QTableWidgetItem(tr("(*)datSet")));
-//    AttrTable->item(4,0)->setFlags(AttrTable->item(4,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(5,0,new QTableWidgetItem(tr("(*)name")));
-//    AttrTable->item(5,0)->setFlags(AttrTable->item(5,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(6,0,new QTableWidgetItem(tr("desc")));
-//    AttrTable->item(6,0)->setFlags(AttrTable->item(6,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(6,0)->setCheckState(Qt::Unchecked);
-
-//    AttrTable->setItem(0,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setCellWidget(1,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(1,1)))->addItems(QStringList()<<tr("true")<<tr("false"));
-//    AttrTable->setCellWidget(2,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(2,1)))->addItems(QStringList()<<tr("true")<<tr("false"));
-//    AttrTable->setCellWidget(3,1,new QSpinBox(this));
-//    AttrTable->setCellWidget(4,1,new QComboBox(this));
-//    AttrTable->setItem(5,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setItem(6,1,new QTableWidgetItem(tr("")));
-
-//    QStringList DatSet;
-//    for(int i=0; i<currentNode.childNodes().count(); i++)
-//    {
-//        if(currentNode.childNodes().at(i).toElement().tagName() == tr("DataSet"))
-//        {
-//            QDomNode DataSetNode = currentNode.childNodes().at(i);
-
-//            if(DataSetNode.attributes().contains(tr("name")))
-//                DatSet.append(DataSetNode.attributes().namedItem("name").toAttr().value());
-//        }
-//    }
-//    if(DatSet.isEmpty())
-//        DatSet.append(tr(""));
-//    ((QComboBox*)(AttrTable->cellWidget(4,1)))->addItems(DatSet);
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    while(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        QDomElement qNewElement = doc->createElement(tr("LogControl"));
-
-//        if(AttrTable->item(0,1)->text()==tr(""))
-//        {
-//            QMessageBox::warning(NULL,tr("警告"),tr("logName项为必需项，不能为空!"));
-//            continue;
-//        }
-
-//        if(AttrTable->item(5,1)->text()==tr(""))
-//        {
-//            QMessageBox::warning(NULL,tr("警告"),tr("name项为必需项，不能为空!"));
-//            continue;
-//        }
-
-//        qNewElement.setAttribute(tr("logName"), AttrTable->item(0,1)->text());
-//        if(AttrTable->item(1,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("logEna"), ((QComboBox*)(AttrTable->cellWidget(1,1)))->currentText());
-//        if(AttrTable->item(2,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("reasonCode"), ((QComboBox*)(AttrTable->cellWidget(2,1)))->currentText());
-//        if(AttrTable->item(3,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("intgPd"), ((QSpinBox*)(AttrTable->cellWidget(3,1)))->text());
-//        qNewElement.setAttribute(tr("datSet"), ((QComboBox*)(AttrTable->cellWidget(4,1)))->currentText());
-//        qNewElement.setAttribute(tr("name"), AttrTable->item(5,1)->text());
-//        if(AttrTable->item(6,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("desc"), AttrTable->item(6,1)->text());
-
-//        currentNode.appendChild(qNewElement);
-//DomItem newItem = DomItem(qNewElement, 0, 0);
-//	currentItem->insertChildren(currentItem->childNum(), newItem);
-//// 	currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-//        break;
-//    }
-}
-
-void MainWindow::addDOI(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - DOI"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(4,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("(*)name")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(1,0,new QTableWidgetItem(tr("ix")));
-//    AttrTable->item(1,0)->setFlags(AttrTable->item(1,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(1,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(2,0,new QTableWidgetItem(tr("accessControl")));
-//    AttrTable->item(2,0)->setFlags(AttrTable->item(2,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(2,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(3,0,new QTableWidgetItem(tr("desc")));
-//    AttrTable->item(3,0)->setFlags(AttrTable->item(3,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(3,0)->setCheckState(Qt::Unchecked);
-
-//    AttrTable->setItem(0,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setCellWidget(1,1,new QSpinBox(this));
-//    AttrTable->setItem(2,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setItem(3,1,new QTableWidgetItem(tr("")));
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    while(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        QDomElement qNewElement = doc->createElement(tr("DOI"));
-
-//        if(AttrTable->item(0,1)->text()==tr(""))
-//        {
-//            QMessageBox::warning(NULL,tr("警告"),tr("name项为必需项，不能为空!"));
-//            continue;
-//        }
-
-//        qNewElement.setAttribute(tr("name"), AttrTable->item(0,1)->text());
-//        if(AttrTable->item(1,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("ix"), ((QSpinBox*)(AttrTable->cellWidget(1,1)))->text());
-//        if(AttrTable->item(2,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("accessControl"), AttrTable->item(2,1)->text());
-//        if(AttrTable->item(3,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("desc"), AttrTable->item(3,1)->text());
-
-//        currentNode.appendChild(qNewElement);
-//DomItem newItem = DomItem(qNewElement, 0, 0);
-//	currentItem->insertChildren(currentItem->childNum(), newItem);
-//// 	currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-//        break;
-//    }
-}
-
-void MainWindow::addInputs(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - Inputs"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(1,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("desc")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(0,0)->setCheckState(Qt::Unchecked);
-
-//    AttrTable->setItem(0,1,new QTableWidgetItem(tr("")));
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    if(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        QDomElement qNewElement = doc->createElement(tr("Inputs"));
-
-//        if(AttrTable->item(0,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("desc"), AttrTable->item(0,1)->text());
-
-//        currentNode.appendChild(qNewElement);
-//DomItem newItem = DomItem(qNewElement, 0, 0);
-//	currentItem->insertChildren(currentItem->childNum(), newItem);
-//// 	currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-//    }
-}
-
-void MainWindow::addIEDName(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-//    qDebug()<<currentNode.toElement().tagName();
-
-//    QDomElement qNewElement = doc->createElement(tr("IEDName"));
-//    currentNode.appendChild(qNewElement);
-//DomItem newItem = DomItem(qNewElement, 0, 0);
-//	currentItem->insertChildren(currentItem->childNum(), newItem);
-//// 	currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//    QModelIndex parentIndex = currentIndex.parent();
-//    view->setExpanded(parentIndex,0);
-//    view->setExpanded(parentIndex,1);
-//    view->setExpanded(currentIndex,1);
-}
-
-void MainWindow::addSmvOpts(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - SmvOpts"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(5,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("refreshTime")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(0,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(1,0,new QTableWidgetItem(tr("sampleSynchronized")));
-//    AttrTable->item(1,0)->setFlags(AttrTable->item(1,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(1,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(2,0,new QTableWidgetItem(tr("sampleRate")));
-//    AttrTable->item(2,0)->setFlags(AttrTable->item(2,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(2,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(3,0,new QTableWidgetItem(tr("security")));
-//    AttrTable->item(3,0)->setFlags(AttrTable->item(3,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(3,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(4,0,new QTableWidgetItem(tr("dataRef")));
-//    AttrTable->item(4,0)->setFlags(AttrTable->item(4,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(4,0)->setCheckState(Qt::Unchecked);
-
-//    AttrTable->setCellWidget(0,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(0,1)))->addItems(QStringList()<<tr("true")<<tr("false"));
-//    ((QComboBox*)(AttrTable->cellWidget(0,1)))->setCurrentIndex(1);
-//    AttrTable->setCellWidget(1,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(1,1)))->addItems(QStringList()<<tr("true")<<tr("false"));
-//    ((QComboBox*)(AttrTable->cellWidget(1,1)))->setCurrentIndex(1);
-//    AttrTable->setCellWidget(2,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(2,1)))->addItems(QStringList()<<tr("true")<<tr("false"));
-//    ((QComboBox*)(AttrTable->cellWidget(2,1)))->setCurrentIndex(1);
-//    AttrTable->setCellWidget(3,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(3,1)))->addItems(QStringList()<<tr("true")<<tr("false"));
-//    ((QComboBox*)(AttrTable->cellWidget(3,1)))->setCurrentIndex(1);
-//    AttrTable->setCellWidget(4,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(4,1)))->addItems(QStringList()<<tr("true")<<tr("false"));
-//    ((QComboBox*)(AttrTable->cellWidget(4,1)))->setCurrentIndex(1);
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    if(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        QDomElement qNewElement = doc->createElement(tr("SmvOpts"));
-
-//        if(AttrTable->item(0,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("refreshTime"), ((QComboBox*)(AttrTable->cellWidget(0,1)))->currentText());
-//        if(AttrTable->item(1,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("sampleSynchronized"), ((QComboBox*)(AttrTable->cellWidget(1,1)))->currentText());
-//        if(AttrTable->item(2,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("sampleRate"), ((QComboBox*)(AttrTable->cellWidget(2,1)))->currentText());
-//        if(AttrTable->item(3,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("security"), ((QComboBox*)(AttrTable->cellWidget(3,1)))->currentText());
-//        if(AttrTable->item(4,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("dataRef"), ((QComboBox*)(AttrTable->cellWidget(4,1)))->currentText());
-
-//        currentNode.appendChild(qNewElement);
-//DomItem newItem = DomItem(qNewElement, 0, 0);
-//	currentItem->insertChildren(currentItem->childNum(), newItem);
-//// 	currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-//    }
-}
-
-void MainWindow::addFCDA(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - FCDA"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(7,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("ldInst")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(0,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(1,0,new QTableWidgetItem(tr("prefix")));
-//    AttrTable->item(1,0)->setFlags(AttrTable->item(1,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(1,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(2,0,new QTableWidgetItem(tr("lnClass")));
-//    AttrTable->item(2,0)->setFlags(AttrTable->item(2,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(2,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(3,0,new QTableWidgetItem(tr("lnInst")));
-//    AttrTable->item(3,0)->setFlags(AttrTable->item(3,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(3,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(4,0,new QTableWidgetItem(tr("doName")));
-//    AttrTable->item(4,0)->setFlags(AttrTable->item(4,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(4,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(5,0,new QTableWidgetItem(tr("daName")));
-//    AttrTable->item(5,0)->setFlags(AttrTable->item(5,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(5,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(6,0,new QTableWidgetItem(tr("fc")));
-//    AttrTable->item(6,0)->setFlags(AttrTable->item(6,0)->flags() & (~Qt::ItemIsEditable));
-
-//    AttrTable->setItem(0,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setItem(1,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setCellWidget(2,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(2,1)))->addItems(lnClass);
-//    AttrTable->setItem(3,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setItem(4,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setItem(5,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setCellWidget(6,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(6,1)))->addItems(fcEnum);
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    if(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        QDomElement qNewElement = doc->createElement(tr("FCDA"));
-
-//        if(AttrTable->item(0,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("ldInst"), AttrTable->item(0,1)->text());
-//        if(AttrTable->item(1,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("prefix"), AttrTable->item(1,1)->text());
-//        if(AttrTable->item(2,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("lnClass"), ((QComboBox*)(AttrTable->cellWidget(2,1)))->currentText());
-//        if(AttrTable->item(3,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("lnInst"), AttrTable->item(3,1)->text());
-//        if(AttrTable->item(4,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("doName"), AttrTable->item(4,1)->text());
-//        if(AttrTable->item(5,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("daName"), AttrTable->item(5,1)->text());
-//        qNewElement.setAttribute(tr("fc"), ((QComboBox*)(AttrTable->cellWidget(6,1)))->currentText());
-
-//        currentNode.appendChild(qNewElement);
-//DomItem newItem = DomItem(qNewElement, 0, 0);
-//	currentItem->insertChildren(currentItem->childNum(), newItem);
-//// 	currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-//    }
-}
-
-void MainWindow::addOptFields(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - OptFields"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(9,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("seqNum")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(0,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(1,0,new QTableWidgetItem(tr("timeStamp")));
-//    AttrTable->item(1,0)->setFlags(AttrTable->item(1,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(1,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(2,0,new QTableWidgetItem(tr("dataSet")));
-//    AttrTable->item(2,0)->setFlags(AttrTable->item(2,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(2,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(3,0,new QTableWidgetItem(tr("reasonCode")));
-//    AttrTable->item(3,0)->setFlags(AttrTable->item(3,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(3,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(4,0,new QTableWidgetItem(tr("dataRef")));
-//    AttrTable->item(4,0)->setFlags(AttrTable->item(4,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(4,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(5,0,new QTableWidgetItem(tr("bufOvfl")));
-//    AttrTable->item(5,0)->setFlags(AttrTable->item(5,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(5,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(6,0,new QTableWidgetItem(tr("entryID")));
-//    AttrTable->item(6,0)->setFlags(AttrTable->item(6,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(6,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(7,0,new QTableWidgetItem(tr("configRef")));
-//    AttrTable->item(7,0)->setFlags(AttrTable->item(7,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(7,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(8,0,new QTableWidgetItem(tr("segmentation")));
-//    AttrTable->item(8,0)->setFlags(AttrTable->item(8,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(8,0)->setCheckState(Qt::Unchecked);
-
-//    AttrTable->setCellWidget(0,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(0,1)))->addItems(QStringList()<<tr("true")<<tr("false"));
-//    ((QComboBox*)(AttrTable->cellWidget(0,1)))->setCurrentIndex(1);
-//    AttrTable->setCellWidget(1,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(1,1)))->addItems(QStringList()<<tr("true")<<tr("false"));
-//    ((QComboBox*)(AttrTable->cellWidget(1,1)))->setCurrentIndex(1);
-//    AttrTable->setCellWidget(2,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(2,1)))->addItems(QStringList()<<tr("true")<<tr("false"));
-//    ((QComboBox*)(AttrTable->cellWidget(2,1)))->setCurrentIndex(1);
-//    AttrTable->setCellWidget(3,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(3,1)))->addItems(QStringList()<<tr("true")<<tr("false"));
-//    ((QComboBox*)(AttrTable->cellWidget(3,1)))->setCurrentIndex(1);
-//    AttrTable->setCellWidget(4,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(4,1)))->addItems(QStringList()<<tr("true")<<tr("false"));
-//    ((QComboBox*)(AttrTable->cellWidget(4,1)))->setCurrentIndex(1);
-//    AttrTable->setCellWidget(5,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(5,1)))->addItems(QStringList()<<tr("true")<<tr("false"));
-//    ((QComboBox*)(AttrTable->cellWidget(5,1)))->setCurrentIndex(1);
-//    AttrTable->setCellWidget(6,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(6,1)))->addItems(QStringList()<<tr("true")<<tr("false"));
-//    ((QComboBox*)(AttrTable->cellWidget(6,1)))->setCurrentIndex(1);
-//    AttrTable->setCellWidget(7,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(7,1)))->addItems(QStringList()<<tr("true")<<tr("false"));
-//    ((QComboBox*)(AttrTable->cellWidget(7,1)))->setCurrentIndex(1);
-//    AttrTable->setCellWidget(8,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(8,1)))->addItems(QStringList()<<tr("true")<<tr("false"));
-//    ((QComboBox*)(AttrTable->cellWidget(8,1)))->setCurrentIndex(1);
-
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    if(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        QDomElement qNewElement = doc->createElement(tr("OptFields"));
-
-//        if(AttrTable->item(0,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("refreshTime"), ((QComboBox*)(AttrTable->cellWidget(0,1)))->currentText());
-//        if(AttrTable->item(1,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("sampleSynchronized"), ((QComboBox*)(AttrTable->cellWidget(1,1)))->currentText());
-//        if(AttrTable->item(2,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("sampleRate"), ((QComboBox*)(AttrTable->cellWidget(2,1)))->currentText());
-//        if(AttrTable->item(3,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("security"), ((QComboBox*)(AttrTable->cellWidget(3,1)))->currentText());
-//        if(AttrTable->item(4,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("dataRef"), ((QComboBox*)(AttrTable->cellWidget(4,1)))->currentText());
-//        if(AttrTable->item(5,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("bufOvfl"), ((QComboBox*)(AttrTable->cellWidget(5,1)))->currentText());
-//        if(AttrTable->item(6,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("entryID"), ((QComboBox*)(AttrTable->cellWidget(6,1)))->currentText());
-//        if(AttrTable->item(7,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("configRef"), ((QComboBox*)(AttrTable->cellWidget(7,1)))->currentText());
-//        if(AttrTable->item(8,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("segmentation"), ((QComboBox*)(AttrTable->cellWidget(8,1)))->currentText());
-
-//        currentNode.appendChild(qNewElement);
-//DomItem newItem = DomItem(qNewElement, 0, 0);
-//	currentItem->insertChildren(currentItem->childNum(), newItem);
-//// 	currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-//    }
-}
-
-void MainWindow::addRptEnabled(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - RptEnabled"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(2,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("max")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(0,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(1,0,new QTableWidgetItem(tr("desc")));
-//    AttrTable->item(1,0)->setFlags(AttrTable->item(1,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(1,0)->setCheckState(Qt::Unchecked);
-
-//    AttrTable->setCellWidget(0,1,new QSpinBox(this));
-//    ((QSpinBox*)(AttrTable->cellWidget(0,1)))->setValue(1);
-//    AttrTable->setItem(1,1,new QTableWidgetItem(tr("")));
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    if(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        QDomElement qNewElement = doc->createElement(tr("RptEnabled"));
-
-//        if(AttrTable->item(0,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("max"), ((QSpinBox*)(AttrTable->cellWidget(0,1)))->text());
-//        if(AttrTable->item(1,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("desc"), AttrTable->item(1,1)->text());
-
-//        currentNode.appendChild(qNewElement);
-//DomItem newItem = DomItem(qNewElement, 0, 0);
-//	currentItem->insertChildren(currentItem->childNum(), newItem);
-//// 	currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-//    }
-}
-
-void MainWindow::addTrgOps(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - TrgOps"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(4,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("dchg")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(0,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(1,0,new QTableWidgetItem(tr("qchg")));
-//    AttrTable->item(1,0)->setFlags(AttrTable->item(1,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(1,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(2,0,new QTableWidgetItem(tr("dupd")));
-//    AttrTable->item(2,0)->setFlags(AttrTable->item(2,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(2,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(3,0,new QTableWidgetItem(tr("period")));
-//    AttrTable->item(3,0)->setFlags(AttrTable->item(3,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(3,0)->setCheckState(Qt::Unchecked);
-
-//    AttrTable->setCellWidget(0,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(0,1)))->addItems(QStringList()<<tr("true")<<tr("false"));
-//    ((QComboBox*)(AttrTable->cellWidget(0,1)))->setCurrentIndex(1);
-//    AttrTable->setCellWidget(1,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(1,1)))->addItems(QStringList()<<tr("true")<<tr("false"));
-//    ((QComboBox*)(AttrTable->cellWidget(1,1)))->setCurrentIndex(1);
-//    AttrTable->setCellWidget(2,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(2,1)))->addItems(QStringList()<<tr("true")<<tr("false"));
-//    ((QComboBox*)(AttrTable->cellWidget(2,1)))->setCurrentIndex(1);
-//    AttrTable->setCellWidget(3,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(3,1)))->addItems(QStringList()<<tr("true")<<tr("false"));
-//    ((QComboBox*)(AttrTable->cellWidget(3,1)))->setCurrentIndex(1);
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    if(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        QDomElement qNewElement = doc->createElement(tr("TrgOps"));
-
-//        if(AttrTable->item(0,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("dchg"), ((QComboBox*)(AttrTable->cellWidget(0,1)))->currentText());
-//        if(AttrTable->item(1,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("qchg"), ((QComboBox*)(AttrTable->cellWidget(1,1)))->currentText());
-//        if(AttrTable->item(2,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("dupd"), ((QComboBox*)(AttrTable->cellWidget(2,1)))->currentText());
-//        if(AttrTable->item(3,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("period"), ((QComboBox*)(AttrTable->cellWidget(3,1)))->currentText());
-
-//        currentNode.appendChild(qNewElement);
-//DomItem newItem = DomItem(qNewElement, 0, 0);
-//	currentItem->insertChildren(currentItem->childNum(), newItem);
-//// 	currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-//    }
-}
-
-void MainWindow::addClientLN(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - ClientLN"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(5,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("prefix")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(0,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(1,0,new QTableWidgetItem(tr("(*)lnClass")));
-//    AttrTable->item(1,0)->setFlags(AttrTable->item(1,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(2,0,new QTableWidgetItem(tr("(*)lnInst")));
-//    AttrTable->item(2,0)->setFlags(AttrTable->item(2,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(3,0,new QTableWidgetItem(tr("(*)iedName")));
-//    AttrTable->item(3,0)->setFlags(AttrTable->item(3,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(4,0,new QTableWidgetItem(tr("(*)ldInst")));
-//    AttrTable->item(4,0)->setFlags(AttrTable->item(4,0)->flags() & (~Qt::ItemIsEditable));
-
-//    AttrTable->setItem(0,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setCellWidget(1,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(1,1)))->addItems(lnClass);
-//    AttrTable->setItem(2,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setItem(3,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setItem(4,1,new QTableWidgetItem(tr("")));
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    while(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        if(AttrTable->item(2,1)->text()==tr(""))
-//        {
-//            QMessageBox::warning(NULL,tr("警告"),tr("lnInst项为必需项，不能为空!"));
-//            continue;
-//        }
-//        if(AttrTable->item(3,1)->text()==tr(""))
-//        {
-//            QMessageBox::warning(NULL,tr("警告"),tr("iedName项为必需项，不能为空!"));
-//            continue;
-//        }
-//        if(AttrTable->item(4,1)->text()==tr(""))
-//        {
-//            QMessageBox::warning(NULL,tr("警告"),tr("ldInst项为必需项，不能为空!"));
-//            continue;
-//        }
-
-//        QDomElement qNewElement = doc->createElement(tr("ClientLN"));
-
-//        if(AttrTable->item(0,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("prefix"), AttrTable->item(0,1)->text());
-//        qNewElement.setAttribute(tr("lnClass"), ((QComboBox*)(AttrTable->cellWidget(1,1)))->currentText());
-//        qNewElement.setAttribute(tr("lnInst"), AttrTable->item(2,1)->text());
-//        qNewElement.setAttribute(tr("iedName"), AttrTable->item(3,1)->text());
-//        qNewElement.setAttribute(tr("ldInst"), AttrTable->item(4,1)->text());
-
-//        currentNode.appendChild(qNewElement);
-//DomItem newItem = DomItem(qNewElement, 0, 0);
-//	currentItem->insertChildren(currentItem->childNum(), newItem);
-//// 	currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-//        break;
-//    }
-}
-
-void MainWindow::addSDI(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - SDI"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(3,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("name")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(1,0,new QTableWidgetItem(tr("ix")));
-//    AttrTable->item(1,0)->setFlags(AttrTable->item(1,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(1,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(2,0,new QTableWidgetItem(tr("desc")));
-//    AttrTable->item(2,0)->setFlags(AttrTable->item(2,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(2,0)->setCheckState(Qt::Unchecked);
-
-//    AttrTable->setItem(0,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setCellWidget(1,1,new QSpinBox(this));
-//    AttrTable->setItem(2,1,new QTableWidgetItem(tr("")));
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    while(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        if(AttrTable->item(0,1)->text()==tr(""))
-//        {
-//            QMessageBox::warning(NULL,tr("警告"),tr("name项为必需项，不能为空!"));
-//            continue;
-//        }
-
-//        QDomElement qNewElement = doc->createElement(tr("SDI"));
-
-//        qNewElement.setAttribute(tr("name"), AttrTable->item(0,1)->text());
-//        if(AttrTable->item(1,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("ix"), ((QSpinBox*)(AttrTable->cellWidget(1,1)))->text());
-//        if(AttrTable->item(2,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("desc"), AttrTable->item(2,1)->text());
-
-//        currentNode.appendChild(qNewElement);
-//DomItem newItem = DomItem(qNewElement, 0, 0);
-//	currentItem->insertChildren(currentItem->childNum(), newItem);
-//// 	currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-//        break;
-//    }
-}
-
-void MainWindow::addDAI(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - DAI"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(5,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("name")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(1,0,new QTableWidgetItem(tr("sAddr")));
-//    AttrTable->item(1,0)->setFlags(AttrTable->item(1,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(1,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(2,0,new QTableWidgetItem(tr("valKind")));
-//    AttrTable->item(2,0)->setFlags(AttrTable->item(2,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(2,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(3,0,new QTableWidgetItem(tr("ix")));
-//    AttrTable->item(3,0)->setFlags(AttrTable->item(3,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(3,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(4,0,new QTableWidgetItem(tr("desc")));
-//    AttrTable->item(4,0)->setFlags(AttrTable->item(4,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(4,0)->setCheckState(Qt::Unchecked);
-
-//    AttrTable->setItem(0,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setItem(1,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setCellWidget(2,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(2,1)))->addItems(QStringList()<<tr("Spec")<<tr("Conf")<<tr("RO")<<tr("Set"));
-//    ((QComboBox*)(AttrTable->cellWidget(2,1)))->setCurrentIndex(3);
-//    AttrTable->setCellWidget(3,1,new QSpinBox(this));
-//    AttrTable->setItem(4,1,new QTableWidgetItem(tr("")));
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    while(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        if(AttrTable->item(0,1)->text()==tr(""))
-//        {
-//            QMessageBox::warning(NULL,tr("警告"),tr("name项为必需项，不能为空!"));
-//            continue;
-//        }
-
-//        QDomElement qNewElement = doc->createElement(tr("DAI"));
-
-//        qNewElement.setAttribute(tr("name"), AttrTable->item(0,1)->text());
-//        if(AttrTable->item(1,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("sAddr"), AttrTable->item(1,1)->text());
-//        if(AttrTable->item(2,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("valKind"), ((QComboBox*)(AttrTable->cellWidget(2,1)))->currentText());
-//        if(AttrTable->item(3,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("ix"), ((QSpinBox*)(AttrTable->cellWidget(1,1)))->text());
-//        if(AttrTable->item(4,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("desc"), AttrTable->item(2,1)->text());
-
-//        currentNode.appendChild(qNewElement);
-//        DomItem newItem = DomItem(qNewElement, 0, 0);
-//currentItem->insertChildren(currentItem->childNum(), newItem);
-//// currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-//        break;
-//    }
-}
-
-void MainWindow::addVal(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - Val"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(1,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("sGroup")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(0,0)->setCheckState(Qt::Unchecked);
-
-//    AttrTable->setCellWidget(0,1,new QSpinBox(this));
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    if(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        QDomElement qNewElement = doc->createElement(tr("Val"));
-
-//        if(AttrTable->item(0,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("sGroup"), ((QSpinBox*)(AttrTable->cellWidget(0,1)))->text());
-
-//        currentNode.appendChild(qNewElement);
-//        DomItem newItem = DomItem(qNewElement, 0, 0);
-//	currentItem->insertChildren(currentItem->childNum(), newItem);
-//// 	currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        qDebug()<<"Add Item";
-//        qDebug()<<currentNode.toElement().tagName();
-//        qDebug()<<qNewElement.tagName();
-//        qDebug()<<currentIndex.parent().data().toString();
-//        model->update();
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-//    }
-}
-
-void MainWindow::addValContent(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *ContentDlg = new QDialog(this);
-//    ContentDlg->setWindowTitle(tr("Val值输入"));
-//    QGridLayout *ContentDlgLayout = new QGridLayout(ContentDlg);
-//    QLabel *ContentLabel = new QLabel(tr("请输入Val值："));
-//    QLineEdit *ContentEdit = new QLineEdit(this);
-
-//    QPushButton *qContentDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qContentDlgConfirm, SIGNAL(clicked()), ContentDlg, SLOT(accept()));
-//    QPushButton *qContentDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qContentDlgCancel, SIGNAL(clicked()), ContentDlg, SLOT(close()));
-//    ContentDlgLayout->addWidget(ContentLabel,0,0,1,1);
-//    ContentDlgLayout->addWidget(ContentEdit,0,1,1,3);
-//    ContentDlgLayout->addWidget(qContentDlgConfirm,2,2);
-//    ContentDlgLayout->addWidget(qContentDlgCancel,2,3);
-
-//    if(ContentDlg->exec() == QDialog::Accepted)
-//    {
-//        QDomText qNewText = doc->createTextNode(ContentEdit->text());
-
-//        currentNode.appendChild(qNewText);
-//        DomItem newItem = DomItem(qNewText, 0, 0);
-//	currentItem->insertChildren(currentItem->childNum(), newItem);
-//// 	currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewText);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-//    }
-}
-
-void MainWindow::addExtRef(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - ExtRef"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(8,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("daName")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(0,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(1,0,new QTableWidgetItem(tr("intAddr")));
-//    AttrTable->item(1,0)->setFlags(AttrTable->item(1,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(1,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(2,0,new QTableWidgetItem(tr("(*)doName")));
-//    AttrTable->item(2,0)->setFlags(AttrTable->item(2,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(3,0,new QTableWidgetItem(tr("prefix")));
-//    AttrTable->item(3,0)->setFlags(AttrTable->item(3,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(3,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(4,0,new QTableWidgetItem(tr("(*)lnClass")));
-//    AttrTable->item(4,0)->setFlags(AttrTable->item(4,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(5,0,new QTableWidgetItem(tr("(*)lnInst")));
-//    AttrTable->item(5,0)->setFlags(AttrTable->item(5,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(6,0,new QTableWidgetItem(tr("(*)iedName")));
-//    AttrTable->item(6,0)->setFlags(AttrTable->item(6,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(7,0,new QTableWidgetItem(tr("(*)ldInst")));
-//    AttrTable->item(7,0)->setFlags(AttrTable->item(7,0)->flags() & (~Qt::ItemIsEditable));
-
-//    AttrTable->setItem(0,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setItem(1,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setItem(2,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setItem(3,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setCellWidget(4,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(4,1)))->addItems(lnClass);
-//    AttrTable->setItem(5,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setItem(6,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setItem(7,1,new QTableWidgetItem(tr("")));
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    while(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        if(AttrTable->item(2,1)->text()==tr(""))
-//        {
-//            QMessageBox::warning(NULL,tr("警告"),tr("doName项为必需项，不能为空!"));
-//            continue;
-//        }
-//        if(AttrTable->item(5,1)->text()==tr(""))
-//        {
-//            QMessageBox::warning(NULL,tr("警告"),tr("lnInst项为必需项，不能为空!"));
-//            continue;
-//        }
-//        if(AttrTable->item(6,1)->text()==tr(""))
-//        {
-//            QMessageBox::warning(NULL,tr("警告"),tr("iedName项为必需项，不能为空!"));
-//            continue;
-//        }
-//        if(AttrTable->item(7,1)->text()==tr(""))
-//        {
-//            QMessageBox::warning(NULL,tr("警告"),tr("ldInst项为必需项，不能为空!"));
-//            continue;
-//        }
-//        QDomElement qNewElement = doc->createElement(tr("ExtRef"));
-
-//        if(AttrTable->item(0,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("daName"), AttrTable->item(0,1)->text());
-//        if(AttrTable->item(1,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("intAddr"), AttrTable->item(1,1)->text());
-//        qNewElement.setAttribute(tr("doName"), AttrTable->item(2,1)->text());
-//        if(AttrTable->item(3,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("prefix"), AttrTable->item(3,1)->text());
-//        qNewElement.setAttribute(tr("lnClass"), ((QComboBox*)(AttrTable->cellWidget(4,1)))->currentText());
-//        qNewElement.setAttribute(tr("lnInst"), AttrTable->item(5,1)->text());
-//        qNewElement.setAttribute(tr("iedName"), AttrTable->item(6,1)->text());
-//        qNewElement.setAttribute(tr("ldInst"), AttrTable->item(7,1)->text());
-
-//        currentNode.appendChild(qNewElement);
-//        DomItem newItem = DomItem(qNewElement, 0, 0);
-//        currentItem->insertChildren(currentItem->childNum(), newItem);
-////      currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-//        break;
-//    }
-}
-
-void MainWindow::addLNodeType(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - LNodeType"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(4,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("iedType")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(0,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(1,0,new QTableWidgetItem(tr("(*)lnClass")));
-//    AttrTable->item(1,0)->setFlags(AttrTable->item(1,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(2,0,new QTableWidgetItem(tr("(*)id")));
-//    AttrTable->item(2,0)->setFlags(AttrTable->item(2,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(3,0,new QTableWidgetItem(tr("desc")));
-//    AttrTable->item(3,0)->setFlags(AttrTable->item(3,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(3,0)->setCheckState(Qt::Unchecked);
-
-//    AttrTable->setItem(0,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setCellWidget(1,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(1,1)))->addItems(lnClass);
-//    AttrTable->setItem(2,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setItem(3,1,new QTableWidgetItem(tr("")));
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    while(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        QDomElement qNewElement = doc->createElement(tr("LNodeType"));
-
-//        if(AttrTable->item(2,1)->text()==tr(""))
-//        {
-//            QMessageBox::warning(NULL,tr("警告"),tr("id项为必需项，不能为空!"));
-//            continue;
-//        }
-
-//        if(AttrTable->item(0,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("iedType"), ((QComboBox*)(AttrTable->cellWidget(0,1)))->currentText());
-//        qNewElement.setAttribute(tr("lnClss"), ((QComboBox*)(AttrTable->cellWidget(1,1)))->currentText());
-//        qNewElement.setAttribute(tr("id"), AttrTable->item(2,1)->text());
-//        if(AttrTable->item(3,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("desc"), AttrTable->item(3,1)->text());
-
-//        currentNode.appendChild(qNewElement);
-//DomItem newItem = DomItem(qNewElement, 0, 0);
-//	currentItem->insertChildren(currentItem->childNum(), newItem);
-//// 	currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-//        break;
-//    }
-}
-
-void MainWindow::addDOType(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - DOType"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(4,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("iedType")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(0,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(1,0,new QTableWidgetItem(tr("(*)cdc")));
-//    AttrTable->item(1,0)->setFlags(AttrTable->item(1,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(2,0,new QTableWidgetItem(tr("(*)id")));
-//    AttrTable->item(2,0)->setFlags(AttrTable->item(2,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(3,0,new QTableWidgetItem(tr("desc")));
-//    AttrTable->item(3,0)->setFlags(AttrTable->item(3,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(3,0)->setCheckState(Qt::Unchecked);
-
-//    AttrTable->setItem(0,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setCellWidget(1,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(1,1)))->addItems(cdc);
-//    ((QComboBox*)(AttrTable->cellWidget(1,1)))->setEditable(1);
-//    AttrTable->setItem(2,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setItem(3,1,new QTableWidgetItem(tr("")));
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    while(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        QDomElement qNewElement = doc->createElement(tr("DOType"));
-
-//        if(AttrTable->item(2,1)->text()==tr(""))
-//        {
-//            QMessageBox::warning(NULL,tr("警告"),tr("id项为必需项，不能为空!"));
-//            continue;
-//        }
-
-//        if(AttrTable->item(0,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("iedType"), AttrTable->item(0,1)->text());
-//        qNewElement.setAttribute(tr("cdc"), ((QComboBox*)(AttrTable->cellWidget(1,1)))->currentText());
-//        qNewElement.setAttribute(tr("id"), AttrTable->item(2,1)->text());
-//        if(AttrTable->item(3,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("desc"), AttrTable->item(3,1)->text());
-
-//        currentNode.appendChild(qNewElement);
-//        DomItem newItem = DomItem(qNewElement, 0, 0);
-//	currentItem->insertChildren(currentItem->childNum(), newItem);
-//// 	currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-//        break;
-//    }
-}
-
-void MainWindow::addDAType(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - DAType"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(3,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("iedType")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(0,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(1,0,new QTableWidgetItem(tr("(*)id")));
-//    AttrTable->item(1,0)->setFlags(AttrTable->item(1,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(2,0,new QTableWidgetItem(tr("desc")));
-//    AttrTable->item(2,0)->setFlags(AttrTable->item(2,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(2,0)->setCheckState(Qt::Unchecked);
-
-//    AttrTable->setItem(0,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setItem(1,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setItem(2,1,new QTableWidgetItem(tr("")));
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    while(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        QDomElement qNewElement = doc->createElement(tr("DAType"));
-
-//        if(AttrTable->item(1,1)->text()==tr(""))
-//        {
-//            QMessageBox::warning(NULL,tr("警告"),tr("id项为必需项，不能为空!"));
-//            continue;
-//        }
-
-//        if(AttrTable->item(0,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("iedType"), AttrTable->item(0,1)->text());
-//        qNewElement.setAttribute(tr("id"), AttrTable->item(1,1)->text());
-//        if(AttrTable->item(2,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("desc"), AttrTable->item(2,1)->text());
-
-//        currentNode.appendChild(qNewElement);
-//        DomItem newItem = DomItem(qNewElement, 0, 0);
-//	currentItem->insertChildren(currentItem->childNum(), newItem);
-//// 	currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-//        break;
-//    }
-}
-
-void MainWindow::addEnumType(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - EnumType"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(2,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("(*)id")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(1,0,new QTableWidgetItem(tr("desc")));
-//    AttrTable->item(1,0)->setFlags(AttrTable->item(1,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(1,0)->setCheckState(Qt::Unchecked);
-
-//    AttrTable->setItem(0,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setItem(1,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setItem(2,1,new QTableWidgetItem(tr("")));
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    while(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        QDomElement qNewElement = doc->createElement(tr("EnumType"));
-
-//        if(AttrTable->item(0,1)->text()==tr(""))
-//        {
-//            QMessageBox::warning(NULL,tr("警告"),tr("id项为必需项，不能为空!"));
-//            continue;
-//        }
-
-//        qNewElement.setAttribute(tr("id"), AttrTable->item(0,1)->text());
-//        if(AttrTable->item(1,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("desc"), AttrTable->item(1,1)->text());
-
-//        currentNode.appendChild(qNewElement);
-//        DomItem newItem = DomItem(qNewElement, 0, 0);
-//	currentItem->insertChildren(currentItem->childNum(), newItem);
-//// 	currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-//        break;
-//    }
-}
-
-void MainWindow::addDO(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - DO"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(5,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("(*)name")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(1,0,new QTableWidgetItem(tr("(*)type")));
-//    AttrTable->item(1,0)->setFlags(AttrTable->item(1,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(2,0,new QTableWidgetItem(tr("accessControl")));
-//    AttrTable->item(2,0)->setFlags(AttrTable->item(2,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(2,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(3,0,new QTableWidgetItem(tr("transient")));
-//    AttrTable->item(3,0)->setFlags(AttrTable->item(3,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(3,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(4,0,new QTableWidgetItem(tr("desc")));
-//    AttrTable->item(4,0)->setFlags(AttrTable->item(4,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(4,0)->setCheckState(Qt::Unchecked);
-
-//    AttrTable->setItem(0,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setCellWidget(1,1,new QComboBox(this));
-//    AttrTable->setItem(2,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setCellWidget(3,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(3,1)))->addItems(QStringList()<<tr("true")<<tr("false"));
-//    ((QComboBox*)(AttrTable->cellWidget(3,1)))->setCurrentIndex(1);
-//    AttrTable->setItem(4,1,new QTableWidgetItem(tr("")));
-
-//    QStringList DAType;
-//    QDomNode DataTypeNode = currentNode.parentNode();
-//    for(int i=0; i<DataTypeNode.childNodes().count(); i++)
-//    {
-//        if(DataTypeNode.childNodes().at(i).toElement().tagName().contains(tr("DAType")))
-//        {
-//            QDomNode DATypeNode = DataTypeNode.childNodes().at(i);
-
-//            if(DATypeNode.attributes().contains(tr("id")))
-//                DAType.append(DATypeNode.attributes().namedItem("id").toAttr().value());
-//        }
-//    }
-//    if(DAType.isEmpty())
-//        DAType.append(tr(""));
-//    ((QComboBox*)(AttrTable->cellWidget(1,1)))->addItems(DAType);
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    while(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        QDomElement qNewElement = doc->createElement(tr("DO"));
-
-//        if(AttrTable->item(0,1)->text()==tr(""))
-//        {
-//            QMessageBox::warning(NULL,tr("警告"),tr("name项为必需项，不能为空!"));
-//            continue;
-//        }
-
-//        qNewElement.setAttribute(tr("name"), AttrTable->item(0,1)->text());
-//        qNewElement.setAttribute(tr("type"), ((QComboBox*)(AttrTable->cellWidget(1,1)))->currentText());
-//        if(AttrTable->item(2,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("accessControl"), AttrTable->item(2,1)->text());
-//        if(AttrTable->item(3,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("transient"), ((QComboBox*)(AttrTable->cellWidget(3,1)))->currentText());
-//        if(AttrTable->item(4,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("desc"), AttrTable->item(4,1)->text());
-
-//        currentNode.appendChild(qNewElement);
-//        DomItem newItem = DomItem(qNewElement, 0, 0);
-//	currentItem->insertChildren(currentItem->childNum(), newItem);
-//// 	currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-//        break;
-//    }
-}
-
-void MainWindow::addSDO(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - SDO"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(3,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("(*)type")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(1,0,new QTableWidgetItem(tr("(*)name")));
-//    AttrTable->item(1,0)->setFlags(AttrTable->item(1,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(2,0,new QTableWidgetItem(tr("desc")));
-//    AttrTable->item(2,0)->setFlags(AttrTable->item(2,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(2,0)->setCheckState(Qt::Unchecked);
-
-//    AttrTable->setItem(0,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setItem(1,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setItem(2,1,new QTableWidgetItem(tr("")));
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    while(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        QDomElement qNewElement = doc->createElement(tr("SDO"));
-
-//        if(AttrTable->item(0,1)->text()==tr(""))
-//        {
-//            QMessageBox::warning(NULL,tr("警告"),tr("type项为必需项，不能为空!"));
-//            continue;
-//        }
-//        if(AttrTable->item(1,1)->text()==tr(""))
-//        {
-//            QMessageBox::warning(NULL,tr("警告"),tr("name项为必需项，不能为空!"));
-//            continue;
-//        }
-
-//        qNewElement.setAttribute(tr("type"), AttrTable->item(0,1)->text());
-//        qNewElement.setAttribute(tr("name"), AttrTable->item(1,1)->text());
-//        if(AttrTable->item(2,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("desc"), AttrTable->item(2,1)->text());
-
-//        currentNode.appendChild(qNewElement);
-//        DomItem newItem = DomItem(qNewElement, 0, 0);
-//	currentItem->insertChildren(currentItem->childNum(), newItem);
-//// 	currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-//        break;
-//    }
-}
-
-void MainWindow::addDA(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - DA"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(11,2,this);
-//    AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("(*)fc")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(1,0,new QTableWidgetItem(tr("dchg")));
-//    AttrTable->item(1,0)->setFlags(AttrTable->item(1,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(1,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(2,0,new QTableWidgetItem(tr("qchg")));
-//    AttrTable->item(2,0)->setFlags(AttrTable->item(2,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(2,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(3,0,new QTableWidgetItem(tr("dupds")));
-//    AttrTable->item(3,0)->setFlags(AttrTable->item(3,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(3,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(4,0,new QTableWidgetItem(tr("(*)name")));
-//    AttrTable->item(4,0)->setFlags(AttrTable->item(4,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(5,0,new QTableWidgetItem(tr("sAddr")));
-//    AttrTable->item(5,0)->setFlags(AttrTable->item(5,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(5,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(6,0,new QTableWidgetItem(tr("(*)bType")));
-//    AttrTable->item(6,0)->setFlags(AttrTable->item(6,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(6,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(7,0,new QTableWidgetItem(tr("valKind")));
-//    AttrTable->item(7,0)->setFlags(AttrTable->item(7,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(7,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(8,0,new QTableWidgetItem(tr("type")));
-//    AttrTable->item(8,0)->setFlags(AttrTable->item(8,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(8,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(9,0,new QTableWidgetItem(tr("count")));
-//    AttrTable->item(9,0)->setFlags(AttrTable->item(9,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(9,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(10,0,new QTableWidgetItem(tr("desc")));
-//    AttrTable->item(10,0)->setFlags(AttrTable->item(10,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(10,0)->setCheckState(Qt::Unchecked);
-
-//    AttrTable->setCellWidget(0,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(0,1)))->addItems(fcEnum);
-//    AttrTable->setCellWidget(1,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(1,1)))->addItems(QStringList()<<tr("true")<<tr("false"));
-//    ((QComboBox*)(AttrTable->cellWidget(1,1)))->setCurrentIndex(1);
-//    AttrTable->setCellWidget(2,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(2,1)))->addItems(QStringList()<<tr("true")<<tr("false"));
-//    ((QComboBox*)(AttrTable->cellWidget(2,1)))->setCurrentIndex(1);
-//    AttrTable->setCellWidget(3,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(3,1)))->addItems(QStringList()<<tr("true")<<tr("false"));
-//    ((QComboBox*)(AttrTable->cellWidget(3,1)))->setCurrentIndex(1);
-//    AttrTable->setCellWidget(4,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(4,1)))->addItems(QStringList()<<tr("T")<<tr("Test")<<tr("Check")<<tr("SIUnit"));
-//    ((QComboBox*)(AttrTable->cellWidget(4,1)))->setEditable(1);
-//    AttrTable->setItem(5,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setCellWidget(6,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(6,1)))->addItems(BasicType);
-//    ((QComboBox*)(AttrTable->cellWidget(6,1)))->setEditable(1);
-//    AttrTable->setCellWidget(7,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(7,1)))->addItems(QStringList()<<tr("Spec")<<tr("Conf")<<tr("RO")<<tr("Set"));
-//    ((QComboBox*)(AttrTable->cellWidget(7,1)))->setCurrentIndex(3);
-//    AttrTable->setItem(8,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setCellWidget(9,1,new QSpinBox(this));
-//    AttrTable->setItem(10,1,new QTableWidgetItem(tr("")));
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    if(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        QDomElement qNewElement = doc->createElement(tr("DA"));
-
-//        qNewElement.setAttribute(tr("fc"), ((QComboBox*)(AttrTable->cellWidget(0,1)))->currentText());
-//        if(AttrTable->item(1,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("dchg"), ((QComboBox*)(AttrTable->cellWidget(1,1)))->currentText());
-//        if(AttrTable->item(2,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("qchg"), ((QComboBox*)(AttrTable->cellWidget(2,1)))->currentText());
-//        if(AttrTable->item(3,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("dupd"), ((QComboBox*)(AttrTable->cellWidget(3,1)))->currentText());
-//        qNewElement.setAttribute(tr("name"), ((QComboBox*)(AttrTable->cellWidget(4,1)))->currentText());
-//        if(AttrTable->item(5,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("sAddr"), AttrTable->item(5,1)->text());
-//        qNewElement.setAttribute(tr("bType"), ((QComboBox*)(AttrTable->cellWidget(6,1)))->currentText());
-//        if(AttrTable->item(7,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("valKind"), ((QComboBox*)(AttrTable->cellWidget(7,1)))->currentText());
-//        if(AttrTable->item(8,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("type"), AttrTable->item(8,1)->text());
-//        if(AttrTable->item(9,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("count"), ((QSpinBox*)(AttrTable->cellWidget(9,1)))->text());
-//        if(AttrTable->item(10,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("desc"), AttrTable->item(10,1)->text());
-
-//        currentNode.appendChild(qNewElement);
-//        DomItem newItem = DomItem(qNewElement, 0, 0);
-//	currentItem->insertChildren(currentItem->childNum(), newItem);
-//// 	currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-//    }
-}
-
-void MainWindow::addBDA(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - BDA"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(7,2,this);
-
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("(*)name")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->setItem(1,0,new QTableWidgetItem(tr("sAddr")));
-//    AttrTable->item(1,0)->setFlags(AttrTable->item(1,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(1,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(2,0,new QTableWidgetItem(tr("(*)bType")));
-//    AttrTable->item(2,0)->setFlags(AttrTable->item(2,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(2,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(3,0,new QTableWidgetItem(tr("valKind")));
-//    AttrTable->item(3,0)->setFlags(AttrTable->item(3,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(3,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(4,0,new QTableWidgetItem(tr("type")));
-//    AttrTable->item(4,0)->setFlags(AttrTable->item(4,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(4,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(5,0,new QTableWidgetItem(tr("count")));
-//    AttrTable->item(5,0)->setFlags(AttrTable->item(5,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(5,0)->setCheckState(Qt::Unchecked);
-//    AttrTable->setItem(6,0,new QTableWidgetItem(tr("desc")));
-//    AttrTable->item(6,0)->setFlags(AttrTable->item(6,0)->flags() & (~Qt::ItemIsEditable));
-//    AttrTable->item(6,0)->setCheckState(Qt::Unchecked);
-
-//    AttrTable->setCellWidget(0,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(0,1)))->addItems(QStringList()<<tr("T")<<tr("Test")<<tr("Check")<<tr("SIUnit"));
-//    ((QComboBox*)(AttrTable->cellWidget(0,1)))->setEditable(1);
-//    AttrTable->setItem(1,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setCellWidget(2,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(2,1)))->addItems(BasicType);
-//    ((QComboBox*)(AttrTable->cellWidget(2,1)))->setEditable(1);
-//    AttrTable->setCellWidget(3,1,new QComboBox(this));
-//    ((QComboBox*)(AttrTable->cellWidget(3,1)))->addItems(QStringList()<<tr("Spec")<<tr("Conf")<<tr("RO")<<tr("Set"));
-//    ((QComboBox*)(AttrTable->cellWidget(3,1)))->setCurrentIndex(3);
-//    AttrTable->setItem(4,1,new QTableWidgetItem(tr("")));
-//    AttrTable->setCellWidget(5,1,new QSpinBox(this));
-//    AttrTable->setItem(6,1,new QTableWidgetItem(tr("")));
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    if(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        QDomElement qNewElement = doc->createElement(tr("BDA"));
-
-//        qNewElement.setAttribute(tr("name"), ((QComboBox*)(AttrTable->cellWidget(0,1)))->currentText());
-//        if(AttrTable->item(1,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("sAddr"), AttrTable->item(1,1)->text());
-//        qNewElement.setAttribute(tr("bType"), ((QComboBox*)(AttrTable->cellWidget(2,1)))->currentText());
-//        if(AttrTable->item(3,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("valKind"), ((QComboBox*)(AttrTable->cellWidget(3,1)))->currentText());
-//        if(AttrTable->item(4,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("type"), AttrTable->item(4,1)->text());
-//        if(AttrTable->item(5,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("count"), ((QSpinBox*)(AttrTable->cellWidget(5,1)))->text());
-//        if(AttrTable->item(6,0)->checkState() == Qt::Checked)
-//            qNewElement.setAttribute(tr("desc"), AttrTable->item(6,1)->text());
-
-//        currentNode.appendChild(qNewElement);
-//        DomItem newItem = DomItem(qNewElement, 0, 0);
-//	currentItem->insertChildren(currentItem->childNum(), newItem);
-//// 	currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-//    }
-}
-
-void MainWindow::addEnumVal(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    QDialog *AttrDlg = new QDialog(this);
-//    AttrDlg->setWindowTitle(tr("属性编辑器 - EnumVal"));
-//    QGridLayout *AttrDlgLayout = new QGridLayout(AttrDlg);
-//    QTableWidget *AttrTable = new QTableWidget(1,2,this);
-
-//    AttrTable->setItem(0,0,new QTableWidgetItem(tr("(*)ord")));
-//    AttrTable->item(0,0)->setFlags(AttrTable->item(0,0)->flags() & (~Qt::ItemIsEditable));
-
-//    AttrTable->setCellWidget(0,1,new QSpinBox(this));
-//    ((QSpinBox*)(AttrTable->cellWidget(0,1)))->setMinimum(-65535);
-
-//    QPushButton *qAttrDlgConfirm = new QPushButton(tr("确认"),this);
-//    connect(qAttrDlgConfirm, SIGNAL(clicked()), AttrDlg, SLOT(accept()));
-//    QPushButton *qAttrDlgCancel = new QPushButton(tr("放弃"),this);
-//    connect(qAttrDlgCancel, SIGNAL(clicked()), AttrDlg, SLOT(close()));
-//    AttrDlgLayout->addWidget(AttrTable,0,0,1,4);
-//    AttrDlgLayout->addWidget(qAttrDlgConfirm,9,2);
-//    AttrDlgLayout->addWidget(qAttrDlgCancel,9,3);
-
-//    if(AttrDlg->exec() == QDialog::Accepted)
-//    {
-//        QDomElement qNewElement = doc->createElement(tr("EnumVal"));
-
-//        qNewElement.setAttribute(tr("ord"), ((QSpinBox*)(AttrTable->cellWidget(0,1)))->text());
-
-//        currentNode.appendChild(qNewElement);
-//        DomItem newItem = DomItem(qNewElement, 0, 0);
-//	currentItem->insertChildren(currentItem->childNum(), newItem);
-//// 	currentItem->insertChildren(currentItem->childNum(), (QDomNode)qNewElement);
-
-//        QModelIndex parentIndex = currentIndex.parent();
-//        view->setExpanded(parentIndex,0);
-//        view->setExpanded(parentIndex,1);
-//        view->setExpanded(currentIndex,1);
-
-//    }
-}
-
-void MainWindow::deleteItem(const QModelIndex& currentIndex)
-{
-////    QModelIndex *currentIndex = new QModelIndex();
-////        *currentIndex = currentIndex;
-//    DomItem *currentItem = static_cast<DomItem*>(currentIndex.internalPointer());
-//    QDomNode currentNode = currentItem->node();
-
-//    qDebug()<<"Delete Item";
-//    qDebug()<<currentNode.nodeName();
-//    qDebug()<<currentNode.childNodes().count();
-
-//    DomItem* parentItem = currentItem->parent();
-//    QDomNode parentNode = parentItem->node();
-//    qDebug()<<parentNode.nodeName();
-//    qDebug()<<parentNode.childNodes().count();
-
-//    QModelIndex parentIndex;
-
-
-////     if(parentNode.childNodes().count()>1)
-//         parentIndex = currentIndex.parent();//.parent();
-////     else
-////         parentIndex = currentIndex.parent().parent();
-
-////    for(int i=0; i<currentNode.childNodes().count(); i++)
-////    {
-////        currentNode.removeChild(currentNode.childNodes().at(i));
-////    }
-
-
-////    if(view->model()->hasChildren(currentIndex))
-////        view->model()->removeRows(0,view->model()->rowCount(currentIndex),currentIndex);
-////     parentItem->removeChildren(currentItem->childNum(),1);
-
-//    view->model()->removeRows(currentIndex.row(),1,currentIndex.parent());
-////    parentItem->removeChildren(currentItem->row(),1);
-//    parentNode.removeChild(currentNode);
-////    refresh();
-////    view->setExpanded(parentIndex,0);
-////    view->setExpanded(parentIndex,1);
-////    refresh();
-////    view->selectionModel()->setCurrentIndex(model->index(0,0,parentIndex), QItemSelectionModel::ClearAndSelect);
-//    emit deleteNode(currentIndex);
-
-
-}
-
-void MainWindow::deleteChildren(DomItem* item)
-{
-/*//    item->removeChildren(item);
-
-    qDebug()<<item->node().nodeName();
-
-    int i = 0;
-    int childCount = item->node().childNodes().count();
-//    if(childCount)
-
-    while(childCount)
-    {
-        for(int j=0; j<item->node().childNodes().count(); j++)
-            if(item->node().childNodes().at(j).nodeType() == QDomNode::TextNode)
-                childCount--;
-//        for(i=0; i<item->node().childNodes().count();i++)
-        qDebug()<<childCount;
-        qDebug()<<i;
-        if(item->child(i)->node().nodeType() != QDomNode::TextNode)
-        {
-            deleteChildren(item->child(i));
-            childCount--;
-            i--;
-        }
-//        i++;
-//        else
-//            break;
-//        for(int i=0; i<item->node().childNodes().count(); i++)
-//        {
-//            qDebug()<<i<<'\t'<<item->child(i)->node().nodeName();
-//            deleteChildren(item->child(i));
-//        }
-
-    }
-//    else
-//    {
-//    qDebug()<<item->parent()->node().nodeName();
-//    qDebug()<<item->node().nodeName();
-//    for(int j=0; j<item->parent()->node().childNodes().count();j++)
-//    {
-        qDebug()<<item->node().nodeName();
-        qDebug()<<item->parent()->node().nodeName();
-//        item->parent()->node().removeChild(item->node());
-//        item->parent()->removeChild(i);
-        if(i>0)
-            i--;
-//    }
-        //node.parentNode().removeChild(node);
-//        item->parent()->node().removeChild(item->node());
-//        for(int j=0; j<item->parent()->node().childNodes().count(); j++)
-//            if(item->parent()->node().childNodes().at(j).nodeName() == item->node().nodeName())
-//                item->parent()->removeChild(j);
-//    }*/
-}
-
-void MainWindow::refresh()
-{
-//    model->update();
-//    DomModel *newModel = new DomModel(*doc);
-//    view->setModel(newModel);
-//    model = newModel;
-
-//    qDebug()<<view->model()->index(2,0);
-//    view->setExpanded(view->model()->index(2,0),true);
-}
-
-
-
-void MainWindow::showAttributes(const QModelIndex& index)
-{
-//    DomItem* item = static_cast<DomItem*>(index.internalPointer());
-//    QDomNode node = item->node();
-
-////    if(node.nodeName() == tr("IED"))
-//    {
-//        qDebug()<<"Here Click IED";
-///*        if(!AttrTable)
-//        {
-//            AttrTable = new QTableWidget(node.attributes().count(),2,this);
-//            AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//        }
-//        else*/
-//        if(AttrTable)
-//        {
-//            AttrTable->deleteLater();
-//            AttrTable = NULL;
-//        }
-
-
-//        {
-////            AttrTable->setRowCount(node.attributes().count());
-
-//            AttrTable = new NodeTableWidget(node.attributes().count(),2,qSplitterMain);
-////            qSplitterMain->addWidget(AttrTable);
-//            AttrTable->setModelIndex(index);
-//            qSplitterMain->setStretchFactor(0,4);
-//            AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//            for(int i=0; i<node.attributes().count(); i++)
-//            {
-//                AttrTable->setItem(i,0,new QTableWidgetItem(node.attributes().item(i).toAttr().name()));
-//                AttrTable->item(i,0)->setFlags(AttrTable->item(i,0)->flags() & (~Qt::ItemIsEditable));
-//                AttrTable->setItem(i,1,new QTableWidgetItem(node.attributes().item(i).toAttr().value()));
-//            }
-
-//            connect(AttrTable, SIGNAL(nodeCellChanged(const QModelIndex&,int,int)), this, SLOT(changeAttributes(QModelIndex, int, int)), Qt::UniqueConnection);
-
-//        }
-
-////        for(int i=0; i<node.attributes().count(); i++)
-////        {
-////            node.attributes().item(i).toAttr().value() = AttrTable->item(i,1)->text();
-////            AttrTable->item(i,0)->setFlags(AttrTable->item(i,0)->flags() & (~Qt::ItemIsEditable));
-////            AttrTable->setItem(i,1,new QTableWidgetItem(node.attributes().item(i).toAttr().value()));
-////        }
-
-//    }
-}
-
-void MainWindow::changeAttributes(const QModelIndex& index, int row, int column)
-{
-//    if(column == 0)
-//        return;
-
-//    DomItem* item = static_cast<DomItem*>(index.internalPointer());
-//    QDomNode node = item->node();
-
-//    node.toElement().setAttribute(AttrTable->item(row,0)->text(),AttrTable->item(row,1)->text());
-
-///*    for(int i=0; i<node.attributes().count(); i++)
-//    {
-//        if(node.attributes().item(i).toAttr().name() == AttrTable->item(row,0)->text())
-//        {
-//            node.toElement().setNodeValue(AttrTable->item(row,1)->text());
-//            return;
-//        }
-//    }*/
-
-}
-
-void MainWindow::hideAttributes(const QModelIndex& index)
-{
-//    if(AttrTable->getModelIndex() == index)
-//    {
-//        AttrTable->setParent(NULL);
-////        AttrTable = new NodeTableWidget(0,2,qSplitterMain);
-////        qSplitterMain->setStretchFactor(0,4);
-////        AttrTable->setHorizontalHeaderLabels(QStringList()<<tr("名称")<<tr("值"));
-//    }
-
-//    return;
-}
-
-void MainWindow::ItemMoveUp(const QModelIndex& index)
-{
-//    ((DomModel*)(view->model()))->moveUpRows(index);
-}
-
-void MainWindow::ItemMoveDown(const QModelIndex& index)
-{
-
-}

@@ -56,7 +56,7 @@ QIcon DomItem::commentIcon;
 QIcon DomItem::elementIcon;
 QIcon DomItem::procInstrBkmIcon;
 QIcon DomItem::commentBkmIcon;
-QIcon DomItem::elementBkIcon;
+QIcon DomItem::elementBkmIcon;
 QIcon DomItem::textIcon;
 QIcon DomItem::textBkmIcon;
 QIcon DomItem::childrenHiddenIcon;
@@ -75,6 +75,7 @@ int DomItem::fixedSizeAttrFonts = 0;
 bool DomItem::firstTimeFixedWidthFont = true ;
 QString DomItem::textCompactViewPrefix ;
 
+
 ItemInfo::ItemInfo()
 {
     reset();
@@ -89,6 +90,7 @@ void ItemInfo::reset()
     numItems = 0;
     totalSize = 0;
 }
+
 
 TextChunk::TextChunk(const bool isCDATASection, const QString &txt)
 {
@@ -145,7 +147,7 @@ void DomItem::initItem(DomModel *model, DomItem *parent)
 {
     generateId();
     visibilityState = EVN_NORMAL;
-    isShowTextBase64 = false;
+//    isShowTextBase64 = false;
     ui = NULL;
     parentRule = model;
     parentItem = parent;
@@ -165,29 +167,29 @@ void DomItem::loadIcons()
 {
     if(isLoadedIcons)
         return;
-    isLoadedIcons = true;
+    isLoadedIcons = true ;
     procInstrIcon.addPixmap(QPixmap(QString::fromUtf8(":/tree/pi_icon.png")), QIcon::Normal, QIcon::Off);
-    commentIcon.addPixmap(QPixmap(QString::fromUtf8(":/tree/pi_icon.png")), QIcon::Normal, QIcon::Off);
-    elementIcon.addPixmap(QPixmap(QString::fromUtf8(":/tree/pi_icon.png")), QIcon::Normal, QIcon::Off);
-    procInstrBkmIcon.addPixmap(QPixmap(QString::fromUtf8(":/tree/pi_icon.png")), QIcon::Normal, QIcon::Off);
-    commentBkmIcon.addPixmap(QPixmap(QString::fromUtf8(":/tree/pi_icon.png")), QIcon::Normal, QIcon::Off);
-    elementBkIcon.addPixmap(QPixmap(QString::fromUtf8(":/tree/pi_icon.png")), QIcon::Normal, QIcon::Off);
-    textIcon.addPixmap(QPixmap(QString::fromUtf8(":/tree/pi_icon.png")), QIcon::Normal, QIcon::Off);
-    textBkmIcon.addPixmap(QPixmap(QString::fromUtf8(":/tree/pi_icon.png")), QIcon::Normal, QIcon::Off);
-    childrenHiddenIcon.addPixmap(QPixmap(QString::fromUtf8(":/tree/pi_icon.png")), QIcon::Normal, QIcon::Off);
-    childrenHiddenBkmIcon.addPixmap(QPixmap(QString::fromUtf8(":/tree/pi_icon.png")), QIcon::Normal, QIcon::Off);
-    textCompactViewPrefix = "       ";
+    commentIcon.addPixmap(QPixmap(QString::fromUtf8(":/tree/comm_icon.png")), QIcon::Normal, QIcon::Off);
+    elementIcon.addPixmap(QPixmap(QString::fromUtf8(":/tree/el_icon.png")), QIcon::Normal, QIcon::Off);
+    procInstrBkmIcon.addPixmap(QPixmap(QString::fromUtf8(":/tree/pi_bkm_icon.png")), QIcon::Normal, QIcon::Off);
+    commentBkmIcon.addPixmap(QPixmap(QString::fromUtf8(":/tree/comm_bk_icon.png")), QIcon::Normal, QIcon::Off);
+    elementBkmIcon.addPixmap(QPixmap(QString::fromUtf8(":/tree/el_bkm.png")), QIcon::Normal, QIcon::Off);
+    textIcon.addPixmap(QPixmap(QString::fromUtf8(":/tree/text.png")), QIcon::Normal, QIcon::Off);
+    textBkmIcon.addPixmap(QPixmap(QString::fromUtf8(":/tree/el_bkm.png")), QIcon::Normal, QIcon::Off);
+    childrenHiddenIcon.addPixmap(QPixmap(QString::fromUtf8(":/tree/hidden_children")), QIcon::Normal, QIcon::Off);
+    childrenHiddenBkmIcon.addPixmap(QPixmap(QString::fromUtf8(":/tree/hidden_children_bm")), QIcon::Normal, QIcon::Off);
+    textCompactViewPrefix =  "     ";
 }
 
-bool DomItem::isShownBase64() const
-{
-    return isShowTextBase64;
-}
+//bool DomItem::isShownBase64() const
+//{
+//    return isShowTextBase64;
+//}
 
-void DomItem::setShownBase64(const bool shownAs)
-{
-    isShowTextBase64 = shownAs;
-}
+//void DomItem::setShownBase64(const bool shownAs)
+//{
+//    isShowTextBase64 = shownAs;
+//}
 
 DomItem::EViewModes DomItem::viewMode() const
 {
@@ -199,6 +201,10 @@ void DomItem::setViewMode(const EViewModes newMode)
     _viewMode = newMode;
 }
 
+// instead of the over length part of a string to ellipsis
+// for example:
+// input String is inputStringAndABCDEFG, but the MAX_LIMIT_TEXTLEN is 10,
+// using this fuction instead input string to inputStrin...
 QString DomItem::limitTextWithEllipsis(const QString &inputText)
 {
     bool appendEllipsis = false;
@@ -220,6 +226,7 @@ QString DomItem::limitTextWithEllipsis(const QString &inputText)
     return result;
 }
 
+// load the view state(expand or not)
 void DomItem::registerState()
 {
     if(NULL != ui) {
@@ -227,21 +234,23 @@ void DomItem::registerState()
     } else {
         wasOpen = false;
     }
-    foreach(DomItem *value, childItems) {
-        value->registerState();
+    foreach(DomItem *item, childItems) {
+        item->registerState();
     }
 }
 
+// display the item and its children
 void DomItem::displayRecursive(PaintInfo *paintInfo)
 {
     if(NULL == ui) {
         return;
     }
     display(ui, paintInfo);
-    foreach(DomItem *value, childItems) {
-        value->displayRecursive(paintInfo);
+    foreach(DomItem *item, childItems) {
+        item->displayRecursive(paintInfo);
     }
 }
+
 
 const QString DomItem::styleItemTag(QTreeWidgetItem *me, PaintInfo *paintInfo)
 {
@@ -279,7 +288,7 @@ const QString DomItem::styleItemTag(QTreeWidgetItem *me, PaintInfo *paintInfo)
             }
         }
     }
-    //usa il default se non assegnato
+    //use default brush if no assignment
     if(!isBrush) {
         me->setForeground(0, VStyle::defaultBrush());
     }
@@ -288,6 +297,7 @@ const QString DomItem::styleItemTag(QTreeWidgetItem *me, PaintInfo *paintInfo)
     }
     return qualifiedInfo;
 }
+
 
 const QString DomItem::styleItemTagString(PaintInfo *paintInfo)
 {
@@ -480,7 +490,7 @@ void DomItem::display(QTreeWidgetItem *me, PaintInfo *paintInfo)
             }
             QString textToShow;
             QString textToShowBase64;
-            bool collectBase64Text = isShowTextBase64 || paintInfo->showUnBase64();
+            bool collectBase64Text = paintInfo->showUnBase64();
             QVectorIterator<TextChunk*> tt(textNodes);
             while(tt.hasNext()) {
                 TextChunk *tx = tt.next();
@@ -831,7 +841,7 @@ bool DomItem::saved()
     return _saved;
 }
 
-void DomItem::caricaFigli(QTreeWidget *pTree, QTreeWidgetItem *parent, PaintInfo *paintInfo, const bool isGUI, const int pos)
+void DomItem::setChildItem(QTreeWidget *pTree, QTreeWidgetItem *parent, PaintInfo *paintInfo, const bool isGUI, const int pos)
 {
     QTreeWidgetItem *me = NULL;
     bool isTop = false;
@@ -849,8 +859,8 @@ void DomItem::caricaFigli(QTreeWidget *pTree, QTreeWidgetItem *parent, PaintInfo
         }
         display(me, paintInfo);
     }
-    foreach(DomItem *value, childItems) {
-        value->caricaFigli(NULL, me, paintInfo, isGUI);
+    foreach(DomItem *item, childItems) {
+        item->setChildItem(NULL, me, paintInfo, isGUI);
     }
     if(isTop) {
         if(pos >= 0) {
@@ -2081,7 +2091,7 @@ bool DomItem::copyTextNodesToTarget(DomItem *target)
                 textItem->setTextOfTextNode(e->text, e->isCDATA()) ;
                 //textItem->markEdited();
                 target->getItems().insert(sourceIndex, textItem);
-                textItem->caricaFigli(target->getUI()->treeWidget(), target->getUI(), target->getParentRule()->getPaintInfo(), true, sourceIndex);
+                textItem->setChildItem(target->getUI()->treeWidget(), target->getUI(), target->getParentRule()->getPaintInfo(), true, sourceIndex);
             }
             index ++;
         } // foreach

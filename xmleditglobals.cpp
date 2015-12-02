@@ -23,7 +23,7 @@
 
 #include "xmleditglobals.h"
 
-QString QXmlEditGlobals::_appTitle = QT_TR_NOOP("QXmlEdit");
+QString QXmlEditGlobals::_appTitle = QT_TR_NOOP("ICD Creator");
 
 QXmlEditGlobals::QXmlEditGlobals()
 {

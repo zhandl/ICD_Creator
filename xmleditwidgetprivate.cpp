@@ -398,7 +398,7 @@ void XmlEditWidgetPrivate::display()
 {
     if(NULL != model) {
         p->treeWidget->setUpdatesEnabled(false);
-        model->caricaValori(p->treeWidget);
+        model->setTreeValue(p->treeWidget);
         p->treeWidget->setUpdatesEnabled(true);
     }
 }
@@ -585,7 +585,7 @@ bool XmlEditWidgetPrivate::editItem(QTreeWidgetItem *item)
     return result;
 }
 
-void XmlEditWidgetPrivate::elementDoubleClicked(QTreeWidgetItem *item, int column)
+void XmlEditWidgetPrivate::elementDoubleClicked(QTreeWidgetItem *item, int /*column*/)
 {
     if(isActionMode()) {
         editItem(item);
@@ -941,7 +941,6 @@ void XmlEditWidgetPrivate::findTextOperation(const bool isFindOrCount)
         }
         FindTextParams findArgs(p->searchEditBox->text(), !isFindOrCount, p->isHiglightAll->isChecked(), p->isMatchExactValue->isChecked(),
                                 p->isCaseSensitive->isChecked(), p->isOnlyChildren->isChecked(), target,
-                                (isFindOrCount ? p->selectionToBookmarks->isChecked() : false),
                                 (isFindOrCount ? p->closeUnrelated->isChecked() : false),
                                 p->showSize->isChecked(), p->searchScope->text());
         bool isErrorShown = false;
@@ -1169,7 +1168,6 @@ void XmlEditWidgetPrivate::updateSearchUI(const FindTextParams &lastSearch)
     p->isMatchExactValue->setChecked(lastSearch.isIsMatchExact());
     p->isCaseSensitive->setChecked(lastSearch.isCaseSensitive());
     p->isOnlyChildren->setChecked(lastSearch.isLookOnlyChildren());
-    p->selectionToBookmarks->setChecked(lastSearch.isSelToBookmarks());
     p->closeUnrelated->setChecked(lastSearch.isCloseUnrelated());
     p->showSize->setChecked(lastSearch.isShowSize());
     Utils::selectComboValue(p->searchLocation, lastSearch.getFindTarget());
@@ -1182,23 +1180,23 @@ void XmlEditWidgetPrivate::saveSearchSettings(const FindTextParams &search)
     search.saveState();
 }
 
-void XmlEditWidgetPrivate::onActionShowCurrentElementTextBase64(const bool isChecked)
-{
-    QTreeWidgetItem *currItem = getSelItem();
-    if(NULL != currItem) {
-        DomItem *item = DomItem::fromItemData(currItem);
-        if(NULL != item) {
-            item->setShownBase64(isChecked);
-            item->refreshUI();
-        }
-    }
-}
+//void XmlEditWidgetPrivate::onActionShowCurrentElementTextBase64(const bool isChecked)
+//{
+//    QTreeWidgetItem *currItem = getSelItem();
+//    if(NULL != currItem) {
+//        DomItem *item = DomItem::fromItemData(currItem);
+//        if(NULL != item) {
+//            item->setShownBase64(isChecked);
+//            item->refreshUI();
+//        }
+//    }
+//}
 
-void XmlEditWidgetPrivate::onActionShowBase64(const bool isChecked)
-{
-    paintInfo.setShowUnBase64(isChecked);
-    repaint();
-}
+//void XmlEditWidgetPrivate::onActionShowBase64(const bool isChecked)
+//{
+//    paintInfo.setShowUnBase64(isChecked);
+//    repaint();
+//}
 
 void XmlEditWidgetPrivate::onActionShowElementSize(const bool isChecked)
 {
@@ -1218,63 +1216,6 @@ void XmlEditWidgetPrivate::on_ok_clicked()
 void XmlEditWidgetPrivate::on_cancel_clicked()
 {
     p->emitCancelClicked();
-}
-
-void XmlEditWidgetPrivate::onActionEditInnerXML()
-{
-    if(!isActionMode()) {
-        return ;
-    }
-    if(NULL == model) {
-        errorNoRule();
-        return ;
-    }
-    if(isSlave) {
-        return ;
-    }
-    QTreeWidgetItem *item = getSelItem();
-    if(NULL != item) {
-        model->editInnerXMLItem(item);
-    }
-}
-
-void XmlEditWidgetPrivate::onActionEditInnerXMLBase64()
-{
-    if(!isActionMode()) {
-        return ;
-    }
-
-    if(NULL == model) {
-        errorNoRule();
-        return ;
-    }
-
-    if(isSlave) {
-        return;
-    }
-
-    QTreeWidgetItem *item = getSelItem();
-    if(NULL != item) {
-        model->editInnerXMLBase64Item(item);
-    }
-}
-
-void XmlEditWidgetPrivate::onActionEditInnerBase64Text()
-{
-    if(!isActionMode()) {
-        return ;
-    }
-    if(NULL == model) {
-        errorNoRule();
-        return ;
-    }
-    if(isSlave) {
-        return ;
-    }
-    QTreeWidgetItem *item = getSelItem();
-    if(NULL != item) {
-        model->editTextNodeItemBase64(p, item);
-    }
 }
 
 QString XmlEditWidgetPrivate::getContentAsText()
@@ -1687,21 +1628,6 @@ void XmlEditWidgetPrivate::insertAllowedItems(DomItem *item)
                 p->emitDocumentIsModified(model->isModified());
             }
         }
-    }
-}
-
-void XmlEditWidgetPrivate::onActionPasteAndSubstituteText()
-{
-    if(!isActionMode()) {
-        return ;
-    }
-    if(NULL == model) {
-        errorNoRule();
-        return ;
-    }
-    DomItem *item = getSelectedItem();
-    if(NULL != item) {
-        model->editAndSubstituteTextInNodeItem(p, item);
     }
 }
 

@@ -68,7 +68,6 @@ const QString Config::KEY_SEARCH_HIGHLIGHALL("search/hiliteAll");
 const QString Config::KEY_SEARCH_MATCHEXACT("search/matchExact");
 const QString Config::KEY_SEARCH_CASEUNSITIVE("search/caseSensitive");
 const QString Config::KEY_SEARCH_ONLYCHILDREN("search/onlyChildren");
-const QString Config::KEY_SEARCH_SEL2BOOKMARK("search/selToBoorkmark");
 const QString Config::KEY_SEARCH_FINDTARGET("search/findTarget");
 const QString Config::KEY_SEARCH_SHOWSIZE("search/showSize");
 //
@@ -111,12 +110,6 @@ const QString Config::KEY_FRAGMENTS_SPLITTYPE("extractFragments/splitType");
 // welcome dialog
 const QString Config::KEY_WELCOMEDIALOG_ENABLED("welcomeDialog/enabled");
 const QString Config::KEY_WELCOMEDIALOG_VERSION("welcomeDialog/version");
-
-// sessions
-const QString Config::KEY_SESSIONS_ENABLED("sessions/sessionsEnabled");
-const QString Config::KEY_SESSIONS_ACTIVECODE("sessions/activeSessionCode");
-const QString Config::KEY_SESSIONS_ACTIVESTATE("sessions/activeState");
-//const QString Config::KEY_SESSIONS_DBCONFIG("sessions/dbConfig");
 
 //logs
 const QString Config::KEY_LOGS_ENABLED("logs/enabled");

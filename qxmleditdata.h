@@ -5,9 +5,10 @@
 
 #include "global.h"
 
-//#include "xmlEdit.h"
+#include "icdCreator.h"
 #include "style.h"
 #include "plugin.h"
+#include "log.h"
 
 #include <QtNetwork/QNetworkDiskCache>
 #include <QtNetwork/QNetworkAccessManager>
@@ -27,6 +28,9 @@ class XsdPlugin;
 class LIBQXMLEDITSHARED_EXPORT QXmlEditData : public QObject
 {
     Q_OBJECT
+
+    FrwLogger *_logger;
+
 protected:
     QVector<VStyle*> _styles;
     VStyle* _defaultStyle;
@@ -65,6 +69,25 @@ public:
 
     void enableAutoscroll(const bool enabled);
     bool isAutoScroll();
+
+
+    //--- region(welcomeDialog)
+    void enableWelcomeDialog(const bool enabled);
+    bool isWelcomeDialogEnabled();
+    bool shouldShowWelcomeDialog();
+    //--- endregion(welcomeDialog)
+
+    //--- region(log)
+    void setLogger(FrwLogger *newLogger);
+    FrwLogger *logger();
+    //--- end region (log)
+
+    //--- region(xsdCache)
+    bool isXsdCacheEnabled();
+    void setXsdCacheEnabled(const bool newState);
+    int xsdCacheLimit();
+    void configureXsdCache();
+    //--- endregion(xsdCache)
 
     QNetworkAccessManager *xsdNetworkAccessManager();
 

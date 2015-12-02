@@ -1,0 +1,128 @@
+<RCC>
+    <qresource prefix="/new">
+        <file>images/document-new.png</file>
+    </qresource>
+    <qresource prefix="/special">
+        <file alias="style">images/view-media-visualization.png</file>
+        <file alias="empty">images/empty.png</file>
+        <file alias="warning">images/dialog-warning.png</file>
+    </qresource>
+    <qresource prefix="/arrows">
+        <file>images/go-down.png</file>
+        <file>images/go-up.png</file>
+        <file alias="zoomin.png">images/zoom-in.png</file>
+        <file alias="zoom1.png">images/zoom-original.png</file>
+        <file alias="zoomout.png">images/zoom-out.png</file>
+        <file>images/go-next.png</file>
+        <file>images/go-previous.png</file>
+    </qresource>
+    <qresource prefix="/editText">
+        <file alias="edit-find">images/edit-find.png</file>
+        <file>images/edit-clear-locationbar-rtl.png</file>
+        <file alias="searchInFiles">images/system-search.png</file>
+        <file alias="number">images/applications-education-mathematics.png</file>
+        <file alias="group">images/group.png</file>
+    </qresource>
+    <qresource prefix="/icon">
+        <file>images/icon.png</file>
+    </qresource>
+    <qresource prefix="/quit">
+        <file>images/window-close.png</file>
+    </qresource>
+    <qresource prefix="/open">
+        <file>images/document-open.png</file>
+    </qresource>
+    <qresource prefix="/paste">
+        <file>images/edit-paste.png</file>
+    </qresource>
+    <qresource prefix="/copy">
+        <file>images/edit-copy.png</file>
+    </qresource>
+    <qresource prefix="/cut">
+        <file>images/edit-cut.png</file>
+    </qresource>
+    <qresource prefix="/save">
+        <file>images/document-save.png</file>
+    </qresource>
+    <qresource prefix="/save-as">
+        <file>images/document-save-as.png</file>
+    </qresource>
+    <qresource prefix="/arrow-right">
+        <file>images/arrow-right.png</file>
+    </qresource>
+    <qresource prefix="/arrow-down">
+        <file>images/arrow-down.png</file>
+    </qresource>
+    <qresource prefix="/tree">
+        <file alias="pi_icon.png">images/tools-wizard.png</file>
+        <file alias="comm_icon.png">images/im-status-message-edit.png</file>
+        <file alias="ad_icon.png">images/applications-development.png</file>
+        <file alias="el_icon.png">images/text-xml.png</file>
+        <file alias="treeOpen">images/tree_open.png</file>
+        <file alias="treeClosed">images/tree_close.png</file>
+        <file>images/text.png</file>
+        <file alias="hidden_children">images/hidden_children.png</file>
+        <file alias="hidden_children_bm">images/hidden_children_bm.png</file>
+        <file alias="show_children">images/show_children.png</file>
+        <file>images/applications-development-bkm.png</file>
+        <file>images/im-status-message-edit-bkm.png</file>
+    </qresource>
+    <qresource prefix="/images">
+        <file alias="edit-delete">images/edit-delete.png</file>
+        <file alias="add">images/add.png</file>
+        <file alias="addbrother">images/add_brother.png</file>
+        <file alias="addchild">images/add_child.png</file>
+    </qresource>
+    <qresource prefix="/xsdimages">
+        <file alias="base">images/xsd_base.png</file>
+        <file alias="documentinfo">images/documentinfo.png</file>
+        <file alias="link">images/link.png</file>
+        <file alias="link2">images/vcs-locally-modified.png</file>
+        <file alias="sequence">images/sequence.png</file>
+        <file alias="attrIcon">images/attrIcon.png</file>
+        <file alias="attrElement">images/attrElement.png</file>
+        <file alias="attrType">images/attrType.png</file>
+        <file alias="referencesIcon">images/xsdReferencesIcon.png</file>
+        <file alias="attributesIcon">images/xsdAttributesIcon.png</file>
+        <file alias="elementsIcon">images/xsdElementsIcon.png</file>
+        <file alias="typesIcon">images/xsdTypesIcon.png</file>
+        <file alias="simpleTypeIcon">images/xsdSimpleTypesIcon.png</file>
+        <file alias="choice">images/choice.png</file>
+        <file alias="extra-attributes">images/extra-attributes.png</file>
+    </qresource>
+    <qresource prefix="/status">
+        <file alias="explore-mode">images/exploremode.png</file>
+    </qresource>
+    <qresource prefix="/devices">
+        <file alias="printer">images/printer.png</file>
+        <file alias="svg">images/image-svg+xml.png</file>
+        <file alias="pdf">images/application-pdf.png</file>
+    </qresource>
+    <qresource prefix="/configuration">
+        <file alias="style">images/applications-graphics.png</file>
+        <file alias="validation2">images/security-high.png</file>
+        <file alias="general">images/preferences-system.png</file>
+        <file alias="validation">images/validation.png</file>
+        <file alias="document-validate">images/document-validate.png</file>
+        <file alias="sessions">images/sessions_open.png</file>
+    </qresource>
+    <qresource prefix="/commands">
+        <file>images/help-contents.png</file>
+        <file alias="modify">images/modify.png</file>
+        <file alias="view_columns_1">images/view_columns.png</file>
+        <file alias="view_columns">images/view-file-columns.png</file>
+    </qresource>
+    <qresource prefix="/goto">
+        <file>images/gotoprevbro.png</file>
+        <file>images/gotonextbro.png</file>
+        <file>images/gotoparent.png</file>
+    </qresource>
+    <qresource prefix="/edit">
+        <file alias="redo">images/edit-redo.png</file>
+        <file alias="undo">images/edit-undo.png</file>
+    </qresource>
+    <qresource prefix="/tools">
+        <file>images/split.png</file>
+        <file>images/view-structure-icon.png</file>
+    </qresource>
+</RCC>

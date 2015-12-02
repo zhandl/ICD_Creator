@@ -18,7 +18,7 @@
 #define CS_ATTRIBUTE_NAME "N"
 #define CS_ATTRIBUTE_VALUE "V"
 
-const char *APP_TITLE = QT_TR_NOOP("ICD Creator");
+//const char *APP_TITLE = QT_TR_NOOP("ICD Creator");
 
 XmlEditWidget::XmlEditWidget(QWidget *parent) :
     QWidget(parent),
@@ -144,11 +144,6 @@ void XmlEditWidget::setupUi()
 
     searchBottom->addWidget(closeUnrelated);
 
-    selectionToBookmarks = new QCheckBox(searchGroup);
-    selectionToBookmarks->setObjectName(QString::fromUtf8("selectionToBookmarks"));
-
-    searchBottom->addWidget(selectionToBookmarks);
-
     isMatchExactValue = new QCheckBox(searchGroup);
     isMatchExactValue->setObjectName(QString::fromUtf8("isMatchExactValue"));
 
@@ -216,7 +211,6 @@ void XmlEditWidget::setupUi()
 
 
     ricercaLayout->addLayout(searchResultsLayout);
-
 
     verticalLayout_2->addWidget(searchGroup);
 
@@ -369,13 +363,8 @@ void XmlEditWidget::setupUi()
     copySpecial->setArrowType(Qt::NoArrow);
 
     horizontalLowLayout->addWidget(copySpecial);
-
-
     verticalLayout->addLayout(horizontalLowLayout);
-
-
     mainLayout->addLayout(verticalLayout);
-
 
     verticalLayout_2->addLayout(mainLayout);
 
@@ -405,7 +394,6 @@ void XmlEditWidget::retranslateUi()
     label->setText(QApplication::translate("XmlEditWidget", "Search in:", 0, QApplication::UnicodeUTF8));
     labelScope->setText(QApplication::translate("XmlEditWidget", "scope:", 0, QApplication::UnicodeUTF8));
     closeUnrelated->setText(QApplication::translate("XmlEditWidget", "Close Unrelated", 0, QApplication::UnicodeUTF8));
-    selectionToBookmarks->setText(QApplication::translate("XmlEditWidget", "Selection to Bookmarks", 0, QApplication::UnicodeUTF8));
     isMatchExactValue->setText(QApplication::translate("XmlEditWidget", "Match Exact Value", 0, QApplication::UnicodeUTF8));
     isCaseSensitive->setText(QApplication::translate("XmlEditWidget", "Case Sensitive", 0, QApplication::UnicodeUTF8));
     isHiglightAll->setText(QApplication::translate("XmlEditWidget", "Find All", 0, QApplication::UnicodeUTF8));
@@ -416,8 +404,8 @@ void XmlEditWidget::retranslateUi()
     lblSize->setText(QApplication::translate("XmlEditWidget", "Size:", 0, QApplication::UnicodeUTF8));
     sizeOfSearch->setText(QApplication::translate("XmlEditWidget", "---", 0, QApplication::UnicodeUTF8));
     cdataElement->setText(QApplication::translate("XmlEditWidget", "CDATA", 0, QApplication::UnicodeUTF8));
-    QTreeWidgetItem *___qtreewidgetitem = treeWidget->headerItem();
-    ___qtreewidgetitem->setText(0, QApplication::translate("XmlEditWidget", "1", 0, QApplication::UnicodeUTF8));
+    QTreeWidgetItem *_qtreewidgetitem = treeWidget->headerItem();
+    _qtreewidgetitem->setText(0, QApplication::translate("XmlEditWidget", "1", 0, QApplication::UnicodeUTF8));
     docTypeLabel->setText(QApplication::translate("XmlEditWidget", "---", 0, QApplication::UnicodeUTF8));
     encoding->setText(QApplication::translate("XmlEditWidget", "encoding:UTF8", 0, QApplication::UnicodeUTF8));
     ok->setText(QApplication::translate("XmlEditWidget", "OK", 0, QApplication::UnicodeUTF8));
@@ -798,34 +786,19 @@ void XmlEditWidget::onActionHideBrothers()
     d->onActionHideBrothers();
 }
 
-void XmlEditWidget::onActionShowCurrentItemTextBase64(const bool isChecked)
-{
-    d->onActionShowCurrentElementTextBase64(isChecked);
-}
+//void XmlEditWidget::onActionShowCurrentItemTextBase64(const bool isChecked)
+//{
+//    d->onActionShowCurrentElementTextBase64(isChecked);
+//}
 
-void XmlEditWidget::onActionShowBase64(const bool isChecked)
-{
-    d->onActionShowBase64(isChecked);
-}
+//void XmlEditWidget::onActionShowBase64(const bool isChecked)
+//{
+//    d->onActionShowBase64(isChecked);
+//}
 
 void XmlEditWidget::onActionShowItemSize(const bool isChecked)
 {
     d->onActionShowElementSize(isChecked);
-}
-
-void XmlEditWidget::onActionEditInnerXML()
-{
-    d->onActionEditInnerXML();
-}
-
-void XmlEditWidget::onActionEditInnerXMLBase64()
-{
-    d->onActionEditInnerXMLBase64();
-}
-
-void XmlEditWidget::onActionEditInnerBase64Text()
-{
-    d->onActionEditInnerBase64Text();
 }
 
 QString XmlEditWidget::getContentAsText()
@@ -1007,12 +980,6 @@ void XmlEditWidget::insertAllowedItem(DomItem *item)
     d->insertAllowedItems(item);
 }
 
-/** Substitute the element text
-  */
-void XmlEditWidget::onActionPasteAndSubstituteText()
-{
-    d->onActionPasteAndSubstituteText();
-}
 
 void XmlEditWidget::onActionNewUsingXMLSchema(const QString &schemaURL)
 {

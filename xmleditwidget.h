@@ -143,7 +143,6 @@ private:
     QHBoxLayout *searchBottom;
     QSpacerItem *horizontalSpacer;
     QCheckBox *closeUnrelated;
-    QCheckBox *selectionToBookmarks;
     QCheckBox *isMatchExactValue;
     QCheckBox *isCaseSensitive;
     QCheckBox *isHiglightAll;
@@ -242,11 +241,8 @@ public:
     void onActionHideBrothers();
     void onActionFixedSizeAttributes(const bool isChecked);
     void onActionShowAttributesLength(const bool isChecked);
-    void onActionShowCurrentItemTextBase64(const bool isChecked);
-    void onActionShowBase64(const bool isChecked);
-    void onActionEditInnerXML();
-    void onActionEditInnerXMLBase64();
-    void onActionEditInnerBase64Text();
+//    void onActionShowCurrentItemTextBase64(const bool isChecked);
+//    void onActionShowBase64(const bool isChecked);
     void onActionZoomIn();
     void onActionZoomOut();
     void onActionCopyPathToClipboard();
@@ -259,7 +255,6 @@ public:
     void onActionHideView(const bool isChecked);
     void onActionViewAsXsd();
     void onActionAllowedSchemaItems();
-    void onActionPasteAndSubstituteText();
     void onActionNewUsingXMLSchema(const QString &schemaURL);
     void onActionTransformInComment();
     void onActionExtractItemsFromComment();

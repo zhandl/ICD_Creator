@@ -5,7 +5,7 @@
 #include "config.h"
 #include "utils.h"
 #include "stylepersistence.h"
-//#include "balsamiqsrc/balsamiqplugin.h"
+#include "balsamiqsrc/balsamiqplugin.h"
 #include "xsdeditor/xsdplugin.h"
 
 QXmlEditData::QXmlEditData()
@@ -202,3 +202,73 @@ QNetworkAccessManager *QXmlEditData::xsdNetworkAccessManager()
 {
     return &_networkAccessManager;
 }
+
+// -- log
+FrwLogger *QXmlEditData::logger()
+{
+    return _logger;
+}
+
+void QXmlEditData::setLogger(FrwLogger *newLogger)
+{
+    _logger = newLogger;
+}
+
+//--- region(xsdCache)
+
+bool QXmlEditData::isXsdCacheEnabled()
+{
+    return Config::getBool(Config::KEY_XSDCACHE_ENABLED, false);
+}
+
+void QXmlEditData::setXsdCacheEnabled(const bool newState)
+{
+    Config::saveBool(Config::KEY_XSDCACHE_ENABLED, newState);
+    configureXsdCache();
+}
+
+int QXmlEditData::xsdCacheLimit()
+{
+    return 1000000; // 1Mega
+    //TODO enable when it will be possible to configure it. return Config::getInt(Config::KEY_XSDCACHE_LIMIT, 1000000);
+}
+
+void QXmlEditData::configureXsdCache()
+{
+    if(isXsdCacheEnabled()) {
+        QNetworkDiskCache *xsdDiskCache = new QNetworkDiskCache();
+        if(NULL == xsdDiskCache) {
+            Utils::error(tr("Error while getting a disk cache object."));
+            return ;
+        }
+        QString cacheProgramDirectory = QDesktopServices::storageLocation(QDesktopServices::CacheLocation);
+        xsdDiskCache->setMaximumCacheSize(xsdCacheLimit());
+        xsdDiskCache->setCacheDirectory(cacheProgramDirectory);
+        _networkAccessManager.setCache(xsdDiskCache);
+    } else {
+        _networkAccessManager.setCache(NULL);
+    }
+}
+
+void QXmlEditData::enableWelcomeDialog(const bool enabled)
+{
+    Config::saveBool(Config::KEY_WELCOMEDIALOG_ENABLED, enabled) ;
+    Config::saveInt(Config::KEY_WELCOMEDIALOG_VERSION, VERSION_NUMBER_WELCOME) ;
+}
+
+bool QXmlEditData::isWelcomeDialogEnabled()
+{
+    return Config::getBool(Config::KEY_WELCOMEDIALOG_ENABLED, false) ;
+}
+
+bool QXmlEditData::shouldShowWelcomeDialog()
+{
+    bool welcomeEanbled = isWelcomeDialogEnabled();
+    int welcomeVersion = Config::getInt(Config::KEY_WELCOMEDIALOG_VERSION, 0) ;
+    if(welcomeEanbled || (welcomeVersion < VERSION_NUMBER_WELCOME)) {
+        return true ;
+    }
+    return false;
+}
+
+//--- endregion(welcomeDialog)

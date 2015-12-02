@@ -159,11 +159,30 @@ bool XSDSchema::findSchemaChildComponents(XValidationContext *context, XElementC
 
 XSchemaObject *XSchemaChoice::findComponentInValidationPath(const QString &component)
 {
+    /* TODO: unire con findSchemaChildComponents*/
+    foreach(XSchemaObject * child, _children) {
+        if(child->getType() == SchemaTypeElement) {
+            XSchemaElement * element = (XSchemaElement *) child ;
+            if( element->name() == component ) {
+                return element ;
+            }
+        }
+    }
     return NULL;
 }
 
-bool XSchemaChoice::findSchemaChildComponents(XValidationContext *context, XElementContent *content)
+bool XSchemaChoice::findSchemaChildComponents(XValidationContext */*context*/, XElementContent * /*content*/)
 {
+    /* TODO
+    bool atLeastOne = false;
+    foreach(XSchemaObject * child, _children) {
+        if(child->getType() == SchemaTypeElement) {
+            XSchemaElement * element = (XSchemaElement *) child ;
+            if( element->name() == component ) {
+                return true ;
+            }
+        }
+    } */
     return false;
 }
 
@@ -192,11 +211,6 @@ XSchemaObject *XSchemaObject::findComponentInValidationPath(SchemaSearchContext 
     }
     TRACEQ(QString("INVALID findComponentInValidationPath\n"));
     return NULL;
-}
-
-bool XSchemaObject::findSchemaChildComponents(XValidationContext *context, XElementContent *content)
-{
-    return false;
 }
 
 bool XSchemaElement::examineType(XValidationContext *context, XSingleElementContent *parent)
@@ -255,7 +269,12 @@ bool XSchemaComplexContent::examineType(XValidationContext *context, XSingleElem
     return true;
 }
 
-bool XSchemaElement::elabTypeForCollect(XValidationContext *context, XElementContent *content)
+bool XSchemaObject::findSchemaChildComponents(XValidationContext * /*context*/, XElementContent * /*content*/)
+{
+    return false;
+}
+
+bool XSchemaElement::elabTypeForCollect(XValidationContext *context, XElementContent * /*content*/)
 {
     if(!xsdType().isEmpty()) {
         XSchemaElement *baseType = _root->schema()->rootType(xsdType());
@@ -293,10 +312,12 @@ bool XSchemaElement::findSchemaChildComponents(XValidationContext *context, XEle
             break;
         case EES_REFERENCE: {
             XSchemaElement *referencedElement = _root->schema()->rootElement(_ref);
-            if(NULL != referencedElement->findSchemaChildComponents(context, content)) {
+            if(NULL != referencedElement) {
+                if(referencedElement->findSchemaChildComponents(context, content)) {
                 return true;
+                }
+                return false;
             }
-            return false;
         }
 
         case EES_COMPLEX_DERIVED: {
@@ -318,4 +339,5 @@ bool XSchemaElement::findSchemaChildComponents(XValidationContext *context, XEle
         }
         }
     }
+    return false;
 }
