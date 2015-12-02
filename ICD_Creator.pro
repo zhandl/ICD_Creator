@@ -15,6 +15,8 @@ TEMPLATE = app
 
 DEFINES += LIBQXMLEDIT_LIBRARY
 
+RC_FILE = icdCreator.rc
+
 SOURCES += main.cpp\
         mainwindow.cpp \
     domitem.cpp \
@@ -89,7 +91,27 @@ SOURCES += main.cpp\
     texteditutils.cpp \
     alloweditemsinsert.cpp \
     searchinfiles.cpp \
-    scansax.cpp
+    scansax.cpp \
+    aboutdialog.cpp \
+    AboutData.cpp \
+    balsamiqsrc/balsamiqbasedialog.cpp \
+    balsamiqsrc/balsamiqcontrol.cpp \
+    balsamiqsrc/balsamiqplugin.cpp \
+    balsamiqsrc/balsamiqproxy.cpp \
+    balsamiqsrc/balsamiqtree.cpp \
+    balsamiqsrc/balsamiqwork.cpp \
+    compare.cpp \
+    preferreddirs.cpp \
+    config/configurationgeneraloptions.cpp \
+    config/configurestyle.cpp \
+    config/configvalidation.cpp \
+    configurationdialog.cpp \
+    services/loghandler.cpp \
+    snippet.cpp \
+    snippethandler.cpp \
+    editsnippet.cpp \
+    test.cpp \
+    schemachooser.cpp
 
 HEADERS  += mainwindow.h \
     domitem.h \
@@ -163,7 +185,30 @@ HEADERS  += mainwindow.h \
     texteditutils.h \
     alloweditemsinsert.h \
     searchinfiles.h \
-    scansax.h
+    scansax.h \
+    aboutdialog.h \
+    authorinfo.h \
+    balsamiqsrc/balsamiqbasedialog.h \
+    balsamiqsrc/balsamiqcontrol.h \
+    balsamiqsrc/balsamiqplugin.h \
+    balsamiqsrc/balsamiqproxy.h \
+    balsamiqsrc/balsamiqtree.h \
+    balsamiqsrc/balsamiqwork.h \
+    compare.h \
+    preferreddirs.h \
+    config/configurationgeneraloptions.h \
+    config/configurestyle.h \
+    config/configvalidation.h \
+    configurationdialog.h \
+    log.h \
+    StartParams.h \
+    services/loghandler.h \
+    snippet.h \
+    snippet_interface.h \
+    snippethandler.h \
+    editsnippet.h \
+    test.h \
+    schemachooser.h
 
 FORMS += \
     xsdeditor/xsdwindow.ui \
@@ -173,3 +218,6 @@ FORMS += \
     xsdeditor/widgets/xsdgenericeditor.ui \
     xsdeditor/widgets/xsdrooteditor.ui \
     xsdeditor/widgets/xsdsequenceeditor.ui
+
+RESOURCES += \
+    risorse.qrc

@@ -45,6 +45,7 @@
 
 #include "domitem.h"
 #include "dommodel.h"
+#include "mainwindow.h"
 
 #include "xmlutils.h"
 #include "utils.h"
@@ -87,6 +88,7 @@ DomModel::DomModel(QDomDocument &document, const QString &name)
 DomModel::DomModel()
 {
     init();
+    paintInfo = new PaintInfo();
     modified = false;
     rootItem = NULL;
     _collectSizeData = false;
@@ -127,7 +129,7 @@ void DomModel::clearUndo()
     _undoStack.clear();
 }
 
-void DomModel::caricaValori(QTreeWidget *pTree)
+void DomModel::setTreeValue(QTreeWidget *pTree)
 {
     pTree->clear();
     QVectorIterator<DomItem*> it(childItems);
@@ -135,7 +137,7 @@ void DomModel::caricaValori(QTreeWidget *pTree)
     {
         DomItem *item = it.next();
         item->registerState();
-        item->caricaFigli(pTree, NULL, paintInfo, true);
+        item->setChildItem(pTree, NULL, paintInfo, true);
     }
 }
 
@@ -406,15 +408,6 @@ void DomModel::setFileName(const QString &newFileName)
     setModified(true);
 }
 
-bool DomModel::editNodeItemAsXML(const bool isBase64Coded, DomItem *pItem)
-{
-    bool isOk = false;
-    bool isCDataOut = false;
-    QString text = pItem->getAsSimpleTextXml(isBase64Coded);
-    pItem->setAsSingleTextNode(text, isBase64Coded, isCDataOut);
-
-    return true;
-}
 
 bool DomModel::editTextNodeItem(QWidget * const parentWindow, const bool isBase64Coded, DomItem *pItem)
 {
@@ -442,158 +435,6 @@ bool DomModel::editNodeItem(QWidget * const parentWindow, DomItem *pItem)
 bool DomModel::editNodeComment(QWidget * const parentWindow, DomItem *pItem)
 {
     return EditCommentNode(parentWindow, pItem);
-}
-
-bool DomModel::editInnerXMLItem(QTreeWidgetItem *item)
-{
-    DomItem *pElement = DomItem::fromItemData(item);
-    switch(pElement->getType()) {
-    case DomItem::ET_ELEMENT:
-        if(pElement->isMixedContent()) {
-
-            return false;
-        }
-        // pass through
-    case DomItem::ET_TEXT: {
-        UndoEditCommand *undoCommand = new UndoEditCommand(item->treeWidget(), this, pElement->indexPath());
-        if(NULL == undoCommand) {
-            throw new std::exception();
-            return false;
-        }
-        undoCommand->setOriginalElement(pElement);
-        bool result = false;
-
-        result = editNodeItemAsXML(false, pElement);
-
-        if(result) {
-            // Aggiorna la visualizzazione
-            //se nuovo figlio, o nuovo fratello
-            //setta il nuovo valore
-            pElement->updateSizeInfo();
-            pElement->display(item, paintInfo);
-            setModified(true);
-            undoCommand->setModifiedElement(pElement);
-            _undoStack.push(undoCommand);
-            return true ;
-        } else {
-            delete undoCommand;
-            return false ;
-        }
-    }
-    break;
-    default:
-        return false;
-    }
-    return false;
-}
-
-bool DomModel::editInnerXMLBase64Item(QTreeWidgetItem *item)
-{
-    DomItem *pElement = DomItem::fromItemData(item);
-    switch(pElement->getType()) {
-    case DomItem::ET_ELEMENT:
-        if(pElement->isMixedContent()) {
-
-            return false;
-        }
-        // pass through
-    case DomItem::ET_TEXT: {
-        UndoEditCommand *undoCommand = new UndoEditCommand(item->treeWidget(), this, pElement->indexPath());
-        if(NULL == undoCommand) {
-            throw new std::exception();
-            return false;
-        }
-        undoCommand->setOriginalElement(pElement);
-        bool result = false;
-
-        result = editNodeItemAsXML(true, pElement);
-
-        if(result) {
-            // Aggiorna la visualizzazione
-            //se nuovo figlio, o nuovo fratello
-            //setta il nuovo valore
-            pElement->updateSizeInfo();
-            pElement->display(item, paintInfo);
-            setModified(true);
-            undoCommand->setModifiedElement(pElement);
-            _undoStack.push(undoCommand);
-            return true ;
-        } else {
-            delete undoCommand;
-            return false ;
-        }
-    }
-    break;
-    default:
-        return false;
-    }
-    return false;
-}
-
-bool DomModel::editTextNodeItemBase64(QWidget *const parentWindow, QTreeWidgetItem *item)
-{
-    DomItem *pElement = DomItem::fromItemData(item);
-    switch(pElement->getType()) {
-    case DomItem::ET_ELEMENT:
-        if(pElement->isMixedContent()) {
-
-            return false;
-        }
-        // pass through
-    case DomItem::ET_TEXT: {
-        UndoEditCommand *undoCommand = new UndoEditCommand(item->treeWidget(), this, pElement->indexPath());
-        if(NULL == undoCommand) {
-            throw new std::exception();
-            return false;
-        }
-        undoCommand->setOriginalElement(pElement);
-        bool result = false;
-
-        result = editTextNodeItem(parentWindow, true, pElement);
-
-        if(result) {
-            pElement->updateSizeInfo();
-            pElement->display(item, paintInfo);
-            setModified(true);
-            undoCommand->setModifiedElement(pElement);
-            _undoStack.push(undoCommand);
-            return true ;
-        } else {
-            delete undoCommand;
-            return false ;
-        }
-    }
-    break;
-    default:
-        return false;
-    }
-    return false;
-}
-
-
-/**
-  * substitute all the text of an element
-  */
-bool DomModel::editAndSubstituteTextInNodeItem(QWidget *const parentWindow, DomItem *pElement)
-{
-    UndoEditCommand *undoCommand = new UndoEditCommand(pElement->getUI()->treeWidget(), this, pElement->indexPath());
-    if(NULL == undoCommand) {
-        throw new std::exception();
-        return false;
-    }
-    undoCommand->setOriginalElement(pElement);
-    bool result = false;
-
-    result = editAndSubstituteTextInNodeItemInternal(parentWindow, pElement) ;
-
-    if(result) {
-        undoCommand->setModifiedElement(pElement);
-        _undoStack.push(undoCommand);
-        return true ;
-    } else {
-        delete undoCommand;
-        return false ;
-    }
 }
 
 bool DomModel::editAndSubstituteTextInNodeItemInternal(QWidget *const parentWindow, DomItem *pElement)
@@ -625,36 +466,36 @@ bool DomModel::editItem(QWidget *const parentWindow, QTreeWidgetItem *item)
     try {
         bool result = false;
         bool updateInfo = false;
-        DomItem *pElement = DomItem::fromItemData(item);
-        UndoEditCommand *undoCommand = new UndoEditCommand(item->treeWidget(), this, pElement->indexPath());
+        DomItem *pItem = DomItem::fromItemData(item);
+        UndoEditCommand *undoCommand = new UndoEditCommand(item->treeWidget(), this, pItem->indexPath());
         if(NULL == undoCommand) {
             throw new std::exception();
             return false;
         }
-        undoCommand->setOriginalElement(pElement);
+        undoCommand->setOriginalElement(pItem);
 
        {
 
-            switch(pElement->getType()) {
+            switch(pItem->getType()) {
             case DomItem::ET_TEXT:
-                result = editAndSubstituteTextInNodeItemInternal(parentWindow, pElement);
+                result = editAndSubstituteTextInNodeItemInternal(parentWindow, pItem);
                 break;
 
             case DomItem::ET_ELEMENT:
-                result = editNodeItem(parentWindow, pElement);
+                result = editNodeItem(parentWindow, pItem);
                 if(result) {
                     updateInfo = true ;
                 }
                 break;
 
             case DomItem::ET_PROCESSING_INSTRUCTION:
-                result = editProcessingInstruction(parentWindow, pElement);
+                result = editProcessingInstruction(parentWindow, pItem);
                 if(result) {
                     updateInfo = true ;
                 }
                 break;
             case DomItem::ET_COMMENT:
-                result = editNodeComment(parentWindow, pElement);
+                result = editNodeComment(parentWindow, pItem);
                 if(result) {
                     updateInfo = true ;
                 }
@@ -667,11 +508,11 @@ bool DomModel::editItem(QWidget *const parentWindow, QTreeWidgetItem *item)
         }
         if(result) {
             if(updateInfo) {
-                pElement->updateSizeInfo();
-                pElement->display(item, paintInfo);
+                pItem->updateSizeInfo();
+                pItem->display(item, paintInfo);
                 setModified(true);
             }
-            undoCommand->setModifiedElement(pElement);
+            undoCommand->setModifiedElement(pItem);
             _undoStack.push(undoCommand);
         } else {
             delete undoCommand;
@@ -823,7 +664,7 @@ void DomModel::pasteInternals(QTreeWidget *tree, DomItem *parentElement, DomItem
     if(isEmpty(true)) {
         theNewElement = pasteElement->copyTo(*new DomItem(this));
         addTopItem(theNewElement, position);
-        theNewElement->caricaFigli(tree, NULL, paintInfo, true, -1);
+        theNewElement->setChildItem(tree, NULL, paintInfo, true, -1);
     } else {
         theNewElement = pasteElement->copyTo(*new DomItem(this));
         if(!parentElement->isElement()) {
@@ -834,9 +675,8 @@ void DomModel::pasteInternals(QTreeWidget *tree, DomItem *parentElement, DomItem
         } else {
             parentElement->addChildAt(theNewElement, position);
         }
-        theNewElement->caricaFigli(tree, parentElement->getUI(), paintInfo, true, position);
+        theNewElement->setChildItem(tree, parentElement->getUI(), paintInfo, true, position);
     }
-//    theNewElement->markEditedRecursive();
     addUndoInsert(tree, theNewElement);
     setModified(true);
 }
@@ -850,7 +690,7 @@ void DomModel::pasteNoUI(DomItem *pasteItem, DomItem *pasteTo)
     if(NULL == pasteTo) {
         theNewItem = pasteItem->copyTo(*new DomItem(this));
         addTopItem(theNewItem);
-        theNewItem->caricaFigli(NULL, NULL, paintInfo, false, -1);
+        theNewItem->setChildItem(NULL, NULL, paintInfo, false, -1);
     } else {
         // lo inserisce come figlio dell'item corrente
         theNewItem = pasteItem->copyTo(*new DomItem(this));
@@ -858,7 +698,7 @@ void DomModel::pasteNoUI(DomItem *pasteItem, DomItem *pasteTo)
         if(!parentElement->isElement())
             return ;
         parentElement->addChild(theNewItem);
-        theNewItem->caricaFigli(NULL, parentElement->getUI(), paintInfo, false, -1);
+        theNewItem->setChildItem(NULL, parentElement->getUI(), paintInfo, false, -1);
     }
     _undoStack.clear();
     Utils::TODO_NEXT_RELEASE("undo");
@@ -867,7 +707,7 @@ void DomModel::pasteNoUI(DomItem *pasteItem, DomItem *pasteTo)
 
 void DomModel::insertInternal(QTreeWidget *tree, DomItem *parentElement, DomItem *pasteElement, const int position)
 {
-    //if not sel, at the root iif rule is empty
+    //if not selected, at the root iif rule is empty
     //sse extists an item
     //append l'item ( o lo inserisce, con tutti i figli e poi ricarica la lista)
     DomItem *theNewElement = NULL ;
@@ -877,7 +717,7 @@ void DomModel::insertInternal(QTreeWidget *tree, DomItem *parentElement, DomItem
     if(NULL == parentElement) {
         theNewElement = pasteElement->copyTo(*new DomItem(this));
         addTopItem(theNewElement, position);
-        theNewElement->caricaFigli(tree, NULL, paintInfo, true, -1);
+        theNewElement->setChildItem(tree, NULL, paintInfo, true, -1);
     } else {
         theNewElement = pasteElement->copyTo(*new DomItem(this));
         // serve???
@@ -889,9 +729,8 @@ void DomModel::insertInternal(QTreeWidget *tree, DomItem *parentElement, DomItem
         } else {
             parentElement->addChildAt(theNewElement, position);
         }
-        theNewElement->caricaFigli(tree, parentElement->getUI(), paintInfo, true, position);
+        theNewElement->setChildItem(tree, parentElement->getUI(), paintInfo, true, position);
     }
-//    theNewElement->markEditedRecursive();
     setModified(true);
 }
 
@@ -1428,7 +1267,7 @@ void DomModel::transformInComment(QWidget *window, QTreeWidget *tree, DomItem *e
     if(NULL != parentElement) {
         parentUI = parentElement->getUI();
     }
-    comment->caricaFigli(tree, parentUI, paintInfo, true, pos);
+    comment->setChildItem(tree, parentUI, paintInfo, true, pos);
 //    comment->markEditedRecursive();
     clearUndo();
     setModified(true);
@@ -1762,10 +1601,10 @@ void DomModel::insertItemInternal(DomItem *theNewElement, DomItem *parentElement
 {
     if(NULL != parentElement) {
         parentElement->addChild(theNewElement);
-        theNewElement->caricaFigli(tree, parentElement->getUI(), paintInfo);
+        theNewElement->setChildItem(tree, parentElement->getUI(), paintInfo);
     } else {
         addTopItem(theNewElement);
-        theNewElement->caricaFigli(tree, NULL, paintInfo);
+        theNewElement->setChildItem(tree, NULL, paintInfo);
     }
     afterInsertHousekeeping(theNewElement, tree, useUndo);
 }
@@ -1774,15 +1613,15 @@ void DomModel::appendItemInternal(DomItem *theNewElement, DomItem *brotherElemen
 {
     if(NULL == brotherElement) {
         addTopItem(theNewElement);
-        theNewElement->caricaFigli(tree, NULL, paintInfo);
+        theNewElement->setChildItem(tree, NULL, paintInfo);
     } else {
         DomItem *parentElement = brotherElement->parent();
         if(NULL == parentElement) {
             addTopItem(theNewElement);
-            theNewElement->caricaFigli(tree, NULL, paintInfo);
+            theNewElement->setChildItem(tree, NULL, paintInfo);
         } else {
             int pos = parentElement->addChildAfter(theNewElement, brotherElement);
-            theNewElement->caricaFigli(tree, parentElement->getUI(), paintInfo, true, pos);
+            theNewElement->setChildItem(tree, parentElement->getUI(), paintInfo, true, pos);
         }
     }
     afterInsertHousekeeping(theNewElement, tree, useUndo);
@@ -1795,7 +1634,6 @@ void DomModel::afterInsertHousekeeping(DomItem *theNewElement, QTreeWidget *tree
 
 void DomModel::afterInsertHousekeeping(DomItem *theNewElement, QTreeWidget *tree, const bool useUndo)
 {
-//    theNewElement->markEditedRecursive();
     QTreeWidgetItem *item = theNewElement->getUI();
     tree->setCurrentItem(item);
     QTreeWidgetItem *parentItem = item->parent();
@@ -1826,7 +1664,7 @@ bool DomModel::internalMoveUp(DomItem *element, const bool registerInUndo)
         _undoStack.push(undoCmd);
         return undoCmd->done();
     }
-    // DomModel vuota, aggiungo il primo ed ultimo
+
     DomItem *parentItem = element->parent();
     bool doneOp = false;
     if(NULL == parentItem) {

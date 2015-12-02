@@ -49,7 +49,6 @@
 
 
 #include "global.h"
-
 #include "domitem.h"
 #include "paintinfo.h"
 
@@ -96,7 +95,7 @@ public:
     void setPaintInfo(PaintInfo *newValue);
     PaintInfo *getPaintInfo();
 
-    void caricaValori(QTreeWidget *pTree);
+    void setTreeValue(QTreeWidget *pTree);
     bool isEmpty(const bool isRealElement);
     DomItem *root() const;
     void setRootItem(DomItem *newRoot);
@@ -128,12 +127,7 @@ public:
 
     void redisplay();
     void redisplayItem(DomItem *domItem);
-//    void markSaved();
     bool editItem(QWidget * const parentWindow, QTreeWidgetItem *item);
-    bool editInnerXMLBase64Item(QTreeWidgetItem *item);
-    bool editInnerXMLItem(QTreeWidgetItem *item);
-    bool editTextNodeItemBase64(QWidget *const parentWindow, QTreeWidgetItem *item);
-    bool editAndSubstituteTextInNodeItem(QWidget *const parentWindow, DomItem *pItem);
     bool editEntry(QWidget *const parentWindow, const QString &title, const QString &label, const QString &actualText, QString &result);
 
     bool addTopItem(DomItem *theNewItem, const int position = -1);

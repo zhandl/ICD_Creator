@@ -29,7 +29,6 @@ private:
     bool      mIsCaseSensitive;
     bool      mIsOnlyChildren;
     EFindTarget mFindTarget;
-    bool      mIsSelToBookmarks;
     bool      mIsCloseUnrelated;
     QStringList mScopes;
     bool      mIsSearchAttribute;
@@ -43,7 +42,7 @@ private:
 public:
     FindTextParams();
     FindTextParams(const QString textToFind, const bool isCountingOnly, const bool isHiliteAll, const bool isMatchExact, const bool isCaseSensitive,
-                   const bool isOnlyChildren, const EFindTarget findTarget, const bool isSelToBookmarks,
+                   const bool isOnlyChildren, const EFindTarget findTarget,
                    const bool isCloseUnrelated, const bool isShowSize, const QString &scope);
     ~FindTextParams();
 
@@ -70,9 +69,6 @@ public:
     }
     EFindTarget getFindTarget() const {
         return mFindTarget;
-    }
-    bool isSelToBookmarks() const {
-        return mIsSelToBookmarks;
     }
     bool isCloseUnrelated() const {
         return mIsCloseUnrelated;

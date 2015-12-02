@@ -12,7 +12,7 @@
 
 FindTextParams::FindTextParams(const QString textToFind, const bool isCountingOnly, const bool isHiliteAll, const bool isMatchExact,
                                const bool isCaseSensitive, const bool isOnlyChildren, const EFindTarget findTarget,
-                               const bool isSelToBookmarks, const bool isCloseUnrelated, const bool isShowSize,
+                               const bool isCloseUnrelated, const bool isShowSize,
                                const QString &scope)
 {
     mSize = 0 ;
@@ -23,7 +23,6 @@ FindTextParams::FindTextParams(const QString textToFind, const bool isCountingOn
     mIsCaseSensitive = isCaseSensitive ;
     mIsOnlyChildren = isOnlyChildren ;
     mFindTarget = findTarget ;
-    mIsSelToBookmarks = isSelToBookmarks ;
     mIsCloseUnrelated = isCloseUnrelated ;
     mIsShowSize = isShowSize ;
     mIsSearchAttribute = false;
@@ -55,7 +54,6 @@ FindTextParams::FindTextParams()
     mIsCaseSensitive = false ;
     mIsOnlyChildren = false ;
     mFindTarget = FindTextParams::FIND_ALL ;
-    mIsSelToBookmarks = false ;
     mIsCloseUnrelated = false ;
     mIsSearchAttribute = false;
     mIsShowSize = false ;
@@ -114,7 +112,6 @@ void FindTextParams::loadState()
     mIsCaseSensitive = Config::getBool(Config::KEY_SEARCH_CASEUNSITIVE, false);
     mIsOnlyChildren = Config::getBool(Config::KEY_SEARCH_ONLYCHILDREN, false);
     mFindTarget = (EFindTarget)Config::getInt(Config::KEY_SEARCH_FINDTARGET, 0);
-    mIsSelToBookmarks = Config::getBool(Config::KEY_SEARCH_SEL2BOOKMARK, false);
     mIsCloseUnrelated =  Config::getBool(Config::KEY_SEARCH_CLOSEUNRELATED, true);
     mIsShowSize =  Config::getBool(Config::KEY_SEARCH_SHOWSIZE, true);
 }
@@ -126,7 +123,6 @@ void FindTextParams::saveState() const
     Config::saveBool(Config::KEY_SEARCH_CASEUNSITIVE, mIsCaseSensitive);
     Config::saveBool(Config::KEY_SEARCH_ONLYCHILDREN, mIsOnlyChildren);
     Config::saveInt(Config::KEY_SEARCH_FINDTARGET, mFindTarget);
-    Config::saveBool(Config::KEY_SEARCH_SEL2BOOKMARK, mIsSelToBookmarks);
     Config::saveBool(Config::KEY_SEARCH_CLOSEUNRELATED, mIsCloseUnrelated);
     Config::saveBool(Config::KEY_SEARCH_SHOWSIZE, mIsShowSize);
 }

@@ -23,6 +23,7 @@
 #include "xschemaloader.h"
 #include <QDir>
 #include "utils.h"
+#include <QDebug>
 
 XSchemaLoader::XSchemaLoader(XSchemaLoader *parentLoader, SchemaLoaderSpec *newSpec, QObject *parent) :
     QObject(parent)
@@ -54,7 +55,9 @@ void XSchemaLoader::setError(const QString &error)
 bool XSchemaLoader::hasProtocol(const QString& url)
 {
     QUrl theUrl(url);
+    qDebug()<<theUrl.scheme();
     if(!theUrl.scheme().isEmpty()) {
+//    if(!theUrl.isRelative()) {
         return true ;
     }
     return false;
@@ -66,7 +69,7 @@ bool XSchemaLoader::readFromURL(XSDSchema *root, const QString &inputUrl, QNetwo
     _networkAccessManager = networkAccessManager ;
     _mainLoader->_loadedSchemasBySchemaLocation.insert(inputUrl, root);
     QUrl url = QUrl::fromUserInput(inputUrl);
-    if(!hasProtocol(inputUrl)) {
+    if(url.isLocalFile()) {
         handleFileAccess(inputUrl);
         return true;
     }
@@ -338,6 +341,10 @@ XSDSchema *XSchemaLoader::internalSchemaLoader(QFile *inputFile)
             }
         }
         inputFile->close();
+        // this segment has some bug.
+        // pc can enter the segment when debuging
+        // but the if is false(error == NoError)
+        // 2015.5.3
         if(inputFile->error() != QFile::NoError) {
             setError(tr("Error accessing file, error is:'%1'").arg(inputFile->errorString()));
             Utils::error(inputFile->errorString());

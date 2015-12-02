@@ -116,8 +116,6 @@ public:
     void setDisplayMode(const qxmledit::EDisplayMode value);
 
     void setDocument(QDomDocument &document, const QString &filePath, const bool isSetState);
-    void setNavigationDataAndEnable(const int minFragment, const int maxFragment);
-    void showNavigationBox();
     void loadText(const QString &text, const bool isChangeState = true, const bool isAskForReview = false);
     void insertSnippet(DomModel *newModel);
     void insertAllowedItems(DomItem *item);
@@ -180,11 +178,8 @@ public:
     void onActionHideBrothers();
     void onActionFixedSizeAttributes(const bool isChecked);
     void onActionShowAttributesLength(const bool isChecked);
-    void onActionShowCurrentElementTextBase64(const bool isChecked);
-    void onActionShowBase64(const bool isChecked);
-    void onActionEditInnerXML();
-    void onActionEditInnerXMLBase64();
-    void onActionEditInnerBase64Text();
+//    void onActionShowCurrentElementTextBase64(const bool isChecked);
+//    void onActionShowBase64(const bool isChecked);
     void onActionZoomIn();
     void onActionZoomOut();
     void onActionCopyPathToClipboard();
@@ -199,7 +194,6 @@ public:
     void onActionHideView(const bool isChecked);
     void onActionViewAsXsd();
     void onActionAllowedSchemaElements();
-    void onActionPasteAndSubstituteText();
     void onActionNewUsingXMLSchema(const QString &schemaURL);
     void onActionTransformInComment();
     void onActionExtractElementsFromComment();
@@ -228,7 +222,6 @@ private slots:
     void treeContextMenu(const QPoint& position);
     void onStyleChanged();
     void onCopySpecial();
-    void navigateToPage(const int page);
     void docTypeChanged(const QString &docType);
 
     // buttons of the user interface

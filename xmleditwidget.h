@@ -30,7 +30,6 @@
 #include <QtGui/QTreeWidget>
 #include <QtGui/QVBoxLayout>
 #include <QtGui/QWidget>
-#include "navigationbox.h"
 
 class XSDSchema;
 class DomItem;
@@ -109,8 +108,6 @@ public:
     void setDisplayMode(const qxmledit::EDisplayMode value);
 
     void setDocument(QDomDocument &document, const QString &filePath, const bool isSetState);
-    void setNavigationDataAndEnable(const int minFragment, const int maxFragment);
-    void showNavigationBox();
     void loadText(const QString &text, const bool isChangeState = true, const bool isAskForReview = false);
     void insertSnippet(DomModel *newModel);
     void insertAllowedItem(DomItem *item);
@@ -143,7 +140,6 @@ private:
     QHBoxLayout *searchBottom;
     QSpacerItem *horizontalSpacer;
     QCheckBox *closeUnrelated;
-    QCheckBox *selectionToBookmarks;
     QCheckBox *isMatchExactValue;
     QCheckBox *isCaseSensitive;
     QCheckBox *isHiglightAll;
@@ -173,7 +169,6 @@ private:
     QPushButton *testPrev;
     QPushButton *testNext;
     QHBoxLayout *parentNav;
-    NavigationBox *navigation;
     QSpacerItem *verticalSpacer;
     QHBoxLayout *horizontalLowLayout;
     QToolButton *styleButton;
@@ -242,11 +237,8 @@ public:
     void onActionHideBrothers();
     void onActionFixedSizeAttributes(const bool isChecked);
     void onActionShowAttributesLength(const bool isChecked);
-    void onActionShowCurrentItemTextBase64(const bool isChecked);
-    void onActionShowBase64(const bool isChecked);
-    void onActionEditInnerXML();
-    void onActionEditInnerXMLBase64();
-    void onActionEditInnerBase64Text();
+//    void onActionShowCurrentItemTextBase64(const bool isChecked);
+//    void onActionShowBase64(const bool isChecked);
     void onActionZoomIn();
     void onActionZoomOut();
     void onActionCopyPathToClipboard();
@@ -259,7 +251,6 @@ public:
     void onActionHideView(const bool isChecked);
     void onActionViewAsXsd();
     void onActionAllowedSchemaItems();
-    void onActionPasteAndSubstituteText();
     void onActionNewUsingXMLSchema(const QString &schemaURL);
     void onActionTransformInComment();
     void onActionExtractItemsFromComment();

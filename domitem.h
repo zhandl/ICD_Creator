@@ -52,6 +52,8 @@
 class DomModel;
 class FindTextParams;
 
+// Descripe the textNode child of a XML node
+// relative to QDomText node
 class TextChunk
 {
 public:
@@ -76,6 +78,8 @@ public:
     }
 };
 
+// Attribute of a XML node
+// relative to QDomAttribute
 class Attribute
 {
 public:
@@ -87,6 +91,7 @@ public:
     ~Attribute();
 };
 
+// Node information
 class ItemInfo
 {
 public:
@@ -99,6 +104,8 @@ public:
     void reset();
 };
 
+// the Node description class
+// relative to QDomNode
 class DomItem
 {
     Q_DECLARE_TR_FUNCTIONS(DomItem)
@@ -119,7 +126,7 @@ public:
     QString text;
     QString _tag;
     QString tag();
-    bool isShowTextBase64;
+//    bool isShowTextBase64;
     bool wasOpen;
     ItemInfo selfInfo;
     ItemInfo childrenInfo;
@@ -145,7 +152,7 @@ public:
     static bool firstTimeFixedWidthFont;
     static QString textCompactViewPrefix;
 
-    void caricaFigli(QTreeWidget *pTree, QTreeWidgetItem *parent, PaintInfo *panitInfo, const bool isGUI = true, const int pos = -1);
+    void setChildItem(QTreeWidget *pTree, QTreeWidgetItem *parent, PaintInfo *panitInfo, const bool isGUI = true, const int pos = -1);
     void display(QTreeWidgetItem *me, PaintInfo *paintInfo);
     void displayRecursive(PaintInfo *paintInfo);
     void displayWithPaintInfo(PaintInfo *paintInfo);
@@ -260,8 +267,8 @@ public:
     bool isNormalViewState();
     void registerState();
 
-    bool isShownBase64() const;
-    void setShownBase64(const bool shownAs);
+//    bool isShownBase64() const;
+//    void setShownBase64(const bool shownAs);
 
     QList<Attribute*> getAttributesList();
     Attribute *getAttribute(const QString &attributeName);
@@ -341,7 +348,7 @@ private:
     static QIcon elementIcon;
     static QIcon procInstrBkmIcon;
     static QIcon commentBkmIcon;
-    static QIcon elementBkIcon;
+    static QIcon elementBkmIcon;
     static QIcon textIcon;
     static QIcon textBkmIcon;
     static QIcon childrenHiddenIcon;

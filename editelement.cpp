@@ -471,7 +471,7 @@ void EditElement::accept()
                 DomItem *newElement = new DomItem(target->getParentRule(), DomItem::ET_TEXT, target);
                 newElement->setTextOfTextNode(itemValue->text(), itemCDATA->checkState() == Qt::Checked);
                 target->getItems().append(newElement);
-                newElement->caricaFigli(target->getUI()->treeWidget(), target->getUI(), target->getParentRule()->getPaintInfo(), true, row);
+                newElement->setChildItem(target->getUI()->treeWidget(), target->getUI(), target->getParentRule()->getPaintInfo(), true, row);
             } else {
                 target->getItems().append(element);
             }
