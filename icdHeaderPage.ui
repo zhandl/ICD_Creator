@@ -1,0 +1,339 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>icdHeaderPage</class>
+ <widget class="QWidget" name="icdHeaderPage">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>780</width>
+    <height>480</height>
+   </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>800</width>
+    <height>600</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout" stretch="1,2">
+   <item>
+    <widget class="QGroupBox" name="headerGroupBox">
+     <property name="font">
+      <font>
+       <family>Calibri</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="title">
+      <string>Header</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="0" column="7">
+       <widget class="QLabel" name="headerToolIdLabel">
+        <property name="font">
+         <font>
+          <family>Calibri</family>
+          <pointsize>11</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>toolID</string>
+        </property>
+        <property name="buddy">
+         <cstring>headerToolIdText</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="6">
+       <widget class="QCheckBox" name="headerToolIdCheckBox">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="5">
+       <widget class="QComboBox" name="headerNameStructureCombo">
+        <item>
+         <property name="text">
+          <string>IEDName</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>FuncName</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="0" column="3" colspan="2">
+       <widget class="QLabel" name="headerNameStructureLabel">
+        <property name="text">
+         <string>nameStructure</string>
+        </property>
+        <property name="buddy">
+         <cstring>headerNameStructureCombo</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QLineEdit" name="headerIdText"/>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="headerIdLabel">
+        <property name="font">
+         <font>
+          <family>Calibri</family>
+          <weight>50</weight>
+          <bold>false</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>id</string>
+        </property>
+        <property name="buddy">
+         <cstring>headerIdText</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="3">
+       <widget class="QCheckBox" name="headerRevisionCheckBox">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="8">
+       <widget class="QLineEdit" name="headerToolIdText"/>
+      </item>
+      <item row="1" column="5">
+       <widget class="QLineEdit" name="headerRevisionText"/>
+      </item>
+      <item row="1" column="6">
+       <widget class="QCheckBox" name="headerRefCheckBox">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="8">
+       <widget class="QLineEdit" name="headerRefText"/>
+      </item>
+      <item row="1" column="7">
+       <widget class="QLabel" name="headerRefLabel">
+        <property name="text">
+         <string>Ref</string>
+        </property>
+        <property name="buddy">
+         <cstring>headerRefText</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="4">
+       <widget class="QLabel" name="headerRevisionLabel">
+        <property name="text">
+         <string>revision</string>
+        </property>
+        <property name="buddy">
+         <cstring>headerRevisionText</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QCheckBox" name="headerVersionCheckBox">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QLineEdit" name="headerVersionText"/>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLabel" name="headerVersionLabel">
+        <property name="text">
+         <string>vesion</string>
+        </property>
+        <property name="buddy">
+         <cstring>headerVersionText</cstring>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="historyGroupBox">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="font">
+      <font>
+       <family>Calibri</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="title">
+      <string>History</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_2">
+      <item row="0" column="0" rowspan="2">
+       <widget class="QTableWidget" name="hitemTableWidget">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+          <horstretch>0</horstretch>
+          <verstretch>6</verstretch>
+         </sizepolicy>
+        </property>
+        <attribute name="verticalHeaderVisible">
+         <bool>false</bool>
+        </attribute>
+        <row>
+         <property name="text">
+          <string>新建行</string>
+         </property>
+        </row>
+        <column>
+         <property name="text">
+          <string>version</string>
+         </property>
+         <property name="font">
+          <font>
+           <weight>50</weight>
+           <bold>false</bold>
+          </font>
+         </property>
+         <property name="background">
+          <color>
+           <red>255</red>
+           <green>255</green>
+           <blue>127</blue>
+          </color>
+         </property>
+         <property name="foreground">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>0</red>
+            <green>0</green>
+            <blue>0</blue>
+           </color>
+          </brush>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>revision</string>
+         </property>
+         <property name="background">
+          <color>
+           <red>255</red>
+           <green>255</green>
+           <blue>127</blue>
+          </color>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>when</string>
+         </property>
+         <property name="background">
+          <color>
+           <red>255</red>
+           <green>255</green>
+           <blue>127</blue>
+          </color>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>what</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>why</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>who</string>
+         </property>
+        </column>
+        <item row="0" column="0">
+         <property name="text">
+          <string/>
+         </property>
+         <property name="background">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>255</red>
+            <green>255</green>
+            <blue>127</blue>
+           </color>
+          </brush>
+         </property>
+        </item>
+        <item row="0" column="1">
+         <property name="text">
+          <string/>
+         </property>
+         <property name="background">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>255</red>
+            <green>255</green>
+            <blue>127</blue>
+           </color>
+          </brush>
+         </property>
+        </item>
+        <item row="0" column="2">
+         <property name="text">
+          <string/>
+         </property>
+         <property name="background">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>255</red>
+            <green>255</green>
+            <blue>127</blue>
+           </color>
+          </brush>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QPushButton" name="addHitemButton">
+        <property name="text">
+         <string>+</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QPushButton" name="deleteHitemButton">
+        <property name="text">
+         <string>-</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

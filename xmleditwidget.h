@@ -77,7 +77,7 @@ public:
     PaintInfo *getPaintInfo();
 
     void doLoadFileXplore(const QString &filePath);
-    void openProva();
+//    void openProva();
     QString getContentAsText();
     qxmledit::EDisplayMode displayMode();
 

@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
-    Q_INIT_RESOURCE(risorse);
+    Q_INIT_RESOURCE(icdcreator);
 
 
     QTextCodec::setCodecForTr(QTextCodec::codecForName("UTF-8"));

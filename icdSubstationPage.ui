@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>icdSubstationPage</class>
+ <widget class="QWidget" name="icdSubstationPage">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>780</width>
+    <height>480</height>
+   </rect>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QVBoxLayout" name="substationVLayout">
+     <item>
+      <widget class="QGroupBox" name="substationGroupBox">
+       <property name="font">
+        <font>
+         <family>Calibri</family>
+         <pointsize>11</pointsize>
+        </font>
+       </property>
+       <property name="title">
+        <string>Substation</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+       <layout class="QGridLayout" name="gridLayout">
+        <item row="0" column="0">
+         <widget class="QLabel" name="substationNameLabel">
+          <property name="text">
+           <string>name</string>
+          </property>
+          <property name="buddy">
+           <cstring>subStationNameText</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QLineEdit" name="subStationNameText">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="2">
+         <widget class="QCheckBox" name="substationDescCheckBox">
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="3">
+         <widget class="QLabel" name="substationDescLabel">
+          <property name="text">
+           <string>desc</string>
+          </property>
+          <property name="buddy">
+           <cstring>substationDescText</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="4">
+         <widget class="QLineEdit" name="substationDescText">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0" colspan="5">
+         <widget class="QGroupBox" name="voltageLevelGroupBox">
+          <property name="title">
+           <string>VoltageLevel</string>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_2">
+           <item row="0" column="0">
+            <widget class="QLabel" name="votageLevelNameLabel">
+             <property name="text">
+              <string>name</string>
+             </property>
+             <property name="buddy">
+              <cstring>voltageLevelNameText</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QLineEdit" name="voltageLevelNameText"/>
+           </item>
+           <item row="1" column="0" colspan="2">
+            <widget class="QGroupBox" name="voltageGroupBox">
+             <property name="title">
+              <string>Voltage</string>
+             </property>
+             <property name="checkable">
+              <bool>true</bool>
+             </property>
+             <property name="checked">
+              <bool>false</bool>
+             </property>
+             <layout class="QGridLayout" name="gridLayout_3">
+              <item row="0" column="0">
+               <widget class="QLabel" name="voltageUnitLabel">
+                <property name="text">
+                 <string>unit</string>
+                </property>
+                <property name="buddy">
+                 <cstring>voltageUnitComboBox</cstring>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QComboBox" name="voltageUnitComboBox">
+                <property name="enabled">
+                 <bool>false</bool>
+                </property>
+                <item>
+                 <property name="text">
+                  <string>V</string>
+                 </property>
+                </item>
+               </widget>
+              </item>
+              <item row="0" column="2">
+               <widget class="QCheckBox" name="voltageMultiplierCheckBox">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="3">
+               <widget class="QLabel" name="voltageMultiplierLabel">
+                <property name="text">
+                 <string>multiplier</string>
+                </property>
+                <property name="buddy">
+                 <cstring>voltageMultiplierComboBox</cstring>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="4">
+               <widget class="QComboBox" name="voltageMultiplierComboBox">
+                <item>
+                 <property name="text">
+                  <string>m</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>k</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>新建项目</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>新建项目</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>新建项目</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>新建项目</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>新建项目</string>
+                 </property>
+                </item>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="2" column="0" colspan="2">
+            <widget class="QGroupBox" name="bayGroupBox">
+             <property name="title">
+              <string>Bay</string>
+             </property>
+             <layout class="QGridLayout" name="gridLayout_4">
+              <item row="0" column="0">
+               <widget class="QLabel" name="bayNameLabel">
+                <property name="text">
+                 <string>name</string>
+                </property>
+                <property name="buddy">
+                 <cstring>bayNameText</cstring>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QLineEdit" name="bayNameText"/>
+              </item>
+              <item row="0" column="2">
+               <widget class="QCheckBox" name="bayDescCheckBox">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="3">
+               <widget class="QLabel" name="bayDescLabel">
+                <property name="text">
+                 <string>desc</string>
+                </property>
+                <property name="buddy">
+                 <cstring>bayDescText</cstring>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="4">
+               <widget class="QLineEdit" name="bayDescText"/>
+              </item>
+             </layout>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

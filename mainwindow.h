@@ -190,6 +190,11 @@ private:
     QStatusBar *statusbar;
     QToolBar *toolBar;
 
+    //** Add the action
+    //** generate the RCD and NET ICD using wizard
+    QAction *actionNewRcdICDWizard;
+    QAction *actionNewNetICDWizard;
+
     QStringList lnClass;
     QStringList fcEnum;
     QStringList cdc;
@@ -288,6 +293,9 @@ private slots:
 
 //    void on_actionBase64Tools_triggered();
     void on_actionEncodingTools_triggered();
+
+    void on_actionNewRcdICDWizard_triggered();
+    void on_actionNewNetICDWizard_triggered();
 
     //----- other slots ------------------
 

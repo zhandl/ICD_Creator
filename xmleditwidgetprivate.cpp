@@ -1175,24 +1175,6 @@ void XmlEditWidgetPrivate::saveSearchSettings(const FindTextParams &search)
     search.saveState();
 }
 
-//void XmlEditWidgetPrivate::onActionShowCurrentElementTextBase64(const bool isChecked)
-//{
-//    QTreeWidgetItem *currItem = getSelItem();
-//    if(NULL != currItem) {
-//        DomItem *item = DomItem::fromItemData(currItem);
-//        if(NULL != item) {
-//            item->setShownBase64(isChecked);
-//            item->refreshUI();
-//        }
-//    }
-//}
-
-//void XmlEditWidgetPrivate::onActionShowBase64(const bool isChecked)
-//{
-//    paintInfo.setShowUnBase64(isChecked);
-//    repaint();
-//}
-
 void XmlEditWidgetPrivate::onActionShowElementSize(const bool isChecked)
 {
     paintInfo.setShowItemSize(isChecked);

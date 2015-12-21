@@ -111,7 +111,21 @@ SOURCES += main.cpp\
     snippethandler.cpp \
     editsnippet.cpp \
     test.cpp \
-    schemachooser.cpp
+    schemachooser.cpp \
+    recodericdwizard.cpp \
+    icdWizard/welcomepage.cpp \
+    icdWizard/icdheaderpage.cpp \
+    icdWizard/icdsubstationpage.cpp \
+    icdWizard/icdcommunicationpage.cpp \
+    icdWizard/icdiedservicespage.cpp \
+    icdWizard/icdiedaccesspointpage.cpp \
+    icdWizard/icddatatypetemplatepage.cpp \
+    icdWizard/icddatatypetemplatenew.cpp \
+    datatypemodel.cpp \
+    datatypeitem.cpp \
+    newtemplatelnodemodel.cpp \
+    ipaddredit.cpp \
+    ippartlineedit.cpp
 
 HEADERS  += mainwindow.h \
     domitem.h \
@@ -208,7 +222,21 @@ HEADERS  += mainwindow.h \
     snippethandler.h \
     editsnippet.h \
     test.h \
-    schemachooser.h
+    schemachooser.h \
+    recodericdwizard.h \
+    icdWizard/welcomepage.h \
+    icdWizard/icdheaderpage.h \
+    icdWizard/icdsubstationpage.h \
+    icdWizard/icdcommunicationpage.h \
+    icdWizard/icdiedservicespage.h \
+    icdWizard/icdiedaccesspointpage.h \
+    icdWizard/icddatatypetemplatepage.h \
+    icdWizard/icddatatypetemplatenew.h \
+    datatypemodel.h \
+    datatypeitem.h \
+    newtemplatelnodemodel.h \
+    ipaddredit.h \
+    ippartlineedit.h
 
 FORMS += \
     xsdeditor/xsdwindow.ui \
@@ -217,7 +245,13 @@ FORMS += \
     xsdeditor/widgets/xsdchoiceeditor.ui \
     xsdeditor/widgets/xsdgenericeditor.ui \
     xsdeditor/widgets/xsdrooteditor.ui \
-    xsdeditor/widgets/xsdsequenceeditor.ui
+    xsdeditor/widgets/xsdsequenceeditor.ui \
+    icdHeaderPage.ui \
+    icdSubstationPage.ui \
+    icdCommunicationPage.ui \
+    icdIedServicesPage.ui \
+    icdDataTypeTemplate.ui \
+    icdDataTypeTemplateNewPage.ui
 
 RESOURCES += \
-    risorse.qrc
+    icdcreator.qrc

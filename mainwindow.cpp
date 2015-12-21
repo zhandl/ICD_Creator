@@ -21,6 +21,7 @@
 #include "configurationdialog.h"
 #include "snippet_interface.h"
 #include "test.h"
+#include "recodericdwizard.h"
 
 #define MAX_LAST_FILES  (20)
 #define SHORT_TIMEOUT  2000
@@ -437,6 +438,12 @@ BasicType << "BOOLEAN" << "INT8" << "INT16" << "INT24" << "INT32" << "INT128" <<
     actionEncodingTools = new QAction(this);
     actionEncodingTools->setObjectName(QString::fromUtf8("actionEncodingTools"));
 
+    actionNewRcdICDWizard = new QAction(this);
+    actionNewRcdICDWizard->setObjectName(QString::fromUtf8("actionNewRcdICDWizard"));
+
+    actionNewNetICDWizard = new QAction(this);
+    actionNewNetICDWizard->setObjectName(QString::fromUtf8("actionNewNetICDWizard"));
+
     centralwidget = new QWidget(this);
     centralwidget->setObjectName(QString::fromUtf8("centralwidget"));
 
@@ -517,6 +524,8 @@ BasicType << "BOOLEAN" << "INT8" << "INT16" << "INT24" << "INT32" << "INT128" <<
     menuFile->addAction(actionNew);
     menuFile->addAction(actionNewFromClipboard);
     menuFile->addAction(actionNewUsingXMLSchema);
+    menuFile->addAction(actionNewRcdICDWizard);
+    menuFile->addAction(actionNewNetICDWizard);
     menuFile->addAction(actionOpen);
     menuFile->addAction(actionXplore);
     menuFile->addAction(actionSave);
@@ -593,7 +602,6 @@ BasicType << "BOOLEAN" << "INT8" << "INT16" << "INT24" << "INT32" << "INT128" <<
     retranslateUi();
 
     QMetaObject::connectSlotsByName(this);
-
 
 }
 
@@ -848,6 +856,10 @@ void MainWindow::retranslateUi()
 #ifndef QT_NO_TOOLTIP
     actionEncodingTools->setToolTip(QApplication::translate("MainWindow", "Encoding Tools.", 0, QApplication::UnicodeUTF8));
 #endif // QT_NO_TOOLTIP
+
+    actionNewRcdICDWizard->setText(QApplication::translate("MainWindow", "New Recoder ICD file wizard", 0, QApplication::UnicodeUTF8));
+    actionNewNetICDWizard->setText(QApplication::translate("MainWindow", "New NetAnalyzer ICD file wizard", 0, QApplication::UnicodeUTF8));
+
     menu_Navigation->setTitle(QApplication::translate("MainWindow", "&Navigation", 0, QApplication::UnicodeUTF8));
     menuHelp->setTitle(QApplication::translate("MainWindow", "&Help", 0, QApplication::UnicodeUTF8));
     menuEdit->setTitle(QApplication::translate("MainWindow", "&Edit", 0, QApplication::UnicodeUTF8));
@@ -1676,8 +1688,6 @@ void MainWindow::wheelEvent(QWheelEvent *event)
     }
 }
 
-
-
 void MainWindow::on_actionCompare_triggered()
 {
 #ifdef DEBUG_COMPARE
@@ -2192,6 +2202,20 @@ void MainWindow::on_actionEncodingTools_triggered()
 //    data->uiServices()->doEncodingDialog();
 }
 
+void MainWindow::on_actionNewRcdICDWizard_triggered()
+{
+    RecoderIcdWizard recoderICDWizard(this);
+    if(recoderICDWizard.exec() == QDialog::Accepted) {
+        QDomDocument *document = recoderICDWizard.document;
+        setDocument(*document, "", true);
+    }
+
+}
+
+void MainWindow::on_actionNewNetICDWizard_triggered()
+{
+
+}
 
 
 

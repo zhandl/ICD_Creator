@@ -125,4 +125,8 @@
         <file>images/split.png</file>
         <file>images/view-structure-icon.png</file>
     </qresource>
+    <qresource prefix="/dataType">
+        <file>images/LNode.png</file>
+        <file>images/DO.png</file>
+    </qresource>
 </RCC>

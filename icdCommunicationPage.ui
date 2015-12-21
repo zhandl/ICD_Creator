@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>icdCommunicationPage</class>
+ <widget class="QWizardPage" name="icdCommunicationPage">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>780</width>
+    <height>480</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>WizardPage</string>
+  </property>
+  <property name="title">
+   <string>ICD Communication Setting</string>
+  </property>
+  <property name="subTitle">
+   <string>This page can set the attributes of substation segment, if needed.</string>
+  </property>
+  <widget class="QWidget" name="verticalLayoutWidget">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>10</y>
+     <width>761</width>
+     <height>461</height>
+    </rect>
+   </property>
+   <layout class="QVBoxLayout" name="communicationVLayout">
+    <item>
+     <widget class="QGroupBox" name="communicationGroupBox">
+      <property name="title">
+       <string>Communication</string>
+      </property>
+      <property name="checkable">
+       <bool>true</bool>
+      </property>
+      <widget class="QWidget" name="gridLayoutWidget">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>30</y>
+         <width>711</width>
+         <height>421</height>
+        </rect>
+       </property>
+       <layout class="QGridLayout" name="communicationGridLayout">
+        <item row="0" column="0">
+         <widget class="QGroupBox" name="subNetworkGroupBox">
+          <property name="title">
+           <string>SubNetwork</string>
+          </property>
+          <widget class="QWidget" name="gridLayoutWidget_2">
+           <property name="geometry">
+            <rect>
+             <x>10</x>
+             <y>20</y>
+             <width>661</width>
+             <height>391</height>
+            </rect>
+           </property>
+           <layout class="QGridLayout" name="subNetworkGridLayout">
+            <item row="0" column="3">
+             <widget class="QLabel" name="subNetworkTypeLabel">
+              <property name="text">
+               <string>type</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="5">
+             <widget class="QCheckBox" name="subNetworkDescCheckBox">
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="7">
+             <widget class="QLineEdit" name="subNetworkDescText"/>
+            </item>
+            <item row="0" column="2">
+             <widget class="QCheckBox" name="subNetworkTypeCheckBox">
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="6">
+             <widget class="QLabel" name="subNetworkDescLabel">
+              <property name="text">
+               <string>desc</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0" colspan="8">
+             <widget class="QGroupBox" name="bitRateGroupBox">
+              <property name="title">
+               <string>BitRate</string>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
+              </property>
+              <widget class="QWidget" name="gridLayoutWidget_3">
+               <property name="geometry">
+                <rect>
+                 <x>0</x>
+                 <y>10</y>
+                 <width>661</width>
+                 <height>61</height>
+                </rect>
+               </property>
+               <layout class="QGridLayout" name="bitRateGridLayout">
+                <item row="0" column="1">
+                 <widget class="QComboBox" name="bitRateComboBox">
+                  <property name="editable">
+                   <bool>true</bool>
+                  </property>
+                  <property name="currentIndex">
+                   <number>1</number>
+                  </property>
+                  <item>
+                   <property name="text">
+                    <string>10</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>100</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>1000</string>
+                   </property>
+                  </item>
+                 </widget>
+                </item>
+                <item row="0" column="0">
+                 <widget class="QLabel" name="bitRateLabel">
+                  <property name="text">
+                   <string>Setting BitRate of this subNetwork:</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="2">
+                 <widget class="QLabel" name="bitRateUnitLabel">
+                  <property name="text">
+                   <string>(unit : Mb/s)</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+              <widget class="QGroupBox" name="connectedAPGroupBox">
+               <property name="geometry">
+                <rect>
+                 <x>0</x>
+                 <y>130</y>
+                 <width>659</width>
+                 <height>221</height>
+                </rect>
+               </property>
+               <property name="title">
+                <string>ConnectedAP</string>
+               </property>
+               <widget class="QWidget" name="gridLayoutWidget_4">
+                <property name="geometry">
+                 <rect>
+                  <x>10</x>
+                  <y>20</y>
+                  <width>641</width>
+                  <height>191</height>
+                 </rect>
+                </property>
+                <layout class="QGridLayout" name="connectAPGridLayout">
+                 <item row="0" column="1">
+                  <widget class="QLineEdit" name="connectedApNameText"/>
+                 </item>
+                 <item row="0" column="2">
+                  <widget class="QLabel" name="connectedIedNameLabel">
+                   <property name="text">
+                    <string>iedName</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="0">
+                  <widget class="QLabel" name="connectedApNameLabel">
+                   <property name="text">
+                    <string>apName</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="3">
+                  <widget class="QLineEdit" name="connectedIedNameText"/>
+                 </item>
+                 <item row="1" column="0" colspan="4">
+                  <widget class="QGroupBox" name="addressGroupBox">
+                   <property name="title">
+                    <string>Address</string>
+                   </property>
+                   <property name="checkable">
+                    <bool>true</bool>
+                   </property>
+                   <widget class="QWidget" name="gridLayoutWidget_5">
+                    <property name="geometry">
+                     <rect>
+                      <x>10</x>
+                      <y>10</y>
+                      <width>391</width>
+                      <height>141</height>
+                     </rect>
+                    </property>
+                    <layout class="QGridLayout" name="addressGridLayout">
+                     <item row="0" column="1">
+                      <widget class="QPushButton" name="addressAddPButton">
+                       <property name="text">
+                        <string>+</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="1" column="1">
+                      <widget class="QPushButton" name="addressDelPButton">
+                       <property name="text">
+                        <string>-</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="0" column="0" rowspan="2">
+                      <widget class="QTableWidget" name="addressPTableWidget">
+                       <property name="rowCount">
+                        <number>1</number>
+                       </property>
+                       <property name="columnCount">
+                        <number>3</number>
+                       </property>
+                       <attribute name="verticalHeaderVisible">
+                        <bool>false</bool>
+                       </attribute>
+                       <row/>
+                       <column/>
+                       <column/>
+                       <column/>
+                      </widget>
+                     </item>
+                    </layout>
+                   </widget>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </widget>
+             </widget>
+            </item>
+            <item row="0" column="4">
+             <widget class="QLineEdit" name="subNetworkTypeText"/>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="subNetworkNamelabel">
+              <property name="text">
+               <string>name</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLineEdit" name="subNetworkNameText">
+              <property name="styleSheet">
+               <string notr="true">background-color: rgb(255, 255, 127);</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

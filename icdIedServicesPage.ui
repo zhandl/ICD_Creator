@@ -1,0 +1,710 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>icdIedServicesPage</class>
+ <widget class="QWizardPage" name="icdIedServicesPage">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>780</width>
+    <height>480</height>
+   </rect>
+  </property>
+  <property name="font">
+   <font>
+    <family>Calibri</family>
+    <pointsize>11</pointsize>
+   </font>
+  </property>
+  <property name="windowTitle">
+   <string>WizardPage</string>
+  </property>
+  <widget class="QWidget" name="gridLayoutWidget">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>781</width>
+     <height>481</height>
+    </rect>
+   </property>
+   <layout class="QGridLayout" name="iedServiceGridLayout">
+    <property name="leftMargin">
+     <number>11</number>
+    </property>
+    <property name="topMargin">
+     <number>11</number>
+    </property>
+    <property name="rightMargin">
+     <number>11</number>
+    </property>
+    <property name="bottomMargin">
+     <number>11</number>
+    </property>
+    <item row="0" column="8">
+     <widget class="QLineEdit" name="iedTypeText"/>
+    </item>
+    <item row="1" column="1">
+     <widget class="QLabel" name="iedDescLabel">
+      <property name="text">
+       <string>desc</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="0">
+     <widget class="QCheckBox" name="iedDescCheckBox">
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="5">
+     <widget class="QLineEdit" name="iedConfigVersinoText"/>
+    </item>
+    <item row="0" column="6">
+     <widget class="QCheckBox" name="iedTypeCheckBox">
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="9">
+     <widget class="QCheckBox" name="iedManuCheckBox">
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="3">
+     <widget class="QCheckBox" name="iedConfigVersionCheckBox">
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="10">
+     <widget class="QLabel" name="iedManuLabel">
+      <property name="text">
+       <string>Mamnfacturer</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="4">
+     <widget class="QLabel" name="iedConfigVersionLabel">
+      <property name="text">
+       <string>configVersion</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="2">
+     <widget class="QLineEdit" name="iedNameText"/>
+    </item>
+    <item row="0" column="7">
+     <widget class="QLabel" name="iedTypeLabel">
+      <property name="text">
+       <string>type</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="11">
+     <widget class="QLineEdit" name="iedManuText"/>
+    </item>
+    <item row="1" column="2">
+     <widget class="QLineEdit" name="iedDescText"/>
+    </item>
+    <item row="0" column="0" colspan="2">
+     <widget class="QLabel" name="iedNameLabel">
+      <property name="text">
+       <string>name</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="0" colspan="12">
+     <widget class="QGroupBox" name="servicesGroupBox">
+      <property name="title">
+       <string>Services</string>
+      </property>
+      <widget class="QWidget" name="gridLayoutWidget_2">
+       <property name="geometry">
+        <rect>
+         <x>0</x>
+         <y>9</y>
+         <width>751</width>
+         <height>391</height>
+        </rect>
+       </property>
+       <layout class="QGridLayout" name="servicesGridLayout">
+        <property name="leftMargin">
+         <number>11</number>
+        </property>
+        <property name="topMargin">
+         <number>11</number>
+        </property>
+        <property name="rightMargin">
+         <number>11</number>
+        </property>
+        <property name="bottomMargin">
+         <number>11</number>
+        </property>
+        <item row="3" column="0">
+         <widget class="QGroupBox" name="reportSettingsGroupBox">
+          <property name="title">
+           <string>ReportSettings</string>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+          <widget class="QWidget" name="gridLayoutWidget_5">
+           <property name="geometry">
+            <rect>
+             <x>9</x>
+             <y>20</y>
+             <width>201</width>
+             <height>54</height>
+            </rect>
+           </property>
+           <layout class="QGridLayout" name="reportSettingsGridLayout">
+            <item row="0" column="1">
+             <widget class="QLabel" name="label_2">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>cbName:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="3">
+             <widget class="QCheckBox" name="checkBox">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QCheckBox" name="checkBox_3">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="4">
+             <widget class="QLabel" name="label">
+              <property name="text">
+               <string>dataSet:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="5">
+             <widget class="QComboBox" name="comboBox">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="3">
+             <widget class="QCheckBox" name="checkBox_2">
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <widget class="QComboBox" name="comboBox_2">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QGroupBox" name="confLogControlGroupBox">
+          <property name="title">
+           <string>ConfLogContro</string>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+          <widget class="QWidget" name="horizontalLayoutWidget_4">
+           <property name="geometry">
+            <rect>
+             <x>9</x>
+             <y>20</y>
+             <width>191</width>
+             <height>31</height>
+            </rect>
+           </property>
+           <layout class="QHBoxLayout" name="confLogControlHLayout">
+            <item>
+             <widget class="QLabel" name="conLogControlMaxLabel">
+              <property name="text">
+               <string>max:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="confLogControlMaxText"/>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+        </item>
+        <item row="2" column="2">
+         <widget class="QGroupBox" name="dynDataSetGroupBox">
+          <property name="title">
+           <string>DynDataSet</string>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+          <widget class="QWidget" name="gridLayoutWidget_4">
+           <property name="geometry">
+            <rect>
+             <x>19</x>
+             <y>20</y>
+             <width>231</width>
+             <height>56</height>
+            </rect>
+           </property>
+           <layout class="QGridLayout" name="dynDataSetGridLayout">
+            <item row="0" column="0">
+             <widget class="QLabel" name="dynDataSetMaxLabel">
+              <property name="text">
+               <string>max:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLineEdit" name="dynDataSetMaxText"/>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="dynDataSetMaxAttrLabel">
+              <property name="text">
+               <string>maxAttributes: </string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QLineEdit" name="dynDataSetMaxAttrText"/>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QGroupBox" name="confReportControlGroupBox">
+          <property name="title">
+           <string>ConfReportControl</string>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout">
+           <item>
+            <layout class="QHBoxLayout" name="confReportControlHLayout">
+             <item>
+              <widget class="QLabel" name="confReportControlMaxLabel">
+               <property name="text">
+                <string>max:</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="confReportControlMaxText"/>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QGroupBox" name="gooseGroupBox">
+          <property name="title">
+           <string>GOOSE</string>
+          </property>
+          <property name="flat">
+           <bool>false</bool>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_2">
+           <item>
+            <layout class="QHBoxLayout" name="gooseHLayout">
+             <property name="leftMargin">
+              <number>6</number>
+             </property>
+             <property name="topMargin">
+              <number>6</number>
+             </property>
+             <property name="rightMargin">
+              <number>6</number>
+             </property>
+             <property name="bottomMargin">
+              <number>6</number>
+             </property>
+             <item>
+              <widget class="QLabel" name="gooseMaxLabel">
+               <property name="text">
+                <string>max: </string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="gooseMaxText"/>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QGroupBox" name="gsseGroupBox">
+          <property name="title">
+           <string>GSSE</string>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_2">
+           <item row="0" column="0">
+            <layout class="QHBoxLayout" name="gsseHLayout">
+             <item>
+              <widget class="QLabel" name="gsseMaxLabel">
+               <property name="text">
+                <string>max: </string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="gsseMaxText"/>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="1" column="2">
+         <widget class="QGroupBox" name="confDataSetGroupBox">
+          <property name="title">
+           <string>ConfDataSet</string>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+          <layout class="QGridLayout" name="gridLayout">
+           <item row="0" column="0">
+            <widget class="QLabel" name="confDataSetMaxLabel">
+             <property name="text">
+              <string>max: </string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0" colspan="2">
+            <widget class="QLabel" name="confDataSetMaxAttrLabel">
+             <property name="text">
+              <string>maxAttributes:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="2">
+            <widget class="QLineEdit" name="confDataSetMaxAttrText"/>
+           </item>
+           <item row="0" column="2">
+            <widget class="QLineEdit" name="confDataSetMaxText"/>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="4" column="0">
+         <widget class="QGroupBox" name="logSettingsGroupBox">
+          <property name="title">
+           <string>GroupBox</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="QGroupBox" name="settingGroupsGroupBox">
+          <property name="title">
+           <string>GroupBox</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="1">
+         <widget class="QGroupBox" name="gseSettingsGroupBox">
+          <property name="title">
+           <string>GroupBox</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="2">
+         <widget class="QGroupBox" name="smvSettingsGroupBox">
+          <property name="title">
+           <string>GroupBox</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="2">
+         <widget class="QGroupBox" name="confLNsGroupBox">
+          <property name="title">
+           <string>GroupBox</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0" colspan="3">
+         <widget class="QGroupBox" name="servicesWOAttrGroupBox">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="title">
+           <string>Services without Attributes</string>
+          </property>
+          <widget class="QWidget" name="gridLayoutWidget_3">
+           <property name="geometry">
+            <rect>
+             <x>20</x>
+             <y>30</y>
+             <width>691</width>
+             <height>101</height>
+            </rect>
+           </property>
+           <layout class="QGridLayout" name="servicesWOAttrGridLayout">
+            <item row="0" column="5">
+             <widget class="QLabel" name="getDataObjectDefinitionLabel">
+              <property name="text">
+               <string>GetDataObjectDefinition</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="7">
+             <widget class="QLabel" name="dataObjectDirectoryLabel">
+              <property name="text">
+               <string>DataObjectDirectory</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="6">
+             <widget class="QCheckBox" name="dataObjectDirectoryCheckBox">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLabel" name="dynAssociationLabel">
+              <property name="text">
+               <string>DynAssociation</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="4">
+             <widget class="QCheckBox" name="getDataObjectDefinitionCheckBox">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <widget class="QCheckBox" name="getDirectoryCheckBox">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QCheckBox" name="dynAssociationCheckBox">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Minimum">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="3">
+             <widget class="QLabel" name="getDirectoryLabel">
+              <property name="text">
+               <string>GetDirectory</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QCheckBox" name="getDataValueCheckBox">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Minimum">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QLabel" name="getDataValueLabel">
+              <property name="text">
+               <string>GetDataValue</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="2">
+             <widget class="QCheckBox" name="setDataSetValueCheckBox">
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="3">
+             <widget class="QLabel" name="setDataSetValueLabel">
+              <property name="text">
+               <string>SetDataSetValue</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="4">
+             <widget class="QCheckBox" name="dataSetDirectoryCheckBox">
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="5">
+             <widget class="QLabel" name="dataSetDirectoryLabel">
+              <property name="text">
+               <string>DataSetDirectory</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="6">
+             <widget class="QCheckBox" name="readWriteCheckBox">
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="7">
+             <widget class="QLabel" name="readWriteLabel">
+              <property name="text">
+               <string>ReadWrite</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QCheckBox" name="timerActivatedContorlCheckBox">
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="2">
+             <widget class="QCheckBox" name="getCBValuesCheckBox">
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="4">
+             <widget class="QCheckBox" name="gseDirCheckBox">
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="6">
+             <widget class="QCheckBox" name="fileHandlingCheckBox">
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QLabel" name="timerActivatedControlLabel">
+              <property name="text">
+               <string>TimerActivatedControl</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="3">
+             <widget class="QLabel" name="getCBValuesLabel">
+              <property name="text">
+               <string>GetCBValues</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="5">
+             <widget class="QLabel" name="gseDirLabel">
+              <property name="text">
+               <string>GSEDir</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="7">
+             <widget class="QLabel" name="fileHandlingLabel">
+              <property name="text">
+               <string>FileHandling</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
