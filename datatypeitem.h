@@ -44,6 +44,7 @@ public:
     void display(QTreeWidgetItem *me, PaintInfo *paintInfo, bool isNewTemplate);
     void displayRecursive(PaintInfo *paintInfo);
     void displayWithPaintInfo(PaintInfo *paintInfo);
+    void updateDisplay(QTreeWidgetItem *me);
 
     static DataTypeItem *fromItemData(QTreeWidgetItem *item);
     static DataTypeItem *fromModelIndex(const QModelIndex &index);
@@ -61,6 +62,10 @@ public:
     void zeroUISelf();
 
     QString attributeValueOfName(const QString &name);
+
+    DataTypeModel* getParentModel() const {
+        return parentModel;
+    }
 
     ItemType getType() const {
         return type;

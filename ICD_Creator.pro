@@ -125,7 +125,8 @@ SOURCES += main.cpp\
     datatypeitem.cpp \
     newtemplatelnodemodel.cpp \
     ipaddredit.cpp \
-    ippartlineedit.cpp
+    ippartlineedit.cpp \
+    modifylnodeid.cpp
 
 HEADERS  += mainwindow.h \
     domitem.h \
@@ -236,7 +237,8 @@ HEADERS  += mainwindow.h \
     datatypeitem.h \
     newtemplatelnodemodel.h \
     ipaddredit.h \
-    ippartlineedit.h
+    ippartlineedit.h \
+    modifylnodeid.h
 
 FORMS += \
     xsdeditor/xsdwindow.ui \

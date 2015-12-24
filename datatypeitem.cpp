@@ -191,6 +191,20 @@ QVariant DataTypeItem::displayData(PaintInfo *paintInfo, const int rowOrdinal)
     return QVariant("");
 }
 
+void DataTypeItem::updateDisplay(QTreeWidgetItem *me)
+{
+    if(ui != me) {
+        ui = me;
+    }
+    QString showText;
+    if(tag() == "LNodeType") {
+        showText += attributeValueOfName("lnClass");
+        showText.append(": ");
+        showText += attributeValueOfName("id");
+    }
+    me->setText(0, showText);
+}
+
 void DataTypeItem::display(QTreeWidgetItem *me, PaintInfo *paintInfo, bool isNewTemplate)
 {
     if(ui != me) {
@@ -198,7 +212,7 @@ void DataTypeItem::display(QTreeWidgetItem *me, PaintInfo *paintInfo, bool isNew
     }
     QFont font;
     font.setFamily("Calibri");
-    font.setPointSize(12);
+    font.setPointSize(9);
     me->setFont(0, font);
 
     me->setData(0, Qt::UserRole, qVariantFromValue((void*)this));
@@ -221,7 +235,7 @@ void DataTypeItem::display(QTreeWidgetItem *me, PaintInfo *paintInfo, bool isNew
 
             me->setFlags(me->flags() & ~Qt::ItemIsUserCheckable);
 
-            wasOpen = true;
+            wasOpen = false;
 
 
         } else if(tag() == tr("DO")) {

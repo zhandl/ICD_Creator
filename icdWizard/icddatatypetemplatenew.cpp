@@ -2,6 +2,7 @@
 #include "datatypemodel.h"
 #include "datatypeitem.h"
 #include "newtemplatelnodemodel.h"
+#include "modifylnodeid.h"
 
 icdDataTypeTemplateNew::icdDataTypeTemplateNew(QWidget *parent) :
     QWizardPage(parent)
@@ -26,6 +27,7 @@ icdDataTypeTemplateNew::icdDataTypeTemplateNew(QWidget *parent) :
 //            selectedModel->setRootItem(item);
 //    }
 
+    connect(newTemplateLNodeTree, SIGNAL(itemDoubleClicked(QTreeWidgetItem*,int)), this, SLOT(on_newTemplateLNodeTree_itemDoubleClicked(QTreeWidgetItem*, int)));
     connect(standardComboBox, SIGNAL(activated(int)), this, SLOT(selecteDataTypeStandard(int)));
     standardComboBox->setCurrentIndex(0);
     setStandardDLT860();
@@ -323,4 +325,19 @@ void icdDataTypeTemplateNew::registerData()
             }
         }
     }
+}
+
+void icdDataTypeTemplateNew::on_newTemplateLNodeTree_itemDoubleClicked(QTreeWidgetItem* item, int /*column*/)
+{
+    DataTypeItem *dataItem = new DataTypeItem(selectedModel);
+    dataItem = DataTypeItem::fromItemData(item);
+
+    ModifyLNodeId dialog(this);
+    dialog.setModal(true);
+    dialog.setTarget(dataItem);
+    if(dialog.exec() == QDialog::Accepted) {
+        dataItem->updateDisplay(item);
+    }
+
+
 }

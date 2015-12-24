@@ -88,6 +88,8 @@ public slots:
     void on_addLNode_clicked();
     void on_delLNode_clicked();
 
+    void on_newTemplateLNodeTree_itemDoubleClicked(QTreeWidgetItem* item, int column);
+
 };
 
 #endif // ICDDATATYPETEMPLATENEW_H

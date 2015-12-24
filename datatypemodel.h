@@ -70,6 +70,10 @@ public:
         return EnumItemPool;
     }
 
+    QSet<QString> &getLNodeIdNamePool() {
+        return _LNodeIdPool;
+    }
+
     void notifyDeletionTopItem(DataTypeItem *item);
     void deleteItem(DataTypeItem *item);
     void takeOutItem(DataTypeItem *item);
