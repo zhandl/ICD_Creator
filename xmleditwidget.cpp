@@ -615,9 +615,34 @@ bool XmlEditWidget::editItem(QTreeWidgetItem *item)
 }
 
 
+void XmlEditWidget::editAttribute()
+{
+    d->editAttribute();
+}
+
 void XmlEditWidget::addChild()
 {
     d->addChild();
+}
+
+void XmlEditWidget::addText()
+{
+    d->addText();
+}
+
+void XmlEditWidget::addLNode()
+{
+    d->addLNode();
+}
+
+void XmlEditWidget::addLLN0()
+{
+    d->addLLN0();
+}
+
+void XmlEditWidget::addDataSet()
+{
+    d->addDataSet();
 }
 
 void XmlEditWidget::addBrother()

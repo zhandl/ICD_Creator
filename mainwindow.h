@@ -43,6 +43,7 @@
 #include "icdtreeview.h"
 
 #include "xmleditwidget.h"
+#include "xmleditwidgetprivate.h"
 #include "qxmleditdata.h"
 
 class XsdPlugin;
@@ -195,6 +196,25 @@ private:
     QAction *actionNewRcdICDWizard;
     QAction *actionNewNetICDWizard;
 
+    QMenu *menuAddLN0;
+    QMenu *menuAddLN;
+
+    QAction *actionAddLLN0;
+//    QAction *actionAddLPHD;
+//    QAction *actionAddGGIO;
+//    QAction *actionAddLTSM;
+    QAction *actionAddLN;
+
+    //** Add the action for customContext
+    //** add icd element for every node
+    QAction *actionEditAttribute;
+    QAction *actionAddText;
+
+    QAction *actionAddDataSet;
+
+//    QMenu *actionAddLN0;
+//    QMenu *actionAddLN;
+
     QStringList lnClass;
     QStringList fcEnum;
     QStringList cdc;
@@ -296,6 +316,15 @@ private slots:
 
     void on_actionNewRcdICDWizard_triggered();
     void on_actionNewNetICDWizard_triggered();
+
+    void on_actionEditAttribute_triggered();
+    void on_actionAddText_triggered();
+
+    void on_actionAddLNNode_triggered();
+
+    void on_actionAddLLN0_triggered();
+    void on_actionAddLN_triggered();
+    void on_actionAddDataSet_triggered();
 
     //----- other slots ------------------
 

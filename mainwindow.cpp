@@ -5,6 +5,7 @@
 #include <QXmlSchema>
 #include <QXmlSchemaValidator>
 #include <QDebug>
+#include <QVector>
 
 #include "mainwindow.h"
 
@@ -599,6 +600,37 @@ BasicType << "BOOLEAN" << "INT8" << "INT16" << "INT24" << "INT32" << "INT128" <<
     toolBar->addSeparator();
     toolBar->addAction(actionHelpOnQXmlEdit);
 
+
+    actionEditAttribute = new QAction(this);
+    actionEditAttribute->setObjectName(tr("actionEditAttribute"));
+
+    actionAddText = new QAction(this);
+    actionAddText->setObjectName(tr("actionAddText"));
+
+    menuAddLN0 = new QMenu(this);
+    menuAddLN0->setObjectName(tr("menuAddLN0"));
+
+    menuAddLN = new QMenu(this);
+    menuAddLN->setObjectName(tr("menuAddLN"));
+
+    actionAddLLN0 = new QAction(this);
+    actionAddLLN0->setObjectName(tr("actionAddLLN0"));
+
+    actionAddLN = new QAction(this);
+    actionAddLN->setObjectName(tr("actionAddLN"));
+
+//    actionAddLPHD = new QAction(this);
+//    actionAddLPHD->setObjectName(tr("actionAddLPHD"));
+
+//    actionAddGGIO = new QAction(this);
+//    actionAddGGIO->setObjectName(tr("actionAddGGIO"));
+
+//    actionAddLTSM = new QAction(this);
+//    actionAddLTSM->setObjectName(tr("actionAddLTSM"));
+
+    actionAddDataSet = new QAction(this);
+    actionAddDataSet->setObjectName(tr("actionAddDataSet"));
+
     retranslateUi();
 
     QMetaObject::connectSlotsByName(this);
@@ -870,6 +902,18 @@ void MainWindow::retranslateUi()
     menuView->setTitle(QApplication::translate("MainWindow", "&View", 0, QApplication::UnicodeUTF8));
     toolBar->setWindowTitle(QApplication::translate("MainWindow", "toolBar", 0, QApplication::UnicodeUTF8));
 
+
+    actionEditAttribute->setText(tr("EditAttributes"));
+    actionEditAttribute->setIcon(QIcon(":/commands/images/EditAttributes.png"));
+
+    actionAddText->setText(tr("text"));
+    actionAddText->setIcon(QIcon(":/commands/images/AddText.png"));
+
+    menuAddLN0->setTitle(tr("LN0"));
+    menuAddLN->setTitle(tr("LN"));
+
+    actionAddDataSet->setText(tr("DataSet"));
+
 }
 
 void MainWindow::deleteSchema()
@@ -1063,6 +1107,46 @@ void MainWindow::display()
 void MainWindow::treeContextMenu(const QPoint& position)
 {
     QMenu contextMenu(this);
+
+    contextMenu.addAction(actionEditAttribute);
+    contextMenu.addAction(actionAddText);
+
+    if(editor->getSelectedItem()->tag() == tr("LDevice")) {
+
+        QVector<DomItem*> lnItems = getModel()->getDataTypeItems();
+        foreach(DomItem *item, lnItems) {
+            QString LNActionName = item->attributeValueOfName("lnClass") + tr(": ") + item->attributeValueOfName("id");
+            if(item->attributeValueOfName(tr("lnClass")) == tr("LLN0")) {
+                actionAddLLN0->setText(LNActionName);
+                menuAddLN0->addAction(actionAddLLN0);
+            } else {
+                actionAddLN->setText(LNActionName);
+                menuAddLN->addAction(actionAddLN);
+            }
+//            connect(actionAddLNNode, SIGNAL(triggered()), this, SLOT(on_actionAddLNNode_triggered()));
+        }
+
+        if(!(editor->getSelectedItem()->hasChildOfName(tr("LN0")))) {
+            contextMenu.addMenu(menuAddLN0);
+        }
+        contextMenu.addMenu(menuAddLN);
+    }
+
+    if(editor->getSelectedItem()->tag() == tr("LN0")) {
+
+//        QVector<DomItem*> lnItems = getModel()->getDataTypeItems();
+//        foreach(DomItem *item, lnItems) {
+
+//        }
+
+//        if(!(editor->getSelectedItem()->hasChildOfName(tr("LN0")))) {
+//            contextMenu.addMenu(menuAddLN0);
+//        }
+        contextMenu.addAction(actionAddDataSet);
+    }
+
+    contextMenu.addSeparator();
+
     contextMenu.addAction(actionCut);
     contextMenu.addAction(actionCopy);
     bool isActionMode = editor->isActionMode();
@@ -2209,7 +2293,6 @@ void MainWindow::on_actionNewRcdICDWizard_triggered()
         QDomDocument *document = recoderICDWizard.document;
         setDocument(*document, "", true);
     }
-
 }
 
 void MainWindow::on_actionNewNetICDWizard_triggered()
@@ -2217,7 +2300,36 @@ void MainWindow::on_actionNewNetICDWizard_triggered()
 
 }
 
+void MainWindow::on_actionEditAttribute_triggered()
+{
+    editor->editAttribute();
 
+}
+
+void MainWindow::on_actionAddText_triggered()
+{
+    editor->addText();
+}
+
+void MainWindow::on_actionAddLNNode_triggered()
+{
+
+}
+
+void MainWindow::on_actionAddLLN0_triggered()
+{
+    editor->addLLN0();
+}
+
+void MainWindow::on_actionAddLN_triggered()
+{
+    editor->addLNode();
+}
+
+void MainWindow::on_actionAddDataSet_triggered()
+{
+    editor->addDataSet();
+}
 
 void MainWindow::CreateNewICD(QDomDocument *doc)
 {

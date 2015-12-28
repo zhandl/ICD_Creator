@@ -62,6 +62,12 @@ QIcon DomItem::textBkmIcon;
 QIcon DomItem::childrenHiddenIcon;
 QIcon DomItem::childrenHiddenBkmIcon;
 
+QIcon DomItem::sclIcon;
+QIcon DomItem::headerIcon;
+QIcon DomItem::communicationIcon;
+QIcon DomItem::iedIcon;
+QIcon DomItem::dataTypeIcon;
+
 const int DomItem::ShowDataRole = Qt::UserRole + 1;
 
 QRegExp DomItem::terminatorSearch("[\\n\\r]");
@@ -112,18 +118,30 @@ DomItem::DomItem(const QString newTag, const QString &itext, DomModel *model, Do
     _tag = newTag;
     type = ET_ELEMENT;
     text = itext;
+    if(newTag == tr("Header")) {
+        nodeType = ICD_HEADER;
+    } else if(newTag == tr("Communication")) {
+        nodeType = ICD_COMMUNICATION;
+    } else if(newTag == tr("IED")) {
+        nodeType = ICD_IED;
+    } else if(newTag == tr("DataTypeTemplates")) {
+        nodeType = ICD_DATATYPETEMPLATES;
+    } else
+        nodeType = ICD_SCL;
 }
 
 DomItem::DomItem(DomModel *model)
 {
     initItem(model, NULL);
     type = ET_ELEMENT;
+    nodeType = ICD_SCL;
 }
 
 DomItem::DomItem(DomModel *model, const ItemType newType, DomItem *parent)
 {
     initItem(model, parent);
     type = newType;
+    nodeType = ICD_SCL;
 }
 
 DomItem::~DomItem()
@@ -179,6 +197,12 @@ void DomItem::loadIcons()
     childrenHiddenIcon.addPixmap(QPixmap(QString::fromUtf8(":/tree/hidden_children")), QIcon::Normal, QIcon::Off);
     childrenHiddenBkmIcon.addPixmap(QPixmap(QString::fromUtf8(":/tree/hidden_children_bm")), QIcon::Normal, QIcon::Off);
     textCompactViewPrefix =  "     ";
+
+    sclIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/SCL.png")), QIcon::Normal, QIcon::Off);
+    headerIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/header.png")), QIcon::Normal, QIcon::Off);
+    communicationIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/communication.png")), QIcon::Normal, QIcon::Off);
+    iedIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/IED.png")), QIcon::Normal, QIcon::Off);
+    dataTypeIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/dataTypeTemplate.png")), QIcon::Normal, QIcon::Off);
 }
 
 //bool DomItem::isShownBase64() const
@@ -468,7 +492,8 @@ void DomItem::display(QTreeWidgetItem *me, PaintInfo *paintInfo)
     case ET_ELEMENT:
         firstColText += tag();
         if(!areChildrenLeavesHidden(me)) {
-            me->setIcon(0, elementIcon);
+//            me->setIcon(0, elementIcon);
+            me->setIcon(0, iconForNode());
         } else {
             me->setIcon(0, childrenHiddenIcon);
         }
@@ -1207,6 +1232,7 @@ void DomItem::copyHeader(DomItem &newItem)
     }
     newItem.text = text;
     newItem.type = type;
+    newItem.nodeType = nodeType;
     newItem._viewMode = _viewMode;
     newItem._isCData = _isCData;
 }
@@ -2119,6 +2145,56 @@ bool DomItem::copyTextNodesToTarget(DomItem *target)
     return false;
 }
 
+QString DomItem::attributeValueOfName(const QString &name)
+{
+    foreach (Attribute *attr, attributes) {
+        if(attr->name == name)
+            return attr->value;
+    }
+    return "";
+}
+
+QIcon DomItem::iconForNode()
+{
+    QIcon *showIcon = new QIcon();
+    switch(nodeType) {
+    case ICD_HEADER:
+        *showIcon = headerIcon;
+        break;
+    case ICD_COMMUNICATION:
+        *showIcon = communicationIcon;
+        break;
+    case ICD_IED:
+        *showIcon = iedIcon;
+        break;
+    case ICD_DATATYPETEMPLATES:
+        *showIcon = dataTypeIcon;
+        break;
+    case ICD_SCL:
+    default:
+        *showIcon = sclIcon;
+        break;
+    }
+
+    return *showIcon;
+
+}
+
+bool DomItem::hasChildOfName(const QString &name)
+{
+    bool result = false;
+    if(NULL == name) {
+        return result;
+    }
+    foreach (DomItem *item, childItems) {
+        if(item->tag() == name) {
+            result = true;
+            return result;
+        }
+    }
+
+    return result;
+}
 
 //----------------------------------------------------------------
 

@@ -138,6 +138,7 @@ public:
     static int fixedSizeAttrFonts;
 
     enum ItemType { ET_ELEMENT, ET_PROCESSING_INSTRUCTION, ET_COMMENT, ET_TEXT};
+    enum NodeType { ICD_SCL, ICD_HEADER, ICD_TEXT, ICD_SUBSTATION, ICD_COMMUNICATION, ICD_IED, ICD_DATATYPETEMPLATES};
 
     DomItem(const QString newTag, const QString &text, DomModel *model, DomItem *parent = 0);
     DomItem(DomModel *model, const ItemType newType, DomItem *parent);
@@ -166,6 +167,8 @@ public:
     void addChild(DomItem *newChild);
     void addChildAt(DomItem *newItem, const int position);
     int addChildAfter(DomItem *newItem, DomItem *brotherItem);
+
+    bool hasChildOfName(const QString &name);
 
     bool moveDown(DomItem *item);
     bool moveUp(DomItem *item);
@@ -200,6 +203,10 @@ public:
 
     ItemType getType() const {
         return type;
+    }
+
+    NodeType getNodeType() const {
+        return nodeType;
     }
     QVector<DomItem*> *getChildItems() {
         return &childItems;
@@ -239,6 +246,8 @@ public:
     bool isElement() const {
         return (ET_ELEMENT == type);
     }
+
+    QString attributeValueOfName(const QString &name);
 
     const QString &getPITarget();
     const QString getPIData();
@@ -325,6 +334,7 @@ private:
 
     QVector<TextChunk*> textNodes;
     ItemType type;
+    NodeType nodeType;
     QVector<DomItem*> childItems;
 
     //***************************************
@@ -353,6 +363,13 @@ private:
     static QIcon textBkmIcon;
     static QIcon childrenHiddenIcon;
     static QIcon childrenHiddenBkmIcon;
+
+    static QIcon sclIcon;
+    static QIcon headerIcon;
+    static QIcon substationIcon;
+    static QIcon communicationIcon;
+    static QIcon iedIcon;
+    static QIcon dataTypeIcon;
 
     void generateId();
 
@@ -396,6 +413,7 @@ public:
     QVariant columnViewTooltipData();
     QVariant columnViewDisplayData(PaintInfo *paintInfo, const int rowOrdinal);
 
+    QIcon iconForNode();
 };
 
 #endif

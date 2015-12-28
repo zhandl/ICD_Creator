@@ -54,6 +54,7 @@
 #include "edittextnode.h"
 #include "editelement.h"
 #include "xsaxhandler.h"
+#include "editattribute.h"
 
 #include "undo/undomoveupcommand.h"
 #include "undo/undomovedowncommand.h"
@@ -194,7 +195,11 @@ DomItem *DomModel::setItem(QDomNode &node, DomItem *parent, QVector<DomItem *> *
                 }
             }
             collection->append(item);
-            setItem(childNode, item, item->getChildItems());
+            setItem(childNode, item, item->getChildItems());       
+
+            if(item->tag() == tr("LNodeType"))
+                _dataTypeItems.append(item);
+
         } else if(childNode.isCDATASection()) {
             QDomCDATASection text = childNode.toCDATASection();
             if(isMixedcontent) {
@@ -235,6 +240,7 @@ DomItem *DomModel::setItem(QDomNode &node, DomItem *parent, QVector<DomItem *> *
             }
         }
     }
+
     return item;
 }//setItem;
 
@@ -432,6 +438,18 @@ bool DomModel::editNodeItem(QWidget * const parentWindow, DomItem *pItem)
     return false;
 }
 
+void DomModel::editAttribute(QWidget *const window, QTreeWidgetItem *pItem)
+{
+    DomItem *item = DomItem::fromItemData(pItem);
+    EditAttribute element(window);
+    element.setModal(true);
+    element.setTarget(item);
+    if(element.exec() == QDialog::Accepted) {
+        return ;
+    }
+
+}
+
 bool DomModel::editNodeComment(QWidget * const parentWindow, DomItem *pItem)
 {
     return EditCommentNode(parentWindow, pItem);
@@ -534,6 +552,104 @@ bool DomModel::editEntry(QWidget * const parentWindow, const QString &title, con
     return ok;
 }
 
+void DomModel::addText(QWidget *window, QTreeWidget *tree)
+{
+    QTreeWidgetItem *currItem = getSelItem(tree);
+    bool isEmptyE = isEmpty(true);
+    DomItem *parentItem = NULL;
+    if(NULL != currItem) {
+        parentItem = DomItem::fromItemData(currItem);
+        if(parentItem->getType() != DomItem::ET_ELEMENT)
+            return ;
+    } else {
+        if(!isEmptyE) {
+            Utils::errorNoSel(window);
+            return;
+        }
+    }
+
+    addChildToItem(window, tree, parentItem, tr("text"), true, 0);
+
+}
+
+
+void DomModel::addLLN0(QWidget *window, QTreeWidget *tree)
+{
+    QTreeWidgetItem *currItem = getSelItem(tree);
+    bool isEmptyE = isEmpty(true);
+    DomItem *parentItem = NULL;
+    if(NULL != currItem) {
+        parentItem = DomItem::fromItemData(currItem);
+        if(parentItem->getType() != DomItem::ET_ELEMENT)
+            return ;
+    } else {
+        if(!isEmptyE) {
+            Utils::errorNoSel(window);
+            return;
+        }
+    }
+
+    DomItem *theNewElement = new DomItem(addNameToPool(tr("LN0")), "", this, parentItem);
+    theNewElement->addAttribute("lnClass", "LLN0");
+    theNewElement->addAttribute("lnType", "LLN0");
+
+    if(!editNodeItem(window, theNewElement)) {
+        delete theNewElement;
+        theNewElement = NULL ;
+    }
+
+    if(NULL != theNewElement) {
+        insertItemInternal(theNewElement, isEmptyE ? NULL : parentItem, tree, true, -1);
+    }
+
+}
+
+void DomModel::addLNode(QWidget *window, QTreeWidget *tree)
+{
+    QTreeWidgetItem *currItem = getSelItem(tree);
+    bool isEmptyE = isEmpty(true);
+    DomItem *parentItem = NULL;
+    if(NULL != currItem) {
+        parentItem = DomItem::fromItemData(currItem);
+        if(parentItem->getType() != DomItem::ET_ELEMENT)
+            return ;
+    } else {
+        if(!isEmptyE) {
+            Utils::errorNoSel(window);
+            return;
+        }
+    }
+
+    DomItem *theNewElement = new DomItem(addNameToPool(tr("LN")), "", this, parentItem);
+    if(NULL != theNewElement) {
+        insertItemInternal(theNewElement, isEmptyE ? NULL : parentItem, tree, true, -1);
+    }
+
+}
+
+void DomModel::addDataSet(QWidget *window, QTreeWidget *tree)
+{
+    QTreeWidgetItem *currItem = getSelItem(tree);
+    bool isEmptyE = isEmpty(true);
+    DomItem *parentItem = NULL;
+    if(NULL != currItem) {
+        parentItem = DomItem::fromItemData(currItem);
+        if(parentItem->getType() != DomItem::ET_ELEMENT)
+            return ;
+    } else {
+        if(!isEmptyE) {
+            Utils::errorNoSel(window);
+            return;
+        }
+    }
+
+    DomItem *theNewElement = new DomItem(addNameToPool(tr("DataSet")), "", this, parentItem);
+    if(NULL != theNewElement) {
+        insertItemInternal(theNewElement, isEmptyE ? NULL : parentItem, tree, true, -1);
+    }
+
+}
+
 void DomModel::addChild(QWidget *window, QTreeWidget *tree)
 {
     addChild(window, tree, NULL);
@@ -569,7 +685,7 @@ void DomModel::addChild(QWidget *window, QTreeWidget *tree, DomItem *preElement)
 }
 
 // TODO: check for the root item
-DomItem* DomModel::addChildToItem(QWidget *window, QTreeWidget *tree, DomItem *parentElement, const QString &elementTag, const bool useUndo)
+DomItem* DomModel::addChildToItem(QWidget *window, QTreeWidget *tree, DomItem *parentElement, const QString &elementTag, const bool useUndo, int position)
 {
     bool isEmptyE = isEmpty(true);
     if(NULL != parentElement) {
@@ -583,7 +699,7 @@ DomItem* DomModel::addChildToItem(QWidget *window, QTreeWidget *tree, DomItem *p
     }
     DomItem *theNewElement = new DomItem(addNameToPool(elementTag), "", this, parentElement);
     if(NULL != theNewElement) {
-        insertItemInternal(theNewElement, isEmptyE ? NULL : parentElement, tree, useUndo);
+        insertItemInternal(theNewElement, isEmptyE ? NULL : parentElement, tree, useUndo, position);
     }
     return theNewElement ;
 }
@@ -1594,14 +1710,14 @@ void DomModel::addUndoInsert(QTreeWidget * tree, DomItem * element)
 
 void DomModel::insertItemInternal(DomItem *theNewElement, DomItem *parentElement, QTreeWidget *tree)
 {
-    insertItemInternal(theNewElement, parentElement, tree, true) ;
+    insertItemInternal(theNewElement, parentElement, tree, true, -1) ;
 }
 
-void DomModel::insertItemInternal(DomItem *theNewElement, DomItem *parentElement, QTreeWidget *tree, const bool useUndo)
+void DomModel::insertItemInternal(DomItem *theNewElement, DomItem *parentElement, QTreeWidget *tree, const bool useUndo, int position)
 {
     if(NULL != parentElement) {
         parentElement->addChild(theNewElement);
-        theNewElement->setChildItem(tree, parentElement->getUI(), paintInfo);
+        theNewElement->setChildItem(tree, parentElement->getUI(), paintInfo, true, position);
     } else {
         addTopItem(theNewElement);
         theNewElement->setChildItem(tree, NULL, paintInfo);

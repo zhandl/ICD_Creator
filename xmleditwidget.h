@@ -98,6 +98,13 @@ public:
     void addChild();
     void addBrother();
 
+    void addText();
+    void editAttribute();
+
+    void addLNode();
+    void addLLN0();
+    void addDataSet();
+
     void errorNoRule();
     void setClipBoardItem(DomItem *pItem);
     void cleanClipBoard();

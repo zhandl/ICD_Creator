@@ -457,7 +457,7 @@ QString DataTypeModel::getAttributeString(const QString &attributeName)
 void DataTypeModel::insertItemInternal(DataTypeItem *theNewElement, DataTypeItem *parentElement, QTreeWidget *tree)
 {
     if(NULL != parentElement) {
-        parentElement->addChild(theNewElement);
+        parentElement->addChild(theNewElement, -1);
         theNewElement->displayChildItem(tree, parentElement->getUI(), paintInfo);
     } else {
 //        addTopItem(theNewElement);
@@ -479,7 +479,7 @@ void DataTypeModel::insertItemInternal(DataTypeItem *theNewElement, DataTypeItem
         EnumItemPool.append(theNewElement);
 }
 
-DataTypeItem *DataTypeModel::insertToNewTemplate(QTreeWidget *tree, DataTypeItem *parentElement, DataTypeItem *pasteElement)
+DataTypeItem *DataTypeModel::insertToNewTemplate(QTreeWidget *tree, DataTypeItem *parentElement, DataTypeItem *pasteElement, int pos)
 {
     //if not selected, at the root iif rule is empty
     //sse extists an item
@@ -494,7 +494,7 @@ DataTypeItem *DataTypeModel::insertToNewTemplate(QTreeWidget *tree, DataTypeItem
             return NULL;
         }
 
-        parentElement->addChild(theNewElement);
+        parentElement->addChild(theNewElement, pos);
 
         theNewElement->displayChildItemSelected(tree, parentElement->getUI(), paintInfo);
 
@@ -503,11 +503,8 @@ DataTypeItem *DataTypeModel::insertToNewTemplate(QTreeWidget *tree, DataTypeItem
     return theNewElement;
 }
 
-DataTypeItem *DataTypeModel::insertToNewTemplateInternal(DataTypeItem *parentElement, DataTypeItem *pasteElement)
+DataTypeItem *DataTypeModel::insertToNewTemplateInternal(DataTypeItem *parentElement, DataTypeItem *pasteElement, int pos)
 {
-    //if not selected, at the root iif rule is empty
-    //sse extists an item
-    //append l'item ( o lo inserisce, con tutti i figli e poi ricarica la lista)
     DataTypeItem *theNewElement = NULL ;
     if(NULL == pasteElement) {
         return NULL;
@@ -518,13 +515,13 @@ DataTypeItem *DataTypeModel::insertToNewTemplateInternal(DataTypeItem *parentEle
             return NULL;
         }
 
-        parentElement->addChild(theNewElement);
+        parentElement->addChild(theNewElement, pos);
 
-        foreach (DataTypeItem* item, theNewElement->getItems()) {
-            if(item->isSelected) {
-                insertToNewTemplateInternal(theNewElement, item);
-            }
-        }
+//        foreach (DataTypeItem* item, theNewElement->getItems()) {
+//            if(item->isSelected) {
+//                insertToNewTemplateInternal(theNewElement, item);
+//            }
+//        }
     }
 
     return theNewElement;

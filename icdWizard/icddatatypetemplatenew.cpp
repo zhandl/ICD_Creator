@@ -239,7 +239,7 @@ void icdDataTypeTemplateNew::on_addLNode_clicked()
         DataTypeItem *item = NULL;
         item = DataTypeItem::fromItemData(itemList.at(i));
         if(item->tag() == tr("LNodeType")) {
-            _LNodeItemPool.append(selectedModel->insertToNewTemplate(newTemplateLNodeTree, selectedModel->root(), item));
+            _LNodeItemPool.append(selectedModel->insertToNewTemplate(newTemplateLNodeTree, selectedModel->root(), item, _LNodeItemPool.count()));
         }
     }
 
@@ -287,7 +287,7 @@ void icdDataTypeTemplateNew::registerData()
             foreach (DataTypeItem *doTypeItem, model->getDoTypeItems()) {
                 if((doTypeItem->attributeValueOfName("id") == DoType)) {
                     //_DoTypeItemPool.append(selectedModel->insertToNewTemplate(newTemplateLNodeTree, selectedModel->root(), doTypeItem));
-                    _DoTypeItemPool.append(selectedModel->insertToNewTemplateInternal(selectedModel->root(), doTypeItem));
+                    _DoTypeItemPool.append(selectedModel->insertToNewTemplateInternal(selectedModel->root(), doTypeItem, _LNodeItemPool.count()+_DoTypeItemPool.count()));
                     _DoTypeNamePool.insert(DoType);
                 }
             }
@@ -303,7 +303,7 @@ void icdDataTypeTemplateNew::registerData()
             foreach (DataTypeItem *daTypeItem, model->getDaTypeItems()) {
                 if((daTypeItem->attributeValueOfName("id") == DaType)) {
                     //_DaTypeItemPool.append(selectedModel->insertToNewTemplate(newTemplateLNodeTree, selectedModel->root(), daTypeItem));
-                    _DaTypeItemPool.append(selectedModel->insertToNewTemplateInternal(selectedModel->root(), daTypeItem));
+                    _DaTypeItemPool.append(selectedModel->insertToNewTemplateInternal(selectedModel->root(), daTypeItem, _LNodeItemPool.count()+_DoTypeItemPool.count()+_DaTypeItemPool.count()));
                     _DaTypeNamePool.insert(DaType);
                 }
             }
@@ -319,7 +319,7 @@ void icdDataTypeTemplateNew::registerData()
             foreach (DataTypeItem *enumTypeItem, model->getEnumTypeItems()) {
                 if((enumTypeItem->attributeValueOfName("id") == EnumType)) {
                     //selectedModel->insertToNewTemplate(newTemplateLNodeTree, selectedModel->root(), enumTypeItem);
-                    selectedModel->insertToNewTemplateInternal(selectedModel->root(), enumTypeItem);
+                    selectedModel->insertToNewTemplateInternal(selectedModel->root(), enumTypeItem, -1);
                     _EnumTypeNamePool.insert(EnumType);
                 }
             }

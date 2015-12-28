@@ -111,6 +111,8 @@
         <file alias="modify">images/modify.png</file>
         <file alias="view_columns_1">images/view_columns.png</file>
         <file alias="view_columns">images/view-file-columns.png</file>
+        <file>images/AddText.png</file>
+        <file>images/EditAttributes.png</file>
     </qresource>
     <qresource prefix="/goto">
         <file>images/gotoprevbro.png</file>
@@ -128,5 +130,14 @@
     <qresource prefix="/dataType">
         <file>images/LNode.png</file>
         <file>images/DO.png</file>
+    </qresource>
+    <qresource prefix="/nodeType">
+        <file>images/SCL.png</file>
+        <file>images/communication.png</file>
+        <file>images/dataTypeTemplate.png</file>
+        <file>images/header.png</file>
+        <file>images/Server.png</file>
+        <file>images/IED.png</file>
+        <file>images/Attribute.png</file>
     </qresource>
 </RCC>

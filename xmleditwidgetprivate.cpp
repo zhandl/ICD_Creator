@@ -568,6 +568,21 @@ void XmlEditWidgetPrivate::resizeTreeColumns()
     p->treeWidget->setUpdatesEnabled(true);
 }
 
+void XmlEditWidgetPrivate::editAttribute()
+{
+    if(!isActionMode()) {
+        return ;
+    }
+    QTreeWidgetItem *itemSel = getSelItem();
+    if(NULL == itemSel) {
+        Utils::errorNoSel(p);
+        return;
+    }
+
+    model->editAttribute(p, itemSel);
+
+}
+
 bool XmlEditWidgetPrivate::editItem(QTreeWidgetItem *item)
 {
     if(NULL == model) {
@@ -640,6 +655,54 @@ void XmlEditWidgetPrivate::addBrother()
         return ;
     }
     model->addBrother(p, p->treeWidget);
+}
+
+void XmlEditWidgetPrivate::addText()
+{
+    if(!isActionMode()) {
+        return ;
+    }
+    if(NULL == model) {
+        errorNoRule();
+        return ;
+    }
+    model->addText(p, p->treeWidget);
+}
+
+void XmlEditWidgetPrivate::addLLN0()
+{
+    if(!isActionMode()) {
+        return ;
+    }
+    if(NULL == model) {
+        errorNoRule();
+        return ;
+    }
+    model->addLLN0(p, p->treeWidget);
+}
+
+void XmlEditWidgetPrivate::addDataSet()
+{
+    if(!isActionMode()) {
+        return ;
+    }
+    if(NULL == model) {
+        errorNoRule();
+        return ;
+    }
+    model->addDataSet(p, p->treeWidget);
+}
+
+void XmlEditWidgetPrivate::addLNode()
+{
+    if(!isActionMode()) {
+        return ;
+    }
+    if(NULL == model) {
+        errorNoRule();
+        return ;
+    }
+    model->addLNode(p, p->treeWidget);
 }
 
 void XmlEditWidgetPrivate::on_addBrother_clicked()

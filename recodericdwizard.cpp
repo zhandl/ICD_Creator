@@ -39,7 +39,7 @@ RecoderIcdWizard::RecoderIcdWizard(QWidget *parent) :
 void RecoderIcdWizard::createDoc(QDomDocument *doc)
 {
     QDomProcessingInstruction instruction;
-    instruction = doc->createProcessingInstruction("xml", "version=\"1.0\" encoding = \"UTF_8\"");
+    instruction = doc->createProcessingInstruction("xml", "version=\"1.0\" encoding = \"UTF-8\"");
     doc->appendChild(instruction);
 
     root = doc->createElement(tr("SCL"));
@@ -109,7 +109,7 @@ void RecoderIcdWizard::accept()
             QDomAttr hitemWho = document->createAttribute("who");
             hitemWho.setValue(((QLineEdit*)(icdHeader_page->hitemTableWidget->cellWidget(i,0)))->text());
 
-            QDomElement hitem = document->createElement("hitem");
+            QDomElement hitem = document->createElement("Hitem");
             hitem.setAttributeNode(hitemVersion);
             hitem.setAttributeNode(hitemRevision);
             hitem.setAttributeNode(hitemWhen);

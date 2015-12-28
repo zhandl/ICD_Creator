@@ -106,7 +106,7 @@ public:
     QList<Attribute*> getAttributesList();
     QVector<Attribute*> attributes;
 
-    void addChild(DataTypeItem *newChild);
+    void addChild(DataTypeItem *newChild, int pos);
     void addAttribute(const QString &name, const QString &value);
     void addTextNode(TextChunk *text);
 

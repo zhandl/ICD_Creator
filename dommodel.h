@@ -115,9 +115,16 @@ public:
     QString &fileName();
     void setFileName(const QString &newFileName);
 
+    void addText(QWidget *window, QTreeWidget *tree);
+    void editAttribute(QWidget *const window, QTreeWidgetItem* pItem);
+
+    void addLLN0(QWidget *window, QTreeWidget *tree);
+    void addLNode(QWidget *window, QTreeWidget *tree);
+    void addDataSet(QWidget *window, QTreeWidget *tree);
+
     void addChild(QWidget *window, QTreeWidget *tree);
     void addChild(QWidget *window, QTreeWidget *tree, DomItem *preItem);
-    DomItem* addChildToItem(QWidget *window, QTreeWidget *tree, DomItem *parentItem, const QString &itemTag, const bool useUndo = false);
+    DomItem* addChildToItem(QWidget *window, QTreeWidget *tree, DomItem *parentItem, const QString &itemTag, const bool useUndo = false, int position = -1);
     void addBrother(QWidget *window, QTreeWidget *tree);
     void addBrother(QWidget *window, QTreeWidget *tree, DomItem *theNewItem);
     void paste(QWidget *window, QTreeWidget *tree, DomItem *pasteItem);
@@ -146,6 +153,10 @@ public:
     }
     QVector<DomItem*> *getChildItems() {
         return &childItems;
+    }
+
+    QVector<DomItem*> getDataTypeItems() {
+        return _dataTypeItems;
     }
 
     static QBrush setBkBrush;
@@ -249,6 +260,8 @@ private:
     QSet<QString>       _attributeValuesPool;
     DocumentType        *_docType;
 
+    QVector<DomItem *> _dataTypeItems;
+
     void clear();
     void clearUndo();
     void addUndoInsert(QTreeWidget *tree, DomItem *item);
@@ -266,7 +279,7 @@ private:
     int swapAndDeleteItem(DomItem *newItem, DomItem *oldItem);
 
     void insertItemInternal(DomItem *theNewItem, DomItem *parentItem, QTreeWidget *tree);
-    void insertItemInternal(DomItem *theNewItem, DomItem *parentItem, QTreeWidget *tree, const bool useUndo);
+    void insertItemInternal(DomItem *theNewItem, DomItem *parentItem, QTreeWidget *tree, const bool useUndo, int position);
     void appendItemInternal(DomItem *theNewItem, DomItem *brotherItem, QTreeWidget *tree, const bool useUndo = true);
     void afterInsertHousekeeping(DomItem *theNewItem, QTreeWidget *tree);
     void afterInsertHousekeeping(DomItem *theNewItem, QTreeWidget *tree, const bool useUndo);

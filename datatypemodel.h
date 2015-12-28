@@ -92,8 +92,8 @@ public:
     void insertItemInternal(DataTypeItem *theNewElement, DataTypeItem *parentElement, QTreeWidget *tree);
 
 //    void insertInternal(QTreeWidget *tree, DataTypeItem *parentElement, DataTypeItem *pasteElement);
-    DataTypeItem* insertToNewTemplate(QTreeWidget *tree, DataTypeItem *parentElement, DataTypeItem *pasteElement);
-    DataTypeItem* insertToNewTemplateInternal(DataTypeItem *parentElement, DataTypeItem *pasteElement);
+    DataTypeItem* insertToNewTemplate(QTreeWidget *tree, DataTypeItem *parentElement, DataTypeItem *pasteElement, int pos = -1);
+    DataTypeItem* insertToNewTemplateInternal(DataTypeItem *parentElement, DataTypeItem *pasteElement, int pos = -1);
 private:
    DataTypeItem *rootItem;
    QVector<DataTypeItem*> childItems;

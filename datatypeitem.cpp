@@ -371,10 +371,14 @@ DataTypeItem *DataTypeItem::fromModelIndex(const QModelIndex &index)
     return pItem;
 }
 
-void DataTypeItem::addChild(DataTypeItem *newChild)
+void DataTypeItem::addChild(DataTypeItem *newChild, int pos)
 {
     newChild->parentItem = this;
-    childItems.append(newChild);
+    if(pos >= 0) {
+        childItems.insert(pos, newChild);
+    } else {
+        childItems.append(newChild);
+    }
 }
 
 void DataTypeItem::setText(const QString &data)
@@ -561,7 +565,7 @@ DataTypeItem *DataTypeItem::copyTo(DataTypeItem &newItem, const bool isRecursive
     QVectorIterator<DataTypeItem*> it(childItems);
     while(it.hasNext()) {
         DataTypeItem *newEl = new DataTypeItem(newItem.parentModel);
-        newItem.addChild(newEl);
+        newItem.addChild(newEl, -1);
         it.next()->copyTo(*newEl, isRecursive);
     }
     return &newItem;
@@ -659,7 +663,7 @@ DataTypeItem *DataTypeItem::copyToNewTemplate(DataTypeModel *newModel, DataTypeI
         DataTypeItem *childItem = it.next();
         if(childItem->isSelected) {
             DataTypeItem *newEl = new DataTypeItem(newItem.parentModel);
-            newItem.addChild(newEl);
+            newItem.addChild(newEl, -1);
             childItem->copyToNewTemplate(newModel, *newEl);
         }
     }
