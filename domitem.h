@@ -138,7 +138,37 @@ public:
     static int fixedSizeAttrFonts;
 
     enum ItemType { ET_ELEMENT, ET_PROCESSING_INSTRUCTION, ET_COMMENT, ET_TEXT};
-    enum NodeType { ICD_SCL, ICD_HEADER, ICD_TEXT, ICD_SUBSTATION, ICD_COMMUNICATION, ICD_IED, ICD_DATATYPETEMPLATES};
+    enum NodeType { ICD_SCL,
+                    ICD_HEADER,
+                    ICD_HISTORY,
+                    ICD_HITEM,
+
+                    ICD_COMMUNICATION,
+                    ICD_SUBNETWORK,
+                    ICD_BITRATE, ICD_CONNECTEDAP,
+                    ICD_ADDRESS, ICD_GSE, ICD_SMV, ICD_PHYSCONN,
+                    ICD_IP, ICD_MINTIME, ICD_MAXTIME,
+
+                    ICD_IED,
+                    ICD_SERVICES, ICD_ACCESSPOINT,
+                    ICD_SERVICES_ITEMS, ICD_SERVICES_ITEMGROUP, ICD_SERVER, ICD_LN,
+                    ICD_AUTHENTICATION, ICD_LDEVICE, ICD_ASSOCIATION,
+                    ICD_LN0, ICD_ACCESSCONTROL,//ICD_GOOSESECURITY, ICD_SMVSECURITY,
+                    ICD_DATASET, ICD_REPORTCONTROL, ICD_LOGCONTROL, ICD_DOI, ICD_INPUTS, ICD_GSECONTROL, ICD_SVCONTROL, ICD_SETTINGCONTROL, ICD_SCLCONTROL, ICD_LOG,
+                    ICD_FCDA, ICD_TRGOPS, ICD_OPTFIELDS, ICD_RPTENABLED, ICD_SDI, ICD_DAI, ICD_EXTREFS, ICD_IEDNAME, ICD_SMVOPTS,
+
+                    ICD_CLIENTLN, ICD_VAL,
+
+                    ICD_DATATYPETEMPLATES,
+                    ICD_LNODETYPES, ICD_DOTYPE, ICD_DATYPE, ICD_ENUMTYPE,
+                    ICD_DO, ICD_SDO, ICD_DA, ICD_BDA, ICD_ENUMVAL,
+
+                    ICD_SUBSTATION, ICD_LNODE, ICD_POWERTRANSFORMER, ICD_GENERALEQUIPMENT,
+                    ICD_VOLTAGELEVEL, ICD_FUNCTION,
+                    ICD_TRANSFORMERWINDING, ICD_TERMINAL, ICD_SUBEQUIPMENT, ICD_TAPCHARGER, ICD_VOLTAGE, ICD_BAY, ICD_CONDUCTINGEQUIPMENT, ICD_CONNECTIVITYNODE, ICD_SUBFUNCTION,
+
+                    ICD_TEXT, ICD_PRIVATE
+                  };
 
     DomItem(const QString newTag, const QString &text, DomModel *model, DomItem *parent = 0);
     DomItem(DomModel *model, const ItemType newType, DomItem *parent);
@@ -169,6 +199,7 @@ public:
     int addChildAfter(DomItem *newItem, DomItem *brotherItem);
 
     bool hasChildOfName(const QString &name);
+    bool hasAttrOfName(const QString &name);
 
     bool moveDown(DomItem *item);
     bool moveUp(DomItem *item);
@@ -233,6 +264,9 @@ public:
     bool hasChildren() {
         return !childItems.isEmpty();
     }
+
+
+    void setNodeType();
 
     const QString &getComment();
     void setComment(const QString &Comment);
@@ -326,6 +360,9 @@ private:
     EViewModes _viewMode;
     bool _edited;
     bool _saved;
+    bool _isSequence;
+    bool _canNoUse;
+    bool _canBeMore;
 
     void initItem(DomModel *model, DomItem *parent);
 
@@ -371,6 +408,48 @@ private:
     static QIcon iedIcon;
     static QIcon dataTypeIcon;
 
+    static QIcon addTextIcon;
+    static QIcon privateIcon;
+
+    static QIcon historyIcon;
+    static QIcon hitemIcon;
+
+    static QIcon subnetworkIcon;
+    static QIcon bitRateIcon;
+    static QIcon connectedApIcon;
+    static QIcon addressIcon;
+    static QIcon ipIcon;
+    static QIcon gseIcon;
+    static QIcon smvIcon;
+    static QIcon physconnIcon;
+    static QIcon minOrMaxTimeIcon;
+
+    static QIcon servicesIcon;
+    static QIcon servicesItemIcon;
+    static QIcon servicesItemGroupIcon;
+    static QIcon accesspointIcon;
+    static QIcon serverIcon;
+    static QIcon serverAtIcon;
+    static QIcon authenticationIcon;
+    static QIcon associationIcon;
+    static QIcon ldeviceIcon;
+    static QIcon ln0Icon;
+    static QIcon lnIcon;
+    static QIcon doiIcon;
+    static QIcon daiIcon;
+    static QIcon sdiIcon;
+
+    static QIcon datasetIcon;
+    static QIcon fcdaIcon;
+    static QIcon unBufReportControlIcon;
+    static QIcon bufReportControlIcon;
+    static QIcon logControlIcon;
+    static QIcon inputsIcon;
+    static QIcon logIcon;
+    static QIcon gseControlIcon;
+    static QIcon smvControlIcon;
+    static QIcon settingControlIcon;
+
     void generateId();
 
     QTreeWidgetItem *findPreviousBrother(QVector<DomItem*> &items);
@@ -414,6 +493,11 @@ public:
     QVariant columnViewDisplayData(PaintInfo *paintInfo, const int rowOrdinal);
 
     QIcon iconForNode();
+    QString textForNode();
+    QString getTextValue();
+    bool isSequence();
+    bool isCanNoUse();
+    bool isCanBeMore();
 };
 
 #endif

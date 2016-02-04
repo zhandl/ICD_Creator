@@ -68,6 +68,50 @@ QIcon DomItem::communicationIcon;
 QIcon DomItem::iedIcon;
 QIcon DomItem::dataTypeIcon;
 
+QIcon DomItem::addTextIcon;
+QIcon DomItem::privateIcon;
+
+QIcon DomItem::historyIcon;
+QIcon DomItem::hitemIcon;
+
+QIcon DomItem::subnetworkIcon;
+QIcon DomItem::bitRateIcon;
+QIcon DomItem::connectedApIcon;
+QIcon DomItem::addressIcon;
+QIcon DomItem::ipIcon;
+QIcon DomItem::gseIcon;
+QIcon DomItem::smvIcon;
+QIcon DomItem::physconnIcon;
+QIcon DomItem::minOrMaxTimeIcon;
+
+QIcon DomItem::servicesIcon;
+QIcon DomItem::servicesItemIcon;
+QIcon DomItem::servicesItemGroupIcon;
+QIcon DomItem::accesspointIcon;
+QIcon DomItem::serverIcon;
+QIcon DomItem::serverAtIcon;
+QIcon DomItem::authenticationIcon;
+QIcon DomItem::associationIcon;
+QIcon DomItem::ldeviceIcon;
+QIcon DomItem::ln0Icon;
+QIcon DomItem::lnIcon;
+QIcon DomItem::doiIcon;
+QIcon DomItem::daiIcon;
+QIcon DomItem::sdiIcon;
+
+QIcon DomItem::datasetIcon;
+QIcon DomItem::fcdaIcon;
+QIcon DomItem::unBufReportControlIcon;
+QIcon DomItem::bufReportControlIcon;
+QIcon DomItem::logControlIcon;
+QIcon DomItem::inputsIcon;
+QIcon DomItem::logIcon;
+QIcon DomItem::gseControlIcon;
+QIcon DomItem::smvControlIcon;
+QIcon DomItem::settingControlIcon;
+
+
+
 const int DomItem::ShowDataRole = Qt::UserRole + 1;
 
 QRegExp DomItem::terminatorSearch("[\\n\\r]");
@@ -118,16 +162,7 @@ DomItem::DomItem(const QString newTag, const QString &itext, DomModel *model, Do
     _tag = newTag;
     type = ET_ELEMENT;
     text = itext;
-    if(newTag == tr("Header")) {
-        nodeType = ICD_HEADER;
-    } else if(newTag == tr("Communication")) {
-        nodeType = ICD_COMMUNICATION;
-    } else if(newTag == tr("IED")) {
-        nodeType = ICD_IED;
-    } else if(newTag == tr("DataTypeTemplates")) {
-        nodeType = ICD_DATATYPETEMPLATES;
-    } else
-        nodeType = ICD_SCL;
+    setNodeType();
 }
 
 DomItem::DomItem(DomModel *model)
@@ -202,7 +237,49 @@ void DomItem::loadIcons()
     headerIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/header.png")), QIcon::Normal, QIcon::Off);
     communicationIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/communication.png")), QIcon::Normal, QIcon::Off);
     iedIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/IED.png")), QIcon::Normal, QIcon::Off);
-    dataTypeIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/dataTypeTemplate.png")), QIcon::Normal, QIcon::Off);
+    dataTypeIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/iec.png")), QIcon::Normal, QIcon::Off);
+
+    addTextIcon.addPixmap(QPixmap(QString::fromUtf8(":/commands/images/AddText.png")), QIcon::Normal, QIcon::Off);
+    privateIcon.addPixmap(QPixmap(QString::fromUtf8(":/commands/images/private.png")), QIcon::Normal, QIcon::Off);
+
+    historyIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/history.png")), QIcon::Normal, QIcon::Off);
+    hitemIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/hitem.png")), QIcon::Normal, QIcon::Off);
+
+    subnetworkIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/subNetwork.png")), QIcon::Normal, QIcon::Off);
+    bitRateIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/bitRate.png")), QIcon::Normal, QIcon::Off);
+    connectedApIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/connectedAP.png")), QIcon::Normal, QIcon::Off);
+    addressIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/address.png")), QIcon::Normal, QIcon::Off);
+    ipIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/ip.png")), QIcon::Normal, QIcon::Off);
+    gseIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/gse.png")), QIcon::Normal, QIcon::Off);
+    smvIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/smv.png")), QIcon::Normal, QIcon::Off);
+    physconnIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/physconn.png")), QIcon::Normal, QIcon::Off);
+    minOrMaxTimeIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/minTime.png")), QIcon::Normal, QIcon::Off);
+
+    ldeviceIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/ldevices.png")), QIcon::Normal, QIcon::Off);
+    servicesIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/services.png")), QIcon::Normal, QIcon::Off);
+    servicesItemIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/servicesItem.png")), QIcon::Normal, QIcon::Off);
+    servicesItemGroupIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/servicesItemGroup.png")), QIcon::Normal, QIcon::Off);
+    accesspointIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/accesspoint.png")), QIcon::Normal, QIcon::Off);
+    associationIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/association.png")), QIcon::Normal, QIcon::Off);
+    authenticationIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/authentication.png")), QIcon::Normal, QIcon::Off);
+    serverIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/Server.png")), QIcon::Normal, QIcon::Off);
+    serverAtIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/ServerAt.png")), QIcon::Normal, QIcon::Off);
+    ln0Icon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/ln0.png")), QIcon::Normal, QIcon::Off);
+    lnIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/ln.png")), QIcon::Normal, QIcon::Off);
+    doiIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/doi.png")), QIcon::Normal, QIcon::Off);
+    daiIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/dai.png")), QIcon::Normal, QIcon::Off);
+    sdiIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/sdi.png")), QIcon::Normal, QIcon::Off);
+    datasetIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/dataset.png")), QIcon::Normal, QIcon::Off);
+    fcdaIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/fcda.png")), QIcon::Normal, QIcon::Off);
+
+    unBufReportControlIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/unbufReport.png")), QIcon::Normal, QIcon::Off);
+    bufReportControlIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/bufReport.png")), QIcon::Normal, QIcon::Off);
+    logControlIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/logControl.png")), QIcon::Normal, QIcon::Off);
+    inputsIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/inputs.png")), QIcon::Normal, QIcon::Off);
+    logIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/log.png")), QIcon::Normal, QIcon::Off);
+    gseControlIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/gseControl.png")), QIcon::Normal, QIcon::Off);
+    smvControlIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/smvControl.png")), QIcon::Normal, QIcon::Off);
+    settingControlIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/settingControl.png")), QIcon::Normal, QIcon::Off);
 }
 
 //bool DomItem::isShownBase64() const
@@ -498,12 +575,13 @@ void DomItem::display(QTreeWidgetItem *me, PaintInfo *paintInfo)
             me->setIcon(0, childrenHiddenIcon);
         }
         {
-            QString qualifiedInfo = styleItemTag(me, paintInfo);
-            if(qualifiedInfo.length() > 0) {
-                firstColText.append(" - ");
-                firstColText.append(qualifiedInfo);
-            }
-            me->setText(paintInfo->columnForTag, firstColText);
+//            QString qualifiedInfo = styleItemTag(me, paintInfo);
+//            if(qualifiedInfo.length() > 0) {
+//                firstColText.append(" - ");
+//                firstColText.append(qualifiedInfo);
+//            }
+//            me->setText(paintInfo->columnForTag, firstColText);
+            me->setText(paintInfo->columnForTag, textForNode());
             if(paintInfo->showItemSize()) {
                 QString children = QString("%1 (%2)")
                                    .arg(selfInfo.numItems)
@@ -866,6 +944,21 @@ bool DomItem::saved()
     return _saved;
 }
 
+bool DomItem::isSequence()
+{
+    return _isSequence;
+}
+
+bool DomItem::isCanNoUse()
+{
+    return _canNoUse;
+}
+
+bool DomItem::isCanBeMore()
+{
+    return _canBeMore;
+}
+
 void DomItem::setChildItem(QTreeWidget *pTree, QTreeWidgetItem *parent, PaintInfo *paintInfo, const bool isGUI, const int pos)
 {
     QTreeWidgetItem *me = NULL;
@@ -1011,7 +1104,10 @@ void DomItem::addChild(DomItem *newChild)
 void DomItem::addChildAt(DomItem *newItem, const int position)
 {
     newItem->parentItem = this;
-    childItems.insert(position, newItem);
+    if(position == -1)
+        childItems.append(newItem);
+    else
+        childItems.insert(position, newItem);
     addChildInfo(newItem);
 }
 
@@ -1304,7 +1400,18 @@ bool DomItem::isLastChild()
 void DomItem::expand(QTreeWidget *tree)
 {
     if(NULL != ui)
-        tree->expandItem(ui);
+        switch(nodeType) {
+        case ICD_SCL:
+        case ICD_IED:
+        case ICD_ACCESSPOINT:
+        case ICD_SERVER:
+        case ICD_LDEVICE:
+            tree->expandItem(ui);
+            break;
+        default:
+            break;
+        }
+
     QVectorIterator<DomItem*> it(childItems);
     while(it.hasNext()) {
         it.next()->expand(tree);
@@ -2170,6 +2277,115 @@ QIcon DomItem::iconForNode()
     case ICD_DATATYPETEMPLATES:
         *showIcon = dataTypeIcon;
         break;
+
+    case ICD_TEXT:
+        *showIcon = addTextIcon;
+        break;
+    case ICD_PRIVATE:
+        *showIcon = privateIcon;
+        break;
+
+    case ICD_HISTORY:
+        *showIcon = historyIcon;
+        break;
+    case ICD_HITEM:
+        *showIcon = hitemIcon;
+        break;
+
+    case ICD_SUBNETWORK:
+        *showIcon = subnetworkIcon;
+        break;
+    case ICD_BITRATE:
+        *showIcon = bitRateIcon;
+        break;
+    case ICD_CONNECTEDAP:
+        *showIcon = connectedApIcon;
+        break;
+    case ICD_ADDRESS:
+        *showIcon = addressIcon;
+        break;
+    case ICD_IP:
+        *showIcon = ipIcon;
+        break;
+    case ICD_GSE:
+        *showIcon = gseIcon;
+        break;
+    case ICD_SMV:
+        *showIcon = smvIcon;
+        break;
+    case ICD_PHYSCONN:
+        *showIcon = physconnIcon;
+        break;
+    case ICD_MINTIME:
+        *showIcon = minOrMaxTimeIcon;
+        break;
+    case ICD_MAXTIME:
+        *showIcon = minOrMaxTimeIcon;
+        break;
+
+    case ICD_SERVICES:
+        *showIcon = servicesIcon;
+        break;
+    case ICD_SERVICES_ITEMS:
+        *showIcon = servicesItemIcon;
+        break;
+    case ICD_SERVICES_ITEMGROUP:
+        *showIcon = servicesItemGroupIcon;
+        break;
+    case ICD_ACCESSPOINT:
+        *showIcon = accesspointIcon;
+        break;
+    case ICD_SERVER:
+        *showIcon = serverIcon;
+        break;
+    case ICD_AUTHENTICATION:
+        *showIcon = authenticationIcon;
+        break;
+    case ICD_LDEVICE:
+        *showIcon = ldeviceIcon;
+        break;
+    case ICD_LN0:
+        *showIcon = ln0Icon;
+        break;
+    case ICD_LN:
+        *showIcon = lnIcon;
+        break;
+    case ICD_DOI:
+        *showIcon = doiIcon;
+        break;
+    case ICD_DAI:
+        *showIcon = daiIcon;
+        break;
+    case ICD_SDI:
+        *showIcon = sdiIcon;
+        break;
+    case ICD_DATASET:
+        *showIcon = datasetIcon;
+        break;
+    case ICD_FCDA:
+        *showIcon = fcdaIcon;
+        break;
+    case ICD_REPORTCONTROL:
+        *showIcon = unBufReportControlIcon;
+        break;
+    case ICD_LOGCONTROL:
+        *showIcon = logControlIcon;
+        break;
+    case ICD_INPUTS:
+        *showIcon = inputsIcon;
+        break;
+    case ICD_LOG:
+        *showIcon = logIcon;
+        break;
+    case ICD_GSECONTROL:
+        *showIcon = gseControlIcon;
+        break;
+    case ICD_SVCONTROL:
+        *showIcon = smvControlIcon;
+        break;
+    case ICD_SETTINGCONTROL:
+        *showIcon = settingControlIcon;
+        break;
     case ICD_SCL:
     default:
         *showIcon = sclIcon;
@@ -2178,6 +2394,159 @@ QIcon DomItem::iconForNode()
 
     return *showIcon;
 
+}
+
+QString DomItem::textForNode()
+{
+    QString showText = tag();
+    QString value = "";
+    switch(nodeType) {
+    case ICD_TEXT:
+        showText.append(": ");
+        showText += textNodes.at(0)->text;
+        break;
+    case ICD_PRIVATE:
+        showText.clear();
+        showText += textNodes.at(0)->text;
+        break;
+    case ICD_HITEM:
+        showText.append(" : V");
+        showText += attributeValueOfName("version");
+        showText.append("/R");
+        showText += attributeValueOfName("revision");
+        showText.append("@");
+        showText += attributeValueOfName("when");
+        break;
+    case ICD_SUBNETWORK:
+        showText.append(" : ");
+        showText += attributeValueOfName("name");
+        break;
+    case ICD_BITRATE:
+    case ICD_MINTIME:
+    case ICD_MAXTIME:
+        value = getTextValue();
+        if(value != "") {
+            showText.append(" : ");
+            showText += value;
+            showText += attributeValueOfName("multiplier");
+            showText += attributeValueOfName("unit");
+        }
+        break;
+    case ICD_IP:
+        showText.clear();
+        value = getTextValue();
+        showText += attributeValueOfName("type");
+        showText += " ";
+        if(value != "") {
+            showText += value;
+        }
+        break;
+    case ICD_IED:
+    case ICD_ACCESSPOINT:
+        showText.clear();
+        showText += attributeValueOfName("name");
+        break;
+    case ICD_AUTHENTICATION:
+        if(attributes.count() > 0)
+            showText += " {";
+        else
+            break;
+        if(hasAttrOfName("none")){
+            showText += "none = ";
+            if(attributeValueOfName("none") == "true")
+                showText += "T";
+            else if(attributeValueOfName("none") == "false")
+                showText += "F";
+        }
+        if(hasAttrOfName("password")){
+            showText += "password = ";
+            if(attributeValueOfName("password") == "true")
+                showText += "T";
+            else if(attributeValueOfName("password") == "false")
+                showText += "F";
+        }
+        if(hasAttrOfName("weak")){
+            showText += "weak = ";
+            if(attributeValueOfName("weak") == "true")
+                showText += "T";
+            else if(attributeValueOfName("weak") == "false")
+                showText += "F";
+        }
+        if(hasAttrOfName("strong")){
+            showText += "strong = ";
+            if(attributeValueOfName("strong") == "true")
+                showText += "T";
+            else if(attributeValueOfName("strong") == "false")
+                showText += "F";
+        }
+        if(hasAttrOfName("certificate")){
+            showText += "certificate = ";
+            if(attributeValueOfName("certificate") == "true")
+                showText += "T";
+            else if(attributeValueOfName("certificate") == "false")
+                showText += "F";
+        }
+        showText += "}";
+        break;
+    case ICD_LDEVICE:
+        showText.clear();
+        showText += attributeValueOfName("inst");
+        break;
+    case ICD_LN0:
+    case ICD_LN:
+        showText += " : ";
+        showText += attributeValueOfName("lnClass");
+        break;
+    case ICD_DOI:
+    case ICD_SDI:
+    case ICD_DAI:
+        showText.clear();
+        showText += attributeValueOfName("name");
+        break;
+    case ICD_DATASET:
+        showText.clear();
+        showText += attributeValueOfName("name");
+        break;
+    case ICD_FCDA:
+        showText.clear();
+        showText += attributeValueOfName("ldInst");
+        showText.append("/");
+        showText += attributeValueOfName("lnClass");
+        if(hasAttrOfName("lnInst")) {
+            showText.append(".");
+            showText += attributeValueOfName("lnInst");
+        }
+        showText.append(".");
+        showText += attributeValueOfName("fc");
+        showText.append(".");
+        showText += attributeValueOfName("doName");
+        if(hasAttrOfName("daName")) {
+            showText.append(".");
+            showText += attributeValueOfName("daName");
+        }
+        break;
+    default:
+        showText = _tag;
+        break;
+    }
+
+    return showText;
+}
+
+QString DomItem::getTextValue()
+{
+    QString result = "";
+    QVectorIterator<TextChunk*> tt(textNodes);
+    while(tt.hasNext()) {
+        TextChunk *tx = tt.next();
+        if(tx->isCDATA) {
+            return result;
+        } else {
+            result.append(tx->text);
+        }
+    }
+
+    return result;
 }
 
 bool DomItem::hasChildOfName(const QString &name)
@@ -2194,6 +2563,439 @@ bool DomItem::hasChildOfName(const QString &name)
     }
 
     return result;
+}
+
+bool DomItem::hasAttrOfName(const QString &name)
+{
+    bool result = false;
+    if(NULL == name) {
+        return result;
+    }
+    foreach (Attribute *attr, attributes) {
+        if(attr->name == name) {
+            result = true;
+            return result;
+        }
+    }
+
+    return result;
+}
+
+void DomItem::setNodeType()
+{
+    QString newTag = _tag;
+    if(parentItem != NULL) {
+        if(parentItem->nodeType == ICD_SERVICES) {
+            nodeType = ICD_SERVICES_ITEMS;
+            _isSequence = false;
+            _canNoUse = true;
+            return ;
+        }
+
+        if(parentItem->nodeType == ICD_SERVICES_ITEMS) {
+            nodeType = ICD_SERVICES_ITEMGROUP;
+            _isSequence = false;
+            _canNoUse = true;
+            return ;
+        }
+    }
+
+    if(newTag == tr("Header")) {
+        nodeType = ICD_HEADER;
+        _isSequence = true;
+        _canNoUse = false;
+        _canBeMore = false;
+    } else if(newTag == tr("History")) {
+        nodeType = ICD_HISTORY;
+        _isSequence = false;
+        _canNoUse = true;
+        _canBeMore = false;
+    } else if(newTag == tr("Hitem")) {
+        nodeType = ICD_HITEM;
+        _isSequence = false;
+        _canNoUse = false;
+        _canBeMore = true;
+
+    } else if(newTag == tr("Substation")) {
+        nodeType = ICD_SUBSTATION;
+        _isSequence = true;
+        _canNoUse = true;
+        _canBeMore = true;
+    } else if(newTag == tr("LNode")) {
+        nodeType = ICD_LNODE;
+        _isSequence = true;
+        _canNoUse = true;
+        _canBeMore = true;
+    } else if(newTag == tr("PowerTransformer")) {
+        nodeType = ICD_POWERTRANSFORMER;
+        _isSequence = true;
+        _canNoUse = true;
+        _canBeMore = true;
+    } else if(newTag == tr("GeneralEquipment")) {
+        nodeType = ICD_GENERALEQUIPMENT;
+        _isSequence = true;
+        _canNoUse = true;
+        _canBeMore = true;
+    } else if(newTag == tr("VoltageLevel")) {
+        nodeType = ICD_VOLTAGELEVEL;
+        _isSequence = true;
+        _canNoUse = false;
+        _canBeMore = true;
+    } else if(newTag == tr("Function")) {
+        nodeType = ICD_FUNCTION;
+        _isSequence = true;
+        _canNoUse = true;
+        _canBeMore = true;
+    } else if(newTag == tr("TransformerWinding")) {
+        nodeType = ICD_TRANSFORMERWINDING;
+        _isSequence = true;
+        _canNoUse = false;
+        _canBeMore = true;
+    } else if(newTag == tr("Terminal")) {
+        nodeType = ICD_TERMINAL;
+        _isSequence = true;
+        _canNoUse = true;
+        int itemNum = 0;
+        for(int i=0; i < parentItem->getItems().count(); i++) {
+            if(parentItem->getChildAt(i)->getNodeType() == ICD_TERMINAL)
+                itemNum++;
+        }
+
+        if(itemNum >= 2)
+            _canBeMore = false;
+        else
+            _canBeMore = true;
+    } else if(newTag == tr("SubEquipment")) {
+        nodeType = ICD_SUBEQUIPMENT;
+        _isSequence = true;
+        _canNoUse = true;
+        _canBeMore = true;
+    } else if(newTag == tr("TapChanger")) {
+        nodeType = ICD_TAPCHARGER;
+        _isSequence = true;
+        _canNoUse = true;
+        int itemNum = 0;
+        for(int i=0; i < parentItem->childItems.count(); i++) {
+            if(parentItem->getChildAt(i)->getNodeType() == ICD_TAPCHARGER)
+                itemNum++;
+        }
+        if(itemNum >= 1)
+            _canBeMore = false;
+        else
+            _canBeMore = true;
+    } else if(newTag == tr("Voltage")) {
+        nodeType = ICD_VOLTAGE;
+        _isSequence = true;
+        _canNoUse = true;
+        _canBeMore = false;
+    } else if(newTag == tr("Bay")) {
+        nodeType = ICD_BAY;
+        _isSequence = true;
+        _canNoUse = false;
+        _canBeMore = true;
+    } else if(newTag == tr("ConductingEquipment")) {
+        nodeType = ICD_CONDUCTINGEQUIPMENT;
+        _isSequence = true;
+        _canNoUse = true;
+        _canBeMore = true;
+    } else if(newTag == tr("ConnectivityNode")) {
+        nodeType = ICD_CONNECTIVITYNODE;
+        _isSequence = true;
+        _canNoUse = true;
+        _canBeMore = true;
+    } else if(newTag == tr("SubFunction")) {
+        nodeType = ICD_SUBFUNCTION;
+        _isSequence = true;
+        _canNoUse = true;
+        _canBeMore = true;
+
+    } else if(newTag == tr("Communication")) {
+        nodeType = ICD_COMMUNICATION;
+        _isSequence = true;
+        _canNoUse = true;
+        _canBeMore = false;
+    } else if(newTag == tr("SubNetwork")) {
+        nodeType = ICD_SUBNETWORK;
+        _isSequence = true;
+        _canNoUse = false;
+        _canBeMore = true;
+    } else if(newTag == tr("BitRate")) {
+        nodeType = ICD_BITRATE;
+        _isSequence = true;
+        _canNoUse = true;
+        _canBeMore = false;
+    } else if(newTag == tr("ConnectedAP")) {
+        nodeType = ICD_CONNECTEDAP;
+        _isSequence = true;
+        _canNoUse = false;
+        _canBeMore = true;
+    } else if(newTag == tr("Address")) {
+        nodeType = ICD_ADDRESS;
+        _isSequence = true;
+        _canNoUse = true;
+        _canBeMore = false;
+    } else if(newTag == tr("GSE")) {
+        nodeType = ICD_GSE;
+        _isSequence = true;
+        _canNoUse = true;
+        _canBeMore = true;
+    } else if(newTag == tr("SMV")) {
+        nodeType = ICD_SMV;
+        _isSequence = true;
+        _canNoUse = true;
+        _canBeMore = true;
+    } else if(newTag == tr("PhysConn")) {
+        nodeType = ICD_PHYSCONN;
+        _isSequence = true;
+        _canNoUse = true;
+        _canBeMore = true;
+    } else if(newTag == tr("P")) {
+        nodeType = ICD_IP;
+        _isSequence = true;
+        _canNoUse = false;
+        _canBeMore = true;
+
+    } else if(newTag == tr("MinTime")) {
+        nodeType = ICD_MINTIME;
+        _isSequence = true;
+        _canNoUse = true;
+        _canBeMore = false;
+    } else if(newTag == tr("MaxTime")) {
+        nodeType = ICD_MAXTIME;
+        _isSequence = true;
+        _canNoUse = true;
+        _canBeMore = false;
+
+    } else if(newTag == tr("IED")) {
+        nodeType = ICD_IED;
+        _isSequence = true;
+        _canNoUse = true;
+        _canBeMore = true;
+    } else if(newTag == tr("Services")) {
+        nodeType = ICD_SERVICES;
+        _isSequence = true;
+        _canNoUse = true;
+        _canBeMore = false;
+    } else if(newTag == tr("AccessPoint")) {
+        nodeType = ICD_ACCESSPOINT;
+        _isSequence = true;
+        _canNoUse = false;
+        _canBeMore = true;
+    } else if(newTag == tr("Server")) {
+        nodeType = ICD_SERVER;
+        _isSequence = false;
+        _canNoUse = true;
+        _canBeMore = false;
+    } else if(newTag == tr("LN")) {
+        nodeType = ICD_LN;
+        _isSequence = false;
+        _canNoUse = true;
+        _canBeMore = true;
+    } else if(newTag == tr("Authentication")) {
+        nodeType = ICD_AUTHENTICATION;
+        _isSequence = true;
+        _canNoUse = false;
+        _canBeMore = false;
+    } else if(newTag == tr("LDevice")) {
+        nodeType = ICD_LDEVICE;
+        _isSequence = true;
+        _canNoUse = false;
+        _canBeMore = true;
+    } else if(newTag == tr("Association")) {
+        nodeType = ICD_ASSOCIATION;
+        _isSequence = true;
+        _canNoUse = true;
+        _canBeMore = true;
+    } else if(newTag == tr("LN0")) {
+        nodeType = ICD_LN0;
+        _isSequence = true;
+        _canNoUse = false;
+        _canBeMore = false;
+    } else if(newTag == tr("AccessControl")) {
+        nodeType = ICD_ACCESSCONTROL;
+        _isSequence = true;
+        _canNoUse = true;
+        _canBeMore = true;
+    } else if(newTag == tr("DataSet")) {
+        nodeType = ICD_DATASET;
+        _isSequence = true;
+        _canNoUse = true;
+        _canBeMore = true;
+    } else if(newTag == tr("ReportControl")) {
+        nodeType = ICD_REPORTCONTROL;
+        _isSequence = true;
+        _canNoUse = true;
+        _canBeMore = true;
+    } else if(newTag == tr("LogControl")) {
+        nodeType = ICD_LOGCONTROL;
+        _isSequence = true;
+        _canNoUse = true;
+        _canBeMore = true;
+    } else if(newTag == tr("DOI")) {
+        nodeType = ICD_DOI;
+        _isSequence = true;
+        _canNoUse = true;
+        _canBeMore = true;
+    } else if(newTag == tr("Inputs")) {
+        nodeType = ICD_INPUTS;
+        _isSequence = true;
+        _canNoUse = true;
+        _canBeMore = false;
+    } else if(newTag == tr("GSEControl")) {
+        nodeType = ICD_GSECONTROL;
+        _isSequence = true;
+        _canNoUse = true;
+        _canBeMore = true;
+    } else if(newTag == tr("SampledValueControl")) {
+        nodeType = ICD_SVCONTROL;
+        _isSequence = true;
+        _canNoUse = true;
+        _canBeMore = true;
+    } else if(newTag == tr("SetttingControl")) {
+        nodeType = ICD_SETTINGCONTROL;
+        _isSequence = true;
+        _canNoUse = true;
+        _canBeMore = false;
+    } else if(newTag == tr("SCLControl")) {
+        nodeType = ICD_SCLCONTROL;
+        _isSequence = true;
+        _canNoUse = true;
+        _canBeMore = false;
+    } else if(newTag == tr("Log")) {
+        nodeType = ICD_LOG;
+        _isSequence = true;
+        _canNoUse = true;
+        _canBeMore = false;
+//    } else if(newTag == tr("GOOSESecurity")) {
+//        nodeType = ICD_GOOSESECURITY;
+//    } else if(newTag == tr("SMVSecurity")) {
+//        nodeType = ICD_GOOSESECURITY;
+//    } else if(newTag == tr("ServerAt")) {
+//        nodeType = ICD_SERVERAT;
+//    } else if(newTag == tr("Inputs")) {
+//        nodeType = ICD_INPUTS;
+    } else if(newTag == tr("FCDA")) {
+        nodeType = ICD_FCDA;
+        _isSequence = true;
+        _canNoUse = false;
+        _canBeMore = true;
+    } else if(newTag == tr("TrgOps")) {
+        nodeType = ICD_TRGOPS;
+        _isSequence = true;
+        _canNoUse = true;
+        _canBeMore = false;
+    } else if(newTag == tr("OptFields")) {
+        nodeType = ICD_OPTFIELDS;
+        _isSequence = true;
+        _canNoUse = false;
+        _canBeMore = false;
+    } else if(newTag == tr("RptEnabled")) {
+        nodeType = ICD_RPTENABLED;
+        _isSequence = true;
+        _canNoUse = true;
+        _canBeMore = false;
+    } else if(newTag == tr("SDI")) {
+        nodeType = ICD_SDI;
+        _isSequence = false;
+        _canNoUse = true;
+        _canBeMore = true;
+    } else if(newTag == tr("DAI")) {
+        nodeType = ICD_DAI;
+        _isSequence = false;
+        _canNoUse = true;
+        _canBeMore = true;
+    } else if(newTag == tr("ExtRef")) {
+        nodeType = ICD_EXTREFS;
+        _isSequence = true;
+        _canNoUse = false;
+        _canBeMore = true;
+    } else if(newTag == tr("IEDName")) {
+        nodeType = ICD_IEDNAME;
+        _isSequence = true;
+        _canNoUse = true;
+        _canBeMore = true;
+    } else if(newTag == tr("SmvOpts")) {
+        nodeType = ICD_SMVOPTS;
+        _isSequence = true;
+        _canNoUse = false;
+        _canBeMore = false;
+    } else if(newTag == tr("ClientLN")) {
+        nodeType = ICD_CLIENTLN;
+        _isSequence = true;
+        _canNoUse = true;
+        _canBeMore = true;
+    } else if(newTag == tr("Val")) {
+        nodeType = ICD_VAL;
+        _isSequence = true;
+        _canNoUse = true;
+        _canBeMore = true;
+
+    } else if(newTag == tr("DataTypeTemplates")) {
+        nodeType = ICD_DATATYPETEMPLATES;
+        _isSequence = true;
+        _canNoUse = true;
+        _canBeMore = false;
+    } else if(newTag == tr("LNodeTypes")) {
+        nodeType = ICD_LNODETYPES;
+        _isSequence = true;
+        _canNoUse = false;
+        _canBeMore = true;
+    } else if(newTag == tr("DoTypes")) {
+        nodeType = ICD_DOTYPE;
+        _isSequence = true;
+        _canNoUse = true;
+        _canBeMore = true;
+    } else if(newTag == tr("DaTypes")) {
+        nodeType = ICD_DATYPE;
+        _isSequence = true;
+        _canNoUse = true;
+        _canBeMore = true;
+    } else if(newTag == tr("EnumTypes")) {
+        nodeType = ICD_ENUMTYPE;
+        _isSequence = true;
+        _canNoUse = true;
+        _canBeMore = true;
+    } else if(newTag == tr("DO")) {
+        nodeType = ICD_DO;
+        _isSequence = true;
+        _canNoUse = false;
+        _canBeMore = true;
+    } else if(newTag == tr("SDO")) {
+        nodeType = ICD_SDO;
+        _isSequence = false;
+        _canNoUse = true;
+        _canBeMore = true;
+    } else if(newTag == tr("DA")) {
+        nodeType = ICD_DA;
+        _isSequence = false;
+        _canNoUse = true;
+        _canBeMore = true;
+    } else if(newTag == tr("BDA")) {
+        nodeType = ICD_BDA;
+        _isSequence = true;
+        _canNoUse = false;
+        _canBeMore = true;
+    } else if(newTag == tr("EnumVal")) {
+        nodeType = ICD_ENUMVAL;
+        _isSequence = true;
+        _canNoUse = false;
+        _canBeMore = true;
+    } else if(newTag == tr("Text")) {
+        nodeType = ICD_TEXT;
+        _isSequence = false;
+        _canNoUse = true;
+        _canBeMore = false;
+    } else if(newTag == tr("Private")) {
+        nodeType = ICD_PRIVATE;
+        _isSequence = false;
+        _canNoUse = true;
+        _canBeMore = false;
+    } else {
+        nodeType = ICD_SCL;
+        _isSequence = false;
+        _canNoUse = true;
+        _canBeMore = false;
+    }
 }
 
 //----------------------------------------------------------------

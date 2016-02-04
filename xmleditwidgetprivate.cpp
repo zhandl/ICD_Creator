@@ -580,6 +580,7 @@ void XmlEditWidgetPrivate::editAttribute()
     }
 
     model->editAttribute(p, itemSel);
+    computeSelectionState();
 
 }
 
@@ -645,6 +646,20 @@ void XmlEditWidgetPrivate::addChild()
     model->addChild(p, p->treeWidget);
 }
 
+void XmlEditWidgetPrivate::addChild(QString newTag)
+{
+    if(!isActionMode()) {
+        return ;
+    }
+    if(NULL == model) {
+        errorNoRule();
+        return ;
+    }
+    DomItem *newItem = new DomItem(newTag, "", model);
+
+    model->addChild(p, p->treeWidget, newItem);
+}
+
 void XmlEditWidgetPrivate::addBrother()
 {
     if(!isActionMode()) {
@@ -669,7 +684,7 @@ void XmlEditWidgetPrivate::addText()
     model->addText(p, p->treeWidget);
 }
 
-void XmlEditWidgetPrivate::addLLN0()
+void XmlEditWidgetPrivate::addPrivate()
 {
     if(!isActionMode()) {
         return ;
@@ -678,7 +693,367 @@ void XmlEditWidgetPrivate::addLLN0()
         errorNoRule();
         return ;
     }
-    model->addLLN0(p, p->treeWidget);
+    model->addPrivate(p, p->treeWidget);
+}
+
+void XmlEditWidgetPrivate::addSubstation()
+{
+    if(!isActionMode()) {
+        return ;
+    }
+    if(NULL == model) {
+        errorNoRule();
+        return ;
+    }
+    model->addSubstation(p, p->treeWidget);
+}
+
+void XmlEditWidgetPrivate::addCommunication()
+{
+    if(!isActionMode()) {
+        return ;
+    }
+    if(NULL == model) {
+        errorNoRule();
+        return ;
+    }
+    model->addCommunication(p, p->treeWidget);
+}
+
+void XmlEditWidgetPrivate::addIED()
+{
+    if(!isActionMode()) {
+        return ;
+    }
+    if(NULL == model) {
+        errorNoRule();
+        return ;
+    }
+    model->addIED(p, p->treeWidget);
+}
+
+void XmlEditWidgetPrivate::addDataTypeTemplates()
+{
+    if(!isActionMode()) {
+        return ;
+    }
+    if(NULL == model) {
+        errorNoRule();
+        return ;
+    }
+    model->addDataTypeTemplates(p, p->treeWidget);
+}
+
+void XmlEditWidgetPrivate::addHistory()
+{
+    if(!isActionMode()) {
+        return ;
+    }
+    if(NULL == model) {
+        errorNoRule();
+        return ;
+    }
+    model->addHistory(p, p->treeWidget);
+}
+
+void XmlEditWidgetPrivate::addHitem()
+{
+    if(!isActionMode()) {
+        return ;
+    }
+    if(NULL == model) {
+        errorNoRule();
+        return ;
+    }
+    model->addHitem(p, p->treeWidget);
+}
+
+void XmlEditWidgetPrivate::addSubNetwork()
+{
+    if(!isActionMode()) {
+        return ;
+    }
+    if(NULL == model) {
+        errorNoRule();
+        return ;
+    }
+    model->addSubNetwork(p, p->treeWidget);
+}
+
+void XmlEditWidgetPrivate::addBitRate()
+{
+    if(!isActionMode()) {
+        return ;
+    }
+    if(NULL == model) {
+        errorNoRule();
+        return ;
+    }
+    model->addBitRate(p, p->treeWidget);
+}
+
+void XmlEditWidgetPrivate::addConnectedAP()
+{
+    if(!isActionMode()) {
+        return ;
+    }
+    if(NULL == model) {
+        errorNoRule();
+        return ;
+    }
+    model->addConnectedAP(p, p->treeWidget);
+}
+
+void XmlEditWidgetPrivate::addAddress()
+{
+    if(!isActionMode()) {
+        return ;
+    }
+    if(NULL == model) {
+        errorNoRule();
+        return ;
+    }
+    model->addAddress(p, p->treeWidget);
+}
+
+void XmlEditWidgetPrivate::addGSE()
+{
+    if(!isActionMode()) {
+        return ;
+    }
+    if(NULL == model) {
+        errorNoRule();
+        return ;
+    }
+    model->addGSE(p, p->treeWidget);
+}
+
+void XmlEditWidgetPrivate::addSMV()
+{
+    if(!isActionMode()) {
+        return ;
+    }
+    if(NULL == model) {
+        errorNoRule();
+        return ;
+    }
+    model->addSMV(p, p->treeWidget);
+}
+
+void XmlEditWidgetPrivate::addPhysconn()
+{
+    if(!isActionMode()) {
+        return ;
+    }
+    if(NULL == model) {
+        errorNoRule();
+        return ;
+    }
+    model->addPhysconn(p, p->treeWidget);
+}
+
+void XmlEditWidgetPrivate::addP()
+{
+    if(!isActionMode()) {
+        return ;
+    }
+    if(NULL == model) {
+        errorNoRule();
+        return ;
+    }
+    model->addP(p, p->treeWidget);
+}
+
+void XmlEditWidgetPrivate::addMinTime()
+{
+    if(!isActionMode()) {
+        return ;
+    }
+    if(NULL == model) {
+        errorNoRule();
+        return ;
+    }
+    model->addMinTime(p, p->treeWidget);
+}
+
+void XmlEditWidgetPrivate::addMaxTime()
+{
+    if(!isActionMode()) {
+        return ;
+    }
+    if(NULL == model) {
+        errorNoRule();
+        return ;
+    }
+    model->addMaxTime(p, p->treeWidget);
+}
+
+void XmlEditWidgetPrivate::addServices()
+{
+    if(!isActionMode()) {
+        return ;
+    }
+    if(NULL == model) {
+        errorNoRule();
+        return ;
+    }
+    model->addServices(p, p->treeWidget);
+}
+
+void XmlEditWidgetPrivate::addAccessPoint()
+{
+    if(!isActionMode()) {
+        return ;
+    }
+    if(NULL == model) {
+        errorNoRule();
+        return ;
+    }
+    model->addAccessPoint(p, p->treeWidget);
+}
+
+void XmlEditWidgetPrivate::addServer()
+{
+    if(!isActionMode()) {
+        return ;
+    }
+    if(NULL == model) {
+        errorNoRule();
+        return ;
+    }
+    model->addServer(p, p->treeWidget);
+}
+
+void XmlEditWidgetPrivate::addServerAt()
+{
+    if(!isActionMode()) {
+        return ;
+    }
+    if(NULL == model) {
+        errorNoRule();
+        return ;
+    }
+    model->addServerAt(p, p->treeWidget);
+}
+
+void XmlEditWidgetPrivate::addGOOSESecurity()
+{
+    if(!isActionMode()) {
+        return ;
+    }
+    if(NULL == model) {
+        errorNoRule();
+        return ;
+    }
+    model->addGOOSESecurity(p, p->treeWidget);
+}
+
+void XmlEditWidgetPrivate::addSMVSecurity()
+{
+    if(!isActionMode()) {
+        return ;
+    }
+    if(NULL == model) {
+        errorNoRule();
+        return ;
+    }
+    model->addSMVSecurity(p, p->treeWidget);
+}
+
+void XmlEditWidgetPrivate::addSubject()
+{
+    if(!isActionMode()) {
+        return ;
+    }
+    if(NULL == model) {
+        errorNoRule();
+        return ;
+    }
+    model->addSubject(p, p->treeWidget);
+}
+
+void XmlEditWidgetPrivate::addIssuerName()
+{
+    if(!isActionMode()) {
+        return ;
+    }
+    if(NULL == model) {
+        errorNoRule();
+        return ;
+    }
+    model->addIssuerName(p, p->treeWidget);
+}
+
+void XmlEditWidgetPrivate::addAuthentication()
+{
+    if(!isActionMode()) {
+        return ;
+    }
+    if(NULL == model) {
+        errorNoRule();
+        return ;
+    }
+    model->addAuthentication(p, p->treeWidget);
+}
+
+void XmlEditWidgetPrivate::addLDevice()
+{
+    if(!isActionMode()) {
+        return ;
+    }
+    if(NULL == model) {
+        errorNoRule();
+        return ;
+    }
+    model->addLDevice(p, p->treeWidget);
+}
+
+void XmlEditWidgetPrivate::addAssociation()
+{
+    if(!isActionMode()) {
+        return ;
+    }
+    if(NULL == model) {
+        errorNoRule();
+        return ;
+    }
+    model->addAssociation(p, p->treeWidget);
+}
+
+void XmlEditWidgetPrivate::addLN0()
+{
+    if(!isActionMode()) {
+        return ;
+    }
+    if(NULL == model) {
+        errorNoRule();
+        return ;
+    }
+    model->addLN0(p, p->treeWidget);
+}
+
+void XmlEditWidgetPrivate::addLNode()
+{
+    if(!isActionMode()) {
+        return ;
+    }
+    if(NULL == model) {
+        errorNoRule();
+        return ;
+    }
+    model->addLNode(p, p->treeWidget);
+}
+
+void XmlEditWidgetPrivate::addAccessControl()
+{
+    if(!isActionMode()) {
+        return ;
+    }
+    if(NULL == model) {
+        errorNoRule();
+        return ;
+    }
+    model->addAccessControl(p, p->treeWidget);
 }
 
 void XmlEditWidgetPrivate::addDataSet()
@@ -693,7 +1068,7 @@ void XmlEditWidgetPrivate::addDataSet()
     model->addDataSet(p, p->treeWidget);
 }
 
-void XmlEditWidgetPrivate::addLNode()
+void XmlEditWidgetPrivate::addReportControl()
 {
     if(!isActionMode()) {
         return ;
@@ -702,7 +1077,79 @@ void XmlEditWidgetPrivate::addLNode()
         errorNoRule();
         return ;
     }
-    model->addLNode(p, p->treeWidget);
+    model->addReportControl(p, p->treeWidget);
+}
+
+void XmlEditWidgetPrivate::addLogControl()
+{
+    if(!isActionMode()) {
+        return ;
+    }
+    if(NULL == model) {
+        errorNoRule();
+        return ;
+    }
+    model->addLogControl(p, p->treeWidget);
+}
+
+void XmlEditWidgetPrivate::addInputs()
+{
+    if(!isActionMode()) {
+        return ;
+    }
+    if(NULL == model) {
+        errorNoRule();
+        return ;
+    }
+    model->addInputs(p, p->treeWidget);
+}
+
+void XmlEditWidgetPrivate::addLog()
+{
+    if(!isActionMode()) {
+        return ;
+    }
+    if(NULL == model) {
+        errorNoRule();
+        return ;
+    }
+    model->addLog(p, p->treeWidget);
+}
+
+void XmlEditWidgetPrivate::addGSEControl()
+{
+    if(!isActionMode()) {
+        return ;
+    }
+    if(NULL == model) {
+        errorNoRule();
+        return ;
+    }
+    model->addGSEControl(p, p->treeWidget);
+}
+
+void XmlEditWidgetPrivate::addSMVControl()
+{
+    if(!isActionMode()) {
+        return ;
+    }
+    if(NULL == model) {
+        errorNoRule();
+        return ;
+    }
+    model->addSMVControl(p, p->treeWidget);
+}
+
+void XmlEditWidgetPrivate::addSettingControl()
+{
+    if(!isActionMode()) {
+        return ;
+    }
+    if(NULL == model) {
+        errorNoRule();
+        return ;
+    }
+    model->addSettingControl(p, p->treeWidget);
 }
 
 void XmlEditWidgetPrivate::on_addBrother_clicked()

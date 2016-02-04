@@ -65,6 +65,9 @@ class LIBQXMLEDITSHARED_EXPORT DomModel : public QAbstractItemModel
     static const int ModelValue;
     static const int ModelColumns;
 
+
+
+
     // constants
     enum EConsts {
         // undo limit
@@ -88,6 +91,15 @@ public:
     int columnCount(const QModelIndex &parent = QModelIndex()) const;
 
     //******************************** end Model Interface
+
+//    typedef struct fcda {
+//        QString doName;
+//        QString daName;
+//        QString lnInst;
+//        QString lnClass;
+//        QString fc;
+//        QString ldInst;
+//    }_fcda;
 
     QString docType();
     void setDocType(const QString& newDocType, const QString &systemID, const QString &publicId);
@@ -115,12 +127,52 @@ public:
     QString &fileName();
     void setFileName(const QString &newFileName);
 
-    void addText(QWidget *window, QTreeWidget *tree);
     void editAttribute(QWidget *const window, QTreeWidgetItem* pItem);
+    void addText(QWidget *window, QTreeWidget *tree);
+    void addPrivate(QWidget *window, QTreeWidget *tree);
 
-    void addLLN0(QWidget *window, QTreeWidget *tree);
+    void addSubstation(QWidget *window, QTreeWidget *tree);
+    void addCommunication(QWidget *window, QTreeWidget *tree);
+    void addIED(QWidget *window, QTreeWidget *tree);
+    void addDataTypeTemplates(QWidget *window, QTreeWidget *tree);
+
+    void addHistory(QWidget *window, QTreeWidget *tree);
+    void addHitem(QWidget *window, QTreeWidget *tree);
+
+    void addSubNetwork(QWidget *window, QTreeWidget *tree);
+    void addBitRate(QWidget *window, QTreeWidget *tree);
+    void addConnectedAP(QWidget *window, QTreeWidget *tree);
+    void addAddress(QWidget *window, QTreeWidget *tree);
+    void addGSE(QWidget *window, QTreeWidget *tree);
+    void addSMV(QWidget *window, QTreeWidget *tree);
+    void addPhysconn(QWidget *window, QTreeWidget *tree);
+    void addP(QWidget *window, QTreeWidget *tree);
+    void addMinTime(QWidget *window, QTreeWidget *tree);
+    void addMaxTime(QWidget *window, QTreeWidget *tree);
+
+    void addServices(QWidget *window, QTreeWidget *tree);
+    void addAccessPoint(QWidget *window, QTreeWidget *tree);
+    void addServer(QWidget *window, QTreeWidget *tree);
+    void addServerAt(QWidget *window, QTreeWidget *tree);
+    void addGOOSESecurity(QWidget *window, QTreeWidget *tree);
+    void addSMVSecurity(QWidget *window, QTreeWidget *tree);
+    void addSubject(QWidget *window, QTreeWidget *tree);
+    void addIssuerName(QWidget *window, QTreeWidget *tree);
+    void addAuthentication(QWidget *window, QTreeWidget *tree);
+    void addLDevice(QWidget *window, QTreeWidget *tree);
+    void addAssociation(QWidget *window, QTreeWidget *tree);
+
+    void addLN0(QWidget *window, QTreeWidget *tree);
     void addLNode(QWidget *window, QTreeWidget *tree);
+    void addAccessControl(QWidget *window, QTreeWidget *tree);
     void addDataSet(QWidget *window, QTreeWidget *tree);
+    void addReportControl(QWidget *window, QTreeWidget *tree);
+    void addLogControl(QWidget *window, QTreeWidget *tree);
+    void addInputs(QWidget *window, QTreeWidget *tree);
+    void addLog(QWidget *window, QTreeWidget *tree);
+    void addGSEControl(QWidget *window, QTreeWidget *tree);
+    void addSMVControl(QWidget *window, QTreeWidget *tree);
+    void addSettingControl(QWidget *window, QTreeWidget *tree);
 
     void addChild(QWidget *window, QTreeWidget *tree);
     void addChild(QWidget *window, QTreeWidget *tree, DomItem *preItem);
@@ -159,6 +211,20 @@ public:
         return _dataTypeItems;
     }
 
+    QVector<DomItem*> getDoTypeItems() {
+        return _doTypeItems;
+    }
+
+    QVector<DomItem*> getDaEnumItems() {
+        return _daEnumTypeItems;
+    }
+
+//    QVector<_fcda*> getDataSetItems() {
+//        return _dataSetItems;
+//    }
+
+    DomItem *getDataTypeItemWithId(const QString &lnType);
+
     static QBrush setBkBrush;
 
     void findText(FindTextParams &FindArgs, DomItem *seletedItem);
@@ -177,6 +243,8 @@ public:
     QString userDefinedXsd() {
         return _userDefinedXsd;
     }
+
+
 
     void setUserAndDocumentXsd(const QString &newXsd);
 
@@ -245,6 +313,9 @@ private:
     QHash<int, DomItem*> selection;
     PaintInfo  *paintInfo;
 
+
+//    QVector<_fcda*> _dataSetItems;
+
     // XSD file referenced in the document
     QString _noNameSpaceXsd;
     QString _documentXsd;
@@ -261,6 +332,8 @@ private:
     DocumentType        *_docType;
 
     QVector<DomItem *> _dataTypeItems;
+    QVector<DomItem *> _doTypeItems;
+    QVector<DomItem *> _daEnumTypeItems;
 
     void clear();
     void clearUndo();
@@ -271,6 +344,10 @@ private:
     bool editNodeComment(QWidget *const parentWindow, DomItem *pItem);
     bool editTextNodeItem(QWidget *const parentWindow, const bool isBase64Coded, DomItem *pItem);
     void recalcSize();
+
+    bool editLNodeItem(QWidget *const parenteWindow, DomItem *pItem);
+    bool editDataSetItem(QWidget *const parentWindow, DomItem *pItem);
+    bool editReportControlItem(QWidget *const parentWindow, DomItem *pItem);
 
     void checkValidationReference();
     void decodeASchema(const QString &value);

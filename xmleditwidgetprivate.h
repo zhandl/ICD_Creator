@@ -107,12 +107,58 @@ public:
     void addChild();
     void addBrother();
 
-    void addText();
-    void editAttribute();
+    void addChild(QString newTag);
 
+    void editAttribute();
+    void addText();
+    void addPrivate();
+
+    void addSubstation();
+    void addCommunication();
+    void addIED();
+    void addDataTypeTemplates();
+
+    void addHistory();
+    void addHitem();
+
+    void addSubNetwork();
+    void addBitRate();
+    void addConnectedAP();
+    void addAddress();
+    void addGSE();
+    void addSMV();
+    void addPhysconn();
+    void addP();
+    void addMinTime();
+    void addMaxTime();
+
+    void addServices();
+    void addAccessPoint();
+    void addServer();
+    void addServerAt();
+    void addGOOSESecurity();
+    void addSMVSecurity();
+    void addSubject();
+    void addIssuerName();
+    void addAuthentication();
+    void addLDevice();
+    void addAssociation();
+
+    void addLN0();
     void addLNode();
-    void addLLN0();
+    void addAccessControl();
     void addDataSet();
+    void addReportControl();
+    void addLogControl();
+    void addInputs();
+    void addLog();
+    void addGSEControl();
+    void addSMVControl();
+    void addSettingControl();
+
+//    void addLNode();
+//    void addLN0();
+//    void addDataSet();
 
     void errorNoRule();
     void setClipBoardItem(DomItem *pItem);

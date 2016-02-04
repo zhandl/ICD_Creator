@@ -127,7 +127,12 @@ SOURCES += main.cpp\
     ipaddredit.cpp \
     ippartlineedit.cpp \
     modifylnodeid.cpp \
-    editattribute.cpp
+    editattribute.cpp \
+    editlnode.cpp \
+    editdataset.cpp \
+    addtext.cpp \
+    addprivate.cpp \
+    editreportcontrol.cpp
 
 HEADERS  += mainwindow.h \
     domitem.h \
@@ -240,7 +245,12 @@ HEADERS  += mainwindow.h \
     ipaddredit.h \
     ippartlineedit.h \
     modifylnodeid.h \
-    editattribute.h
+    editattribute.h \
+    editlnode.h \
+    editdataset.h \
+    addtext.h \
+    addprivate.h \
+    editreportcontrol.h
 
 FORMS += \
     xsdeditor/xsdwindow.ui \

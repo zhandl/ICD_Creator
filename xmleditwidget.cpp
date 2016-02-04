@@ -630,19 +630,363 @@ void XmlEditWidget::addText()
     d->addText();
 }
 
+void XmlEditWidget::addPrivate()
+{
+    d->addPrivate();
+}
+
+void XmlEditWidget::addSubstation()
+{
+    d->addSubstation();
+}
+
+void XmlEditWidget::addCommunication()
+{
+    d->addCommunication();
+}
+
+void XmlEditWidget::addIED()
+{
+    d->addIED();
+}
+
+void XmlEditWidget::addDataTypeTemplates()
+{
+    d->addDataTypeTemplates();
+}
+
+void XmlEditWidget::addHistory()
+{
+    d->addHistory();
+}
+
+void XmlEditWidget::addHitem()
+{
+    d->addHitem();
+}
+
+void XmlEditWidget::addSubNetwork()
+{
+    d->addSubNetwork();
+}
+
+void XmlEditWidget::addBitRate()
+{
+    d->addBitRate();
+}
+
+void XmlEditWidget::addConnectedAP()
+{
+    d->addConnectedAP();
+}
+
+void XmlEditWidget::addAddress()
+{
+    d->addAddress();
+}
+
+void XmlEditWidget::addGSE()
+{
+    d->addGSE();
+}
+
+void XmlEditWidget::addSMV()
+{
+    d->addSMV();
+}
+
+void XmlEditWidget::addPhysconn()
+{
+    d->addPhysconn();
+}
+
+void XmlEditWidget::addP()
+{
+    d->addP();
+}
+
+void XmlEditWidget::addMinTime()
+{
+    d->addMinTime();
+}
+
+void XmlEditWidget::addMaxTime()
+{
+    d->addMaxTime();
+}
+
+void XmlEditWidget::addServices()
+{
+    d->addServices();
+}
+
+void XmlEditWidget::addAccessPoint()
+{
+    d->addAccessPoint();
+}
+
+void XmlEditWidget::addServer()
+{
+    d->addServer();
+}
+
+void XmlEditWidget::addServerAt()
+{
+    d->addServerAt();
+}
+
+void XmlEditWidget::addGOOSESecurity()
+{
+    d->addGOOSESecurity();
+}
+
+void XmlEditWidget::addSMVSecurity()
+{
+    d->addSMVSecurity();
+}
+
+void XmlEditWidget::addSubject()
+{
+    d->addSubject();
+}
+
+void XmlEditWidget::addIssuerName()
+{
+    d->addIssuerName();
+}
+
+void XmlEditWidget::addAuthentication()
+{
+    d->addAuthentication();
+}
+
+void XmlEditWidget::addLDevice()
+{
+    d->addLDevice();
+}
+
+void XmlEditWidget::addAssociation()
+{
+    d->addAssociation();
+}
+
+void XmlEditWidget::addLN0()
+{
+    d->addLN0();
+}
+
 void XmlEditWidget::addLNode()
 {
     d->addLNode();
 }
 
-void XmlEditWidget::addLLN0()
+void XmlEditWidget::addAccessControl()
 {
-    d->addLLN0();
+    d->addAccessControl();
 }
 
 void XmlEditWidget::addDataSet()
 {
     d->addDataSet();
+}
+
+void XmlEditWidget::addReportControl()
+{
+    d->addReportControl();
+}
+
+void XmlEditWidget::addLogControl()
+{
+    d->addLogControl();
+}
+
+void XmlEditWidget::addInputs()
+{
+    d->addInputs();
+}
+
+void XmlEditWidget::addLog()
+{
+    d->addLog();
+}
+
+void XmlEditWidget::addGSEControl()
+{
+    d->addGSEControl();
+}
+
+void XmlEditWidget::addSMVControl()
+{
+    d->addSMVControl();
+}
+
+void XmlEditWidget::addSettingControl()
+{
+    d->addSettingControl();
+}
+
+void XmlEditWidget::addPowerTransformer()
+{
+    d->addChild("PowerTransformer");
+}
+
+void XmlEditWidget::addGeneralEquipment()
+{
+    d->addChild("GeneralEquipment");
+}
+
+//void XmlEditWidget::addLNode()
+//{
+//}
+
+void XmlEditWidget::addVoltageLevel()
+{
+    d->addChild("VoltageLevel");
+}
+
+void XmlEditWidget::addFunction()
+{
+    d->addChild("Function");
+}
+
+void XmlEditWidget::addTransformerWinding()
+{
+    d->addChild("TransformerWinding");
+}
+
+void XmlEditWidget::addVoltage()
+{
+    d->addChild("Voltage");
+}
+
+void XmlEditWidget::addBay()
+{
+    d->addChild("Bay");
+}
+
+void XmlEditWidget::addSubFunction()
+{
+    d->addChild("SubFunction");
+}
+
+void XmlEditWidget::addTapChanger()
+{
+    d->addChild("TapChanger");
+}
+
+void XmlEditWidget::addTerminal()
+{
+    d->addChild("Terminal");
+}
+
+void XmlEditWidget::addSubEquipment()
+{
+    d->addChild("SubEquipment");
+}
+
+void XmlEditWidget::addConductingEquipment()
+{
+    d->addChild("ConductingEquipment");
+}
+
+void XmlEditWidget::addConnectivityNode()
+{
+    d->addChild("ConnectivityNode");
+}
+
+void XmlEditWidget::addFCDA()
+{
+    d->addChild("FCDA");
+}
+
+void XmlEditWidget::addTrgOps()
+{
+    d->addChild("TrgOps");
+}
+
+void XmlEditWidget::addOptFields()
+{
+    d->addChild("OptFields");
+}
+
+void XmlEditWidget::addRptEnabled()
+{
+    d->addChild("RptEnabled");
+}
+
+void XmlEditWidget::addSDI()
+{
+    d->addChild("SDI");
+}
+
+void XmlEditWidget::addDAI()
+{
+    d->addChild("DAI");
+}
+
+void XmlEditWidget::addExtRef()
+{
+    d->addChild("ExtRef");
+}
+
+void XmlEditWidget::addIEDName()
+{
+    d->addChild("IEDName");
+}
+
+void XmlEditWidget::addSmvOpts()
+{
+    d->addChild("SmvOpts");
+}
+
+void XmlEditWidget::addVal()
+{
+    d->addChild("Val");
+}
+
+void XmlEditWidget::addLNodeType()
+{
+    d->addChild("LNodeType");
+}
+
+void XmlEditWidget::addDOType()
+{
+    d->addChild("DOType");
+}
+
+void XmlEditWidget::addDAType()
+{
+    d->addChild("DAType");
+}
+
+void XmlEditWidget::addEnumType()
+{
+    d->addChild("EnumType");
+}
+
+void XmlEditWidget::addDO()
+{
+    d->addChild("DO");
+}
+
+void XmlEditWidget::addSDO()
+{
+    d->addChild("SDO");
+}
+
+void XmlEditWidget::addDA()
+{
+    d->addChild("DA");
+}
+
+void XmlEditWidget::addBDA()
+{
+    d->addChild("BDA");
+}
+
+void XmlEditWidget::addEnumVal()
+{
+    d->addChild("EnumVal");
 }
 
 void XmlEditWidget::addBrother()

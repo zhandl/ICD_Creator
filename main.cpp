@@ -58,6 +58,7 @@ int main(int argc, char *argv[])
 
     decodeCommandLine(a, &startParams);
     MainWindow w(false, &a, &appData);
+    a.setStyle(QStyleFactory::create("windows"));
     w.showMaximized();
 
     int result = a.exec();

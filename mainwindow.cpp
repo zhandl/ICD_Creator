@@ -606,30 +606,161 @@ BasicType << "BOOLEAN" << "INT8" << "INT16" << "INT24" << "INT32" << "INT128" <<
 
     actionAddText = new QAction(this);
     actionAddText->setObjectName(tr("actionAddText"));
+    actionAddPrivate = new QAction(this);
+    actionAddPrivate->setObjectName(tr("actionAddPrivate"));
 
-    menuAddLN0 = new QMenu(this);
-    menuAddLN0->setObjectName(tr("menuAddLN0"));
+    actionAddSubstation = new QAction(this);
+    actionAddSubstation->setObjectName(tr("actionAddSubstation"));
+    actionAddCommunication = new QAction(this);
+    actionAddCommunication->setObjectName(tr("actionAddCommunication"));
+    actionAddIED = new QAction(this);
+    actionAddIED->setObjectName(tr("actionAddIED"));
+    actionAddDataTypeTemplates = new QAction(this);
+    actionAddDataTypeTemplates->setObjectName(tr("actionAddDataTypeTemplates"));
+    actionAddHistory = new QAction(this);
+    actionAddHistory->setObjectName(tr("actionAddHistory"));
+    actionAddHitem = new QAction(this);
+    actionAddHitem->setObjectName(tr("actionAddHitem"));
 
-    menuAddLN = new QMenu(this);
-    menuAddLN->setObjectName(tr("menuAddLN"));
+    actionAddSubNetwork = new QAction(this);
+    actionAddSubNetwork->setObjectName(tr("actionAddSubNetwork"));
+    actionAddBitRate = new QAction(this);
+    actionAddBitRate->setObjectName(tr("actionAddBitRate"));
+    actionAddConnectedAP = new QAction(this);
+    actionAddConnectedAP->setObjectName(tr("actionAddConnectedAP"));
 
-    actionAddLLN0 = new QAction(this);
-    actionAddLLN0->setObjectName(tr("actionAddLLN0"));
+    actionAddAddress = new QAction(this);
+    actionAddAddress->setObjectName(tr("actionAddAddress"));
+    menuAddGSE = new QMenu(this);
+    menuAddGSE->setObjectName(tr("menuAddGSE"));
+    menuAddSMV = new QMenu(this);
+    menuAddSMV->setObjectName(tr("menuAddSMV"));
+    actionAddPhysconn = new QAction(this);
+    actionAddPhysconn->setObjectName(tr("actionAddPhysconn"));
 
+    actionAddGSE = new QAction(this);
+    actionAddGSE->setObjectName(tr("actionAddGSE"));
+
+    actionAddSMV = new QAction(this);
+    actionAddSMV->setObjectName(tr("actionAddSMV"));
+
+    actionAddP= new QAction(this);
+    actionAddP->setObjectName(tr("actionAddP"));
+    actionAddMinTime= new QAction(this);
+    actionAddMinTime->setObjectName(tr("actionAddMinTime"));
+    actionAddMaxTime= new QAction(this);
+    actionAddMaxTime->setObjectName(tr("actionAddMaxTime"));
+
+    actionAddServices= new QAction(this);
+    actionAddServices->setObjectName(tr("actionAddServices"));
+    actionAddAccessPoint= new QAction(this);
+    actionAddAccessPoint->setObjectName(tr("actionAddAccessPoint"));
+
+    actionAddServer= new QAction(this);
+    actionAddServer->setObjectName(tr("actionAddServer"));
+    actionAddServerAt= new QAction(this);
+    actionAddServerAt->setObjectName(tr("actionAddServerAt"));
+    actionAddGOOSESecurity= new QAction(this);
+    actionAddGOOSESecurity->setObjectName(tr("actionAddGOOSESecurity"));
+    actionAddSMVSecurity= new QAction(this);
+    actionAddSMVSecurity->setObjectName(tr("actionAddSMVSecurity"));
+    actionAddAuthentication= new QAction(this);
+    actionAddAuthentication->setObjectName(tr("actionAddAuthentication"));
+    actionAddLdevice= new QAction(this);
+    actionAddLdevice->setObjectName(tr("actionAddLdevice"));
+    actionAddAssociation= new QAction(this);
+    actionAddAssociation->setObjectName(tr("actionAddAssociation"));
+
+    actionAddLN0 = new QAction(this);
+    actionAddLN0->setObjectName(tr("actionAddLN0"));
     actionAddLN = new QAction(this);
     actionAddLN->setObjectName(tr("actionAddLN"));
-
-//    actionAddLPHD = new QAction(this);
-//    actionAddLPHD->setObjectName(tr("actionAddLPHD"));
-
-//    actionAddGGIO = new QAction(this);
-//    actionAddGGIO->setObjectName(tr("actionAddGGIO"));
-
-//    actionAddLTSM = new QAction(this);
-//    actionAddLTSM->setObjectName(tr("actionAddLTSM"));
+    actionAddAccessControl = new QAction(this);
+    actionAddAccessControl->setObjectName(tr("actionAddAccessControl"));
 
     actionAddDataSet = new QAction(this);
     actionAddDataSet->setObjectName(tr("actionAddDataSet"));
+    actionAddReportControl = new QAction(this);
+    actionAddReportControl->setObjectName(tr("actionAddReportControl"));
+    actionAddLogControl = new QAction(this);
+    actionAddLogControl->setObjectName(tr("actionAddLogControl"));
+    actionAddInputs = new QAction(this);
+    actionAddInputs->setObjectName(tr("actionAddInputs"));
+    actionAddLog = new QAction(this);
+    actionAddLog->setObjectName(tr("actionAddLog"));
+    actionAddGSEControl = new QAction(this);
+    actionAddGSEControl->setObjectName(tr("actionAddGSEControl"));
+    actionAddSMVControl = new QAction(this);
+    actionAddSMVControl->setObjectName(tr("actionAddSMVControl"));
+    actionAddSettingControl = new QAction(this);
+    actionAddSettingControl->setObjectName(tr("actionAddSettingControl"));
+
+    actionAddPowerTransformer = new QAction(this);
+    actionAddPowerTransformer->setObjectName(tr("actionAddPowerTransformer"));
+    actionAddGeneralEquipment = new QAction(this);
+    actionAddGeneralEquipment->setObjectName(tr("actionAddGeneralEquipment"));
+    actionAddLNode = new QAction(this);
+    actionAddLNode->setObjectName(tr("actionAddLNode"));
+    actionAddVoltageLevel = new QAction(this);
+    actionAddVoltageLevel->setObjectName(tr("actionAddVoltageLevel"));
+    actionAddFunction = new QAction(this);
+    actionAddFunction->setObjectName(tr("actionAddFunction"));
+    actionAddTransformerWinding = new QAction(this);
+    actionAddTransformerWinding->setObjectName(tr("actionAddTransformerWinding"));
+    actionAddVoltage = new QAction(this);
+    actionAddVoltage->setObjectName(tr("actionAddVoltage"));
+    actionAddBay = new QAction(this);
+    actionAddBay->setObjectName(tr("actionAddBay"));
+    actionAddSubFunction = new QAction(this);
+    actionAddSubFunction->setObjectName(tr("actionAddSubFunction"));
+    actionAddTapChanger = new QAction(this);
+    actionAddTapChanger->setObjectName(tr("actionAddTapChanger"));
+    actionAddTerminal = new QAction(this);
+    actionAddTerminal->setObjectName(tr("actionAddTerminal"));
+    actionAddSubEquipment = new QAction(this);
+    actionAddSubEquipment->setObjectName(tr("actionAddSubEquipment"));
+    actionAddConductingEquipment = new QAction(this);
+    actionAddConductingEquipment->setObjectName(tr("actionAddConductingEquipment"));
+    actionAddConnectivityNode = new QAction(this);
+    actionAddConnectivityNode->setObjectName(tr("actionAddConnectivityNode"));
+    actionAddFCDA = new QAction(this);
+    actionAddFCDA->setObjectName(tr("actionAddFCDA"));
+    actionAddTrgOps = new QAction(this);
+    actionAddTrgOps->setObjectName(tr("actionAddTrgOps"));
+    actionAddOptFields = new QAction(this);
+    actionAddOptFields->setObjectName(tr("actionAddOptFields"));
+    actionAddRptEnabled = new QAction(this);
+    actionAddRptEnabled->setObjectName(tr("actionAddRptEnabled"));
+    actionAddSDI = new QAction(this);
+    actionAddSDI->setObjectName(tr("actionAddSDI"));
+    actionAddDAI = new QAction(this);
+    actionAddDAI->setObjectName(tr("actionAddDAI"));
+    actionAddExtRef = new QAction(this);
+    actionAddExtRef->setObjectName(tr("actionAddExtRef"));
+    actionAddIEDName = new QAction(this);
+    actionAddIEDName->setObjectName(tr("actionAddIEDName"));
+    actionAddSmvOpts = new QAction(this);
+    actionAddSmvOpts->setObjectName(tr("actionAddSmvOpts"));
+    actionAddVal = new QAction(this);
+    actionAddVal->setObjectName(tr("actionAddVal"));
+    actionAddLNodeType = new QAction(this);
+    actionAddLNodeType->setObjectName(tr("actionAddLNodeType"));
+    actionAddDOType = new QAction(this);
+    actionAddDOType->setObjectName(tr("actionAddDOType"));
+    actionAddDAType = new QAction(this);
+    actionAddDAType->setObjectName(tr("actionAddDAType"));
+    actionAddEnumType = new QAction(this);
+    actionAddEnumType->setObjectName(tr("actionAddEnumType"));
+    actionAddDO = new QAction(this);
+    actionAddDO->setObjectName(tr("actionAddDO"));
+    actionAddSDO = new QAction(this);
+    actionAddSDO->setObjectName(tr("actionAddSDO"));
+    actionAddDA = new QAction(this);
+    actionAddDA->setObjectName(tr("actionAddDA"));
+    actionAddBDA = new QAction(this);
+    actionAddBDA->setObjectName(tr("actionAddBDA"));
+    actionAddEnumVal = new QAction(this);
+    actionAddEnumVal->setObjectName(tr("actionAddEnumVal"));
 
     retranslateUi();
 
@@ -906,13 +1037,164 @@ void MainWindow::retranslateUi()
     actionEditAttribute->setText(tr("EditAttributes"));
     actionEditAttribute->setIcon(QIcon(":/commands/images/EditAttributes.png"));
 
-    actionAddText->setText(tr("text"));
+    actionAddText->setText(tr("Text"));
     actionAddText->setIcon(QIcon(":/commands/images/AddText.png"));
+    actionAddPrivate->setText(tr("Privates"));
+    actionAddPrivate->setIcon(QIcon(":/commands/images/private.png"));
 
-    menuAddLN0->setTitle(tr("LN0"));
-    menuAddLN->setTitle(tr("LN"));
+    actionAddSubstation->setText(tr("Substation"));
+    actionAddSubstation->setIcon(QIcon(":/nodeType/images/substation.png"));
+    actionAddCommunication->setText(tr("Communication"));
+    actionAddCommunication->setIcon(QIcon(":/nodeType/images/communication.png"));
+    actionAddIED->setText(tr("IED"));
+    actionAddIED->setIcon(QIcon(":/nodeType/images/ied.png"));
+    actionAddDataTypeTemplates->setText(tr("DataTypeTemplates"));
+    actionAddDataTypeTemplates->setIcon(QIcon(":/nodeType/images/dataTypeTemplates.png"));
+
+    actionAddHistory->setText(tr("History"));
+    actionAddHistory->setIcon(QIcon(":/nodeType/images/history.png"));
+    actionAddHitem->setText(tr("Hitem"));
+    actionAddHitem->setIcon(QIcon(":/nodeType/images/hitem.png"));
+
+    actionAddSubNetwork->setText(tr("SubNetwork"));
+    actionAddSubNetwork->setIcon(QIcon(":/nodeType/images/subNetwork.png"));
+    actionAddBitRate->setText(tr("BitRate"));
+    actionAddBitRate->setIcon(QIcon(":/nodeType/images/bitRate.png"));
+    actionAddConnectedAP->setText(tr("ConnectedAP"));
+    actionAddConnectedAP->setIcon(QIcon(":/nodeType/images/connectedAP.png"));
+
+    actionAddAddress->setText(tr("Address"));
+    actionAddAddress->setIcon(QIcon(":/nodeType/images/address.png"));
+    menuAddGSE->setTitle(tr("GSE"));
+    menuAddGSE->setIcon(QIcon(":/nodeType/images/gse.png"));
+    menuAddSMV->setTitle(tr("SMV"));
+    menuAddSMV->setIcon(QIcon(":/nodeType/images/smv.png"));
+    actionAddPhysconn->setText(tr("PhysConn"));
+    actionAddPhysconn->setIcon(QIcon(":/nodeType/images/physconn.png"));
+
+    actionAddGSE->setText(tr("GSE"));
+    actionAddGSE->setIcon(QIcon(":/nodeType/images/addGSE.png"));
+    actionAddSMV->setText(tr("SMV"));
+    actionAddSMV->setIcon(QIcon(":/nodeType/images/addSMV.png"));
+
+    actionAddP->setText(tr("P"));
+    actionAddP->setIcon(QIcon(":/nodeType/images/ip.png"));
+    actionAddMinTime->setText(tr("MinTime"));
+    actionAddMinTime->setIcon(QIcon(":/nodeType/images/minTime.png"));
+    actionAddMaxTime->setText(tr("MaxTime"));
+    actionAddMaxTime->setIcon(QIcon(":/nodeType/images/minTime.png"));
+
+    actionAddServices->setText(tr("Services"));
+    actionAddServices->setIcon(QIcon(":/nodeType/images/services.png"));
+    actionAddAccessPoint->setText(tr("AccessPoint"));
+    actionAddAccessPoint->setIcon(QIcon(":/nodeType/images/accesspoint.png"));
+
+    actionAddServer->setText(tr("Server"));
+    actionAddServer->setIcon(QIcon(":/nodeType/images/Server.png"));
+    actionAddServerAt->setText(tr("ServerAt"));
+    actionAddServerAt->setIcon(QIcon(":/nodeType/images/Server.png"));
+    actionAddGOOSESecurity->setText(tr("GOOSESecurity"));
+    actionAddGOOSESecurity->setIcon(QIcon(":/nodeType/images/gooseSecurity.png"));
+    actionAddSMVSecurity->setText(tr("SMVSecurity"));
+    actionAddSMVSecurity->setIcon(QIcon(":/nodeType/images/smvSecurity.png"));
+
+    actionAddAuthentication->setText(tr("Authentication"));
+    actionAddAuthentication->setIcon(QIcon(":/nodeType/images/authentication.png"));
+    actionAddLdevice->setText(tr("LDevice"));
+    actionAddLdevice->setIcon(QIcon(":/nodeType/images/ldevices.png"));
+    actionAddAssociation->setText(tr("Association"));
+    actionAddAssociation->setIcon(QIcon(":/nodeType/images/association.png"));
+
+    actionAddLN0->setText(tr("LN0"));
+    actionAddLN0->setIcon(QIcon(":/nodeType/images/ln0.png"));
+    actionAddLN->setText(tr("LN"));
+    actionAddLN->setIcon(QIcon(":/nodeType/images/ln.png"));
+    actionAddAccessControl->setText(tr("AccessControl"));
+    actionAddAccessControl->setIcon(QIcon(":/nodeType/images/accesscontrol.png"));
 
     actionAddDataSet->setText(tr("DataSet"));
+    actionAddDataSet->setIcon(QIcon(":/nodeType/images/dataset.png"));
+    actionAddReportControl->setText(tr("ReportControl"));
+    actionAddReportControl->setIcon(QIcon(":/nodeType/images/unbufReport.png"));
+    actionAddLogControl->setText(tr("LogControl"));
+    actionAddLogControl->setIcon(QIcon(":/nodeType/images/logControl.png"));
+    actionAddInputs->setText(tr("Inputs"));
+    actionAddInputs->setIcon(QIcon(":/nodeType/images/inputs.png"));
+    actionAddLog->setText(tr("Log"));
+    actionAddLog->setIcon(QIcon(":/nodeType/images/log.png"));
+    actionAddGSEControl->setText(tr("GSEControl"));
+    actionAddGSEControl->setIcon(QIcon(":/nodeType/images/gseControl.png"));
+    actionAddSMVControl->setText(tr("SampledValueControl"));
+    actionAddSMVControl->setIcon(QIcon(":/nodeType/images/smvControl.png"));
+    actionAddSettingControl->setText(tr("SettingControl"));
+    actionAddSettingControl->setIcon(QIcon(":/nodeType/images/settingControl.png"));
+
+    actionAddPowerTransformer->setText(tr("PowerTransformer"));
+    actionAddPowerTransformer->setIcon(QIcon(":/nodeType/images/powerTransformer.png"));
+    actionAddGeneralEquipment->setText(tr("GeneralEquipment"));
+    actionAddGeneralEquipment->setIcon(QIcon(":/nodeType/images/generalEquipment.png"));
+    actionAddLNode->setText(tr("LNode"));
+    actionAddLNode->setIcon(QIcon(":/nodeType/images/LNode.png"));
+    actionAddVoltageLevel->setText(tr("VoltageLevel"));
+    actionAddVoltageLevel->setIcon(QIcon(":/nodeType/images/voltageLevel.png"));
+    actionAddFunction->setText(tr("Function"));
+    actionAddFunction->setIcon(QIcon(":/nodeType/images/function.png"));
+    actionAddTransformerWinding->setText(tr("TransformerWinding"));
+    actionAddTransformerWinding->setIcon(QIcon(":/nodeType/images/transformerWinding.png"));
+    actionAddVoltage->setText(tr("Voltage"));
+    actionAddVoltage->setIcon(QIcon(":/nodeType/images/voltage.png"));
+    actionAddBay->setText(tr("Bay"));
+    actionAddBay->setIcon(QIcon(":/nodeType/images/bay.png"));
+    actionAddSubFunction->setText(tr("SubFunction"));
+    actionAddSubFunction->setIcon(QIcon(":/nodeType/images/subFunction.png"));
+    actionAddTapChanger->setText(tr("TapChanger"));
+    actionAddTapChanger->setIcon(QIcon(":/nodeType/images/tapChanger.png"));
+    actionAddTerminal->setText(tr("Terminal"));
+    actionAddTerminal->setIcon(QIcon(":/nodeType/images/terminal.png"));
+    actionAddSubEquipment->setText(tr("SubEquipment"));
+    actionAddSubEquipment->setIcon(QIcon(":/nodeType/images/subEquipment.png"));
+    actionAddConductingEquipment->setText(tr("ConductingEquipment"));
+    actionAddConductingEquipment->setIcon(QIcon(":/nodeType/images/conductingEquipment.png"));
+    actionAddConnectivityNode->setText(tr("ConnectivityNode"));
+    actionAddConnectivityNode->setIcon(QIcon(":/nodeType/images/connectivityNode.png"));
+    actionAddFCDA->setText(tr("FCDA"));
+    actionAddFCDA->setIcon(QIcon(":/nodeType/images/FCDA.png"));
+    actionAddTrgOps->setText(tr("TrgOps"));
+    actionAddTrgOps->setIcon(QIcon(":/nodeType/images/trgOps.png"));
+    actionAddOptFields->setText(tr("OptFields"));
+    actionAddOptFields->setIcon(QIcon(":/nodeType/images/optFields.png"));
+    actionAddRptEnabled->setText(tr("RptEnabled"));
+    actionAddRptEnabled->setIcon(QIcon(":/nodeType/images/rptEnabled.png"));
+    actionAddSDI->setText(tr("SDI"));
+    actionAddSDI->setIcon(QIcon(":/nodeType/images/SDI.png"));
+    actionAddDAI->setText(tr("DAI"));
+    actionAddDAI->setIcon(QIcon(":/nodeType/images/DAI.png"));
+    actionAddExtRef->setText(tr("ExtRef"));
+    actionAddExtRef->setIcon(QIcon(":/nodeType/images/extRef.png"));
+    actionAddIEDName->setText(tr("IEDName"));
+    actionAddIEDName->setIcon(QIcon(":/nodeType/images/IEDName.png"));
+    actionAddSmvOpts->setText(tr("SmvOpts"));
+    actionAddSmvOpts->setIcon(QIcon(":/nodeType/images/smvOpts.png"));
+    actionAddVal->setText(tr("Val"));
+    actionAddVal->setIcon(QIcon(":/nodeType/images/val.png"));
+    actionAddLNodeType->setText(tr("LNodeType"));
+    actionAddLNodeType->setIcon(QIcon(":/nodeType/images/LNodeType.png"));
+    actionAddDOType->setText(tr("DOType"));
+    actionAddDOType->setIcon(QIcon(":/nodeType/images/DOType.png"));
+    actionAddDAType->setText(tr("DAType"));
+    actionAddDAType->setIcon(QIcon(":/nodeType/images/dAType.png"));
+    actionAddEnumType->setText(tr("EnumType"));
+    actionAddEnumType->setIcon(QIcon(":/nodeType/images/enumType.png"));
+    actionAddDO->setText(tr("DO"));
+    actionAddDO->setIcon(QIcon(":/nodeType/images/DO.png"));
+    actionAddSDO->setText(tr("SDO"));
+    actionAddSDO->setIcon(QIcon(":/nodeType/images/SDO.png"));
+    actionAddDA->setText(tr("DA"));
+    actionAddDA->setIcon(QIcon(":/nodeType/images/DA.png"));
+    actionAddBDA->setText(tr("BDA"));
+    actionAddBDA->setIcon(QIcon(":/nodeType/images/BDA.png"));
+    actionAddEnumVal->setText(tr("EnumVal"));
+    actionAddEnumVal->setIcon(QIcon(":/nodeType/images/EnumVal.png"));
 
 }
 
@@ -1107,42 +1389,425 @@ void MainWindow::display()
 void MainWindow::treeContextMenu(const QPoint& position)
 {
     QMenu contextMenu(this);
+    DomItem *currItem = getSelectedItem();
+    if(currItem == NULL)
+        return ;
 
     contextMenu.addAction(actionEditAttribute);
-    contextMenu.addAction(actionAddText);
+    contextMenu.addSeparator();
 
-    if(editor->getSelectedItem()->tag() == tr("LDevice")) {
+    switch(currItem->getNodeType()) {
+    case DomItem::ICD_SCL:
+        if(!(currItem->hasChildOfName(tr("Substation"))))
+            contextMenu.addAction(actionAddSubstation);
+        if(!(currItem->hasChildOfName(tr("Communication"))))
+            contextMenu.addAction(actionAddCommunication);
+        if(!(currItem->hasChildOfName(tr("IED"))))
+            contextMenu.addAction(actionAddIED);
+        if(!(currItem->hasChildOfName(tr("DataTypeTemplates"))))
+            contextMenu.addAction(actionAddDataTypeTemplates);
+        break;
 
-        QVector<DomItem*> lnItems = getModel()->getDataTypeItems();
-        foreach(DomItem *item, lnItems) {
-            QString LNActionName = item->attributeValueOfName("lnClass") + tr(": ") + item->attributeValueOfName("id");
-            if(item->attributeValueOfName(tr("lnClass")) == tr("LLN0")) {
-                actionAddLLN0->setText(LNActionName);
-                menuAddLN0->addAction(actionAddLLN0);
-            } else {
-                actionAddLN->setText(LNActionName);
-                menuAddLN->addAction(actionAddLN);
-            }
-//            connect(actionAddLNNode, SIGNAL(triggered()), this, SLOT(on_actionAddLNNode_triggered()));
+    case DomItem::ICD_HEADER:
+        if(!(currItem->hasChildOfName(tr("Text"))))
+            contextMenu.addAction(actionAddText);
+        if(!(currItem->hasChildOfName(tr("History"))))
+            contextMenu.addAction(actionAddHistory);
+        break;
+    case DomItem::ICD_HISTORY:
+        contextMenu.addAction(actionAddHitem);
+        break;
+    case DomItem::ICD_HITEM:
+        if(currItem->parent()->getItems().count() == 1)
+            actionDelete->setEnabled(false);
+        else
+            actionDelete->setEnabled(true);
+        break;
+
+    case DomItem::ICD_SUBSTATION:
+        if(!(currItem->hasChildOfName(tr("Text"))))
+            contextMenu.addAction(actionAddText);
+        contextMenu.addAction(actionAddPrivate);
+
+        contextMenu.addAction(actionAddPowerTransformer);
+        contextMenu.addAction(actionAddGeneralEquipment);
+        contextMenu.addAction(actionAddLNode);
+        contextMenu.addAction(actionAddVoltageLevel);
+        contextMenu.addAction(actionAddFunction);
+        break;
+    case DomItem::ICD_LNODE:
+        if(!(currItem->hasChildOfName(tr("Text"))))
+            contextMenu.addAction(actionAddText);
+        contextMenu.addAction(actionAddPrivate);
+        break;
+    case DomItem::ICD_POWERTRANSFORMER:
+        if(!(currItem->hasChildOfName(tr("Text"))))
+            contextMenu.addAction(actionAddText);
+        contextMenu.addAction(actionAddPrivate);
+
+        contextMenu.addAction(actionAddLNode);
+        contextMenu.addAction(actionAddTransformerWinding);
+        break;
+    case DomItem::ICD_GENERALEQUIPMENT:
+        if(!(currItem->hasChildOfName(tr("Text"))))
+            contextMenu.addAction(actionAddText);
+        contextMenu.addAction(actionAddPrivate);
+
+        contextMenu.addAction(actionAddLNode);
+        break;
+    case DomItem::ICD_VOLTAGELEVEL:
+        if(!(currItem->hasChildOfName(tr("Text"))))
+            contextMenu.addAction(actionAddText);
+        contextMenu.addAction(actionAddPrivate);
+
+        contextMenu.addAction(actionAddPowerTransformer);
+        contextMenu.addAction(actionAddGeneralEquipment);
+        contextMenu.addAction(actionAddLNode);
+        if(!(currItem->hasChildOfName(tr("Voltage"))))
+            contextMenu.addAction(actionAddVoltage);
+        contextMenu.addAction(actionAddBay);
+        break;
+    case DomItem::ICD_FUNCTION:
+        if(!(currItem->hasChildOfName(tr("Text"))))
+            contextMenu.addAction(actionAddText);
+        contextMenu.addAction(actionAddPrivate);
+
+        contextMenu.addAction(actionAddLNode);
+        contextMenu.addAction(actionAddSubFunction);
+        contextMenu.addAction(actionAddGeneralEquipment);
+        break;
+    case DomItem::ICD_TRANSFORMERWINDING:
+        if(!(currItem->hasChildOfName(tr("Text"))))
+            contextMenu.addAction(actionAddText);
+        contextMenu.addAction(actionAddPrivate);
+
+        contextMenu.addAction(actionAddLNode);
+        contextMenu.addAction(actionAddTapChanger);
+        contextMenu.addAction(actionAddTerminal);
+        contextMenu.addAction(actionAddSubEquipment);
+        break;
+    case DomItem::ICD_TERMINAL:
+        if(!(currItem->hasChildOfName(tr("Text"))))
+            contextMenu.addAction(actionAddText);
+        contextMenu.addAction(actionAddPrivate);
+        break;
+    case DomItem::ICD_SUBEQUIPMENT:
+        if(!(currItem->hasChildOfName(tr("Text"))))
+            contextMenu.addAction(actionAddText);
+        contextMenu.addAction(actionAddPrivate);
+
+        contextMenu.addAction(actionAddLNode);
+        break;
+    case DomItem::ICD_TAPCHARGER:
+        if(!(currItem->hasChildOfName(tr("Text"))))
+            contextMenu.addAction(actionAddText);
+        contextMenu.addAction(actionAddPrivate);
+
+        contextMenu.addAction(actionAddLNode);
+        break;
+    case DomItem::ICD_BAY:
+        if(!(currItem->hasChildOfName(tr("Text"))))
+            contextMenu.addAction(actionAddText);
+        contextMenu.addAction(actionAddPrivate);
+
+        contextMenu.addAction(actionAddPowerTransformer);
+        contextMenu.addAction(actionAddGeneralEquipment);
+        contextMenu.addAction(actionAddLNode);
+        contextMenu.addAction(actionAddConductingEquipment);
+        contextMenu.addAction(actionAddConnectivityNode);
+        break;
+    case DomItem::ICD_CONDUCTINGEQUIPMENT:
+        if(!(currItem->hasChildOfName(tr("Text"))))
+            contextMenu.addAction(actionAddText);
+        contextMenu.addAction(actionAddPrivate);
+
+        contextMenu.addAction(actionAddLNode);
+        contextMenu.addAction(actionAddTerminal);
+        contextMenu.addAction(actionAddSubEquipment);
+        break;
+    case DomItem::ICD_CONNECTIVITYNODE:
+        if(!(currItem->hasChildOfName(tr("Text"))))
+            contextMenu.addAction(actionAddText);
+        contextMenu.addAction(actionAddPrivate);
+
+        contextMenu.addAction(actionAddLNode);
+        break;
+    case DomItem::ICD_SUBFUNCTION:
+        if(!(currItem->hasChildOfName(tr("Text"))))
+            contextMenu.addAction(actionAddText);
+        contextMenu.addAction(actionAddPrivate);
+
+        contextMenu.addAction(actionAddLNode);
+        contextMenu.addAction(actionAddGeneralEquipment);
+        break;
+
+    case DomItem::ICD_COMMUNICATION:
+        if(!(currItem->hasChildOfName(tr("Text"))))
+            contextMenu.addAction(actionAddText);
+        contextMenu.addAction(actionAddPrivate);
+        contextMenu.addAction(actionAddSubNetwork);
+        break;
+    case DomItem::ICD_SUBNETWORK:
+        if(!(currItem->hasChildOfName(tr("Text"))))
+            contextMenu.addAction(actionAddText);
+        contextMenu.addAction(actionAddPrivate);
+        if(!(currItem->hasChildOfName(tr("BitRate"))))
+            contextMenu.addAction(actionAddBitRate);
+        contextMenu.addAction(actionAddConnectedAP);
+        break;
+    case DomItem::ICD_CONNECTEDAP:
+        if(!(currItem->hasChildOfName(tr("Text"))))
+            contextMenu.addAction(actionAddText);
+        contextMenu.addAction(actionAddPrivate);
+        if(!(currItem->hasChildOfName(tr("Address"))))
+            contextMenu.addAction(actionAddAddress);
+        contextMenu.addMenu(menuAddGSE);
+        contextMenu.addMenu(menuAddSMV);
+        menuAddGSE->addAction(actionAddGSE);
+        menuAddSMV->addAction(actionAddSMV);
+        contextMenu.addAction(actionAddPhysconn);
+        break;
+    case DomItem::ICD_ADDRESS:
+        contextMenu.addAction(actionAddP);
+        break;
+    case DomItem::ICD_GSE:
+        if(!(currItem->hasChildOfName(tr("Text"))))
+            contextMenu.addAction(actionAddText);
+        contextMenu.addAction(actionAddPrivate);
+        if(!(currItem->hasChildOfName(tr("Address"))))
+            contextMenu.addAction(actionAddAddress);
+        if(!(currItem->hasChildOfName(tr("MinTime"))))
+            contextMenu.addAction(actionAddMinTime);
+        if(!(currItem->hasChildOfName(tr("MaxTime"))))
+            contextMenu.addAction(actionAddMaxTime);
+        break;
+    case DomItem::ICD_SMV:
+        if(!(currItem->hasChildOfName(tr("Text"))))
+            contextMenu.addAction(actionAddText);
+        contextMenu.addAction(actionAddPrivate);
+        if(!(currItem->hasChildOfName(tr("Address"))))
+            contextMenu.addAction(actionAddAddress);
+        break;
+    case DomItem::ICD_PHYSCONN:
+        contextMenu.addAction(actionAddP);
+        break;
+
+    case DomItem::ICD_IED:
+        if(!(currItem->hasChildOfName(tr("Text"))))
+            contextMenu.addAction(actionAddText);
+        contextMenu.addAction(actionAddPrivate);
+        if(!(currItem->hasChildOfName(tr("Services"))))
+            contextMenu.addAction(actionAddServices);
+        contextMenu.addAction(actionAddAccessPoint);
+        break;
+    case DomItem::ICD_ACCESSPOINT:
+        if(!(currItem->hasChildOfName(tr("Text"))))
+            contextMenu.addAction(actionAddText);
+        contextMenu.addAction(actionAddPrivate);
+        if(!(currItem->hasChildOfName(tr("Server"))) &&
+           !(currItem->hasChildOfName(tr("LN"))) &&
+           !(currItem->hasChildOfName(tr("ServerAt")))) {
+            contextMenu.addAction(actionAddServer);
+            contextMenu.addAction(actionAddLN);
+            contextMenu.addAction(actionAddServerAt);
         }
-
-        if(!(editor->getSelectedItem()->hasChildOfName(tr("LN0")))) {
-            contextMenu.addMenu(menuAddLN0);
-        }
-        contextMenu.addMenu(menuAddLN);
-    }
-
-    if(editor->getSelectedItem()->tag() == tr("LN0")) {
-
-//        QVector<DomItem*> lnItems = getModel()->getDataTypeItems();
-//        foreach(DomItem *item, lnItems) {
-
-//        }
-
-//        if(!(editor->getSelectedItem()->hasChildOfName(tr("LN0")))) {
-//            contextMenu.addMenu(menuAddLN0);
-//        }
+        contextMenu.addAction(actionAddServices);
+        contextMenu.addAction(actionAddGOOSESecurity);
+        contextMenu.addAction(actionAddSMVSecurity);
+        break;
+    case DomItem::ICD_SERVER:
+        if(!(currItem->hasChildOfName(tr("Text"))))
+            contextMenu.addAction(actionAddText);
+        contextMenu.addAction(actionAddPrivate);
+        if(!(currItem->hasChildOfName(tr("Authentication"))))
+            contextMenu.addAction(actionAddAuthentication);
+        contextMenu.addAction(actionAddLdevice);
+        contextMenu.addAction(actionAddAssociation);
+        break;
+    case DomItem::ICD_LN:
+        if(!(currItem->hasChildOfName(tr("Text"))))
+            contextMenu.addAction(actionAddText);
+        contextMenu.addAction(actionAddPrivate);
         contextMenu.addAction(actionAddDataSet);
+        contextMenu.addAction(actionAddReportControl);
+        contextMenu.addAction(actionAddLogControl);
+        contextMenu.addAction(actionAddInputs);
+//        contextMenu.addAction(actionAddLog);
+        break;
+    case DomItem::ICD_LDEVICE:
+        if(!(currItem->hasChildOfName(tr("Text"))))
+            contextMenu.addAction(actionAddText);
+        contextMenu.addAction(actionAddPrivate);
+
+        if(!(currItem->hasChildOfName(tr("LN0"))))
+            contextMenu.addAction(actionAddLN0);
+        contextMenu.addAction(actionAddLN);
+        contextMenu.addAction(actionAddAccessControl);
+        break;
+    case DomItem::ICD_LN0:
+        if(!(currItem->hasChildOfName(tr("Text"))))
+            contextMenu.addAction(actionAddText);
+        contextMenu.addAction(actionAddPrivate);
+        contextMenu.addAction(actionAddDataSet);
+        contextMenu.addAction(actionAddReportControl);
+        contextMenu.addAction(actionAddLogControl);
+        if(!(currItem->hasChildOfName(tr("Inputs"))))
+            contextMenu.addAction(actionAddInputs);
+        contextMenu.addAction(actionAddLog);
+        contextMenu.addAction(actionAddGSEControl);
+        contextMenu.addAction(actionAddSMVControl);
+        if(!(currItem->hasChildOfName(tr("SettingControl"))))
+            contextMenu.addAction(actionAddSettingControl);
+        break;
+    case DomItem::ICD_DATASET:
+        if(!(currItem->hasChildOfName(tr("Text"))))
+            contextMenu.addAction(actionAddText);
+        contextMenu.addAction(actionAddPrivate);
+
+        contextMenu.addAction(actionAddFCDA);
+        break;
+    case DomItem::ICD_REPORTCONTROL:
+        if(!(currItem->hasChildOfName(tr("Text"))))
+            contextMenu.addAction(actionAddText);
+        contextMenu.addAction(actionAddPrivate);
+
+        if(!(currItem->hasChildOfName(tr("TrgOps"))))
+            contextMenu.addAction(actionAddTrgOps);
+        if(!(currItem->hasChildOfName(tr("OptFields"))))
+            contextMenu.addAction(actionAddOptFields);
+        if(!(currItem->hasChildOfName(tr("RptEnabled"))))
+            contextMenu.addAction(actionAddRptEnabled);
+        break;
+    case DomItem::ICD_LOGCONTROL:
+        if(!(currItem->hasChildOfName(tr("Text"))))
+            contextMenu.addAction(actionAddText);
+        contextMenu.addAction(actionAddPrivate);
+
+        if(!(currItem->hasChildOfName(tr("TrgOps"))))
+            contextMenu.addAction(actionAddTrgOps);
+        break;
+    case DomItem::ICD_DOI:
+        if(!(currItem->hasChildOfName(tr("Text"))))
+            contextMenu.addAction(actionAddText);
+        contextMenu.addAction(actionAddPrivate);
+
+        contextMenu.addAction(actionAddSDI);
+        contextMenu.addAction(actionAddDAI);
+        break;
+    case DomItem::ICD_INPUTS:
+        if(!(currItem->hasChildOfName(tr("Text"))))
+            contextMenu.addAction(actionAddText);
+        contextMenu.addAction(actionAddPrivate);
+
+        contextMenu.addAction(actionAddExtRef);
+        break;
+    case DomItem::ICD_GSECONTROL:
+        if(!(currItem->hasChildOfName(tr("Text"))))
+            contextMenu.addAction(actionAddText);
+        contextMenu.addAction(actionAddPrivate);
+
+        contextMenu.addAction(actionAddIEDName);
+        break;
+    case DomItem::ICD_SVCONTROL:
+        if(!(currItem->hasChildOfName(tr("Text"))))
+            contextMenu.addAction(actionAddText);
+        contextMenu.addAction(actionAddPrivate);
+
+        contextMenu.addAction(actionAddIEDName);
+        if(!(currItem->hasChildOfName(tr("SmvOpts"))))
+            contextMenu.addAction(actionAddSmvOpts);
+        break;
+    case DomItem::ICD_SDI:
+        if(!(currItem->hasChildOfName(tr("Text"))))
+            contextMenu.addAction(actionAddText);
+        contextMenu.addAction(actionAddPrivate);
+
+        contextMenu.addAction(actionAddSDI);
+        contextMenu.addAction(actionAddDAI);
+        break;
+    case DomItem::ICD_LOG:
+        if(!(currItem->hasChildOfName(tr("Text"))))
+            contextMenu.addAction(actionAddText);
+        contextMenu.addAction(actionAddPrivate);
+
+        if(!(currItem->hasChildOfName(tr("TrgOps"))))
+            contextMenu.addAction(actionAddTrgOps);
+        break;
+    case DomItem::ICD_DAI:
+        if(!(currItem->hasChildOfName(tr("Text"))))
+            contextMenu.addAction(actionAddText);
+        contextMenu.addAction(actionAddPrivate);
+
+        contextMenu.addAction(actionAddVal);
+        break;
+
+    case DomItem::ICD_DATATYPETEMPLATES:
+        contextMenu.addAction(actionAddLNodeType);
+        contextMenu.addAction(actionAddDOType);
+        contextMenu.addAction(actionAddDAType);
+        contextMenu.addAction(actionAddEnumType);
+        break;
+    case DomItem::ICD_LNODETYPES:
+        if(!(currItem->hasChildOfName(tr("Text"))))
+            contextMenu.addAction(actionAddText);
+        contextMenu.addAction(actionAddPrivate);
+
+        contextMenu.addAction(actionAddDO);
+        break;
+    case DomItem::ICD_DOTYPE:
+        if(!(currItem->hasChildOfName(tr("Text"))))
+            contextMenu.addAction(actionAddText);
+        contextMenu.addAction(actionAddPrivate);
+
+        contextMenu.addAction(actionAddSDO);
+        contextMenu.addAction(actionAddDA);
+        break;
+    case DomItem::ICD_DATYPE:
+        if(!(currItem->hasChildOfName(tr("Text"))))
+            contextMenu.addAction(actionAddText);
+        contextMenu.addAction(actionAddPrivate);
+
+        contextMenu.addAction(actionAddBDA);
+        break;
+    case DomItem::ICD_ENUMTYPE:
+        if(!(currItem->hasChildOfName(tr("Text"))))
+            contextMenu.addAction(actionAddText);
+        contextMenu.addAction(actionAddPrivate);
+        contextMenu.addAction(actionAddEnumVal);
+        break;
+
+    case DomItem::ICD_SETTINGCONTROL:
+    case DomItem::ICD_SCLCONTROL:
+    case DomItem::ICD_RPTENABLED:
+    case DomItem::ICD_DO:
+    case DomItem::ICD_SDO:
+    case DomItem::ICD_DA:
+    case DomItem::ICD_BDA:
+        if(!(currItem->hasChildOfName(tr("Text"))))
+            contextMenu.addAction(actionAddText);
+        contextMenu.addAction(actionAddPrivate);
+        break;
+    case DomItem::ICD_BITRATE:
+    case DomItem::ICD_IP:
+    case DomItem::ICD_MINTIME:
+    case DomItem::ICD_MAXTIME:
+    case DomItem::ICD_SERVICES:
+    case DomItem::ICD_SERVICES_ITEMGROUP:
+    case DomItem::ICD_SERVICES_ITEMS:
+    case DomItem::ICD_AUTHENTICATION:
+    case DomItem::ICD_ASSOCIATION:
+    case DomItem::ICD_ACCESSCONTROL:
+    case DomItem::ICD_FCDA:
+    case DomItem::ICD_TRGOPS:
+    case DomItem::ICD_OPTFIELDS:
+    case DomItem::ICD_EXTREFS:
+    case DomItem::ICD_IEDNAME:
+    case DomItem::ICD_SMVOPTS:
+    case DomItem::ICD_CLIENTLN:
+    case DomItem::ICD_VAL:
+    case DomItem::ICD_ENUMVAL:
+    default:
+        break;
     }
 
     contextMenu.addSeparator();
@@ -1162,9 +1827,9 @@ void MainWindow::treeContextMenu(const QPoint& position)
         contextMenu.addAction(actionMoveDown);
         contextMenu.addAction(actionDelete);
     }
-    DomItem *item = getSelectedItem();
-    if(NULL != item) {
-        if(item->areChildrenLeavesHidden(item->getUI())) {
+ //   DomItem *item = getSelectedItem();
+    if(NULL != currItem) {
+        if(currItem->areChildrenLeavesHidden(currItem->getUI())) {
             contextMenu.addAction(actionShowLeafChildren);
         } else {
             contextMenu.addAction(actionHideLeafChildren);
@@ -1178,6 +1843,33 @@ void MainWindow::treeContextMenu(const QPoint& position)
         contextMenu.addAction(actionAllowedSchemaElements);
     }
 #endif
+    bool selectSpecialsUp = false;
+    bool selectSpecialsDown = false;
+    selectSpecialsUp = currItem->isFirstChild();
+    selectSpecialsDown = currItem->isLastChild();
+
+    if(currItem->isSequence()){
+        actionMoveUp->setEnabled(false);
+        actionMoveDown->setEnabled(false);
+    } else {
+        actionMoveUp->setEnabled(!selectSpecialsUp);
+        actionMoveDown->setEnabled(!selectSpecialsDown);
+    }
+
+
+    if(currItem->parent() != NULL) {
+        int currItemNum = 0;
+        for(int i=0; i<currItem->parent()->getItems().count(); i++) {
+            if(currItem->parent()->getChildAt(i)->getNodeType() == currItem->getNodeType())
+                currItemNum++;
+        }
+        if(currItem->isCanNoUse() && currItemNum == 1) {
+            actionCut->setEnabled(false);
+            actionDelete->setEnabled(false);
+        }
+    }
+
+
     contextMenu.exec(editor->getMainTreeWidget()->mapToGlobal(position));
 }
 
@@ -1459,7 +2151,7 @@ void MainWindow::on_actionSave_triggered()
         return ;
     }
     model->setModified(false);
-    Utils::message(this, tr("Operation terminated"));
+//    Utils::message(this, tr("Operation terminated"));
     statusBar()->showMessage(tr("File saved"), SHORT_TIMEOUT);
 }
 
@@ -2311,14 +3003,139 @@ void MainWindow::on_actionAddText_triggered()
     editor->addText();
 }
 
-void MainWindow::on_actionAddLNNode_triggered()
+void MainWindow::on_actionAddPrivate_triggered()
 {
-
+    editor->addPrivate();
 }
 
-void MainWindow::on_actionAddLLN0_triggered()
+void MainWindow::on_actionAddSubstation_triggered()
 {
-    editor->addLLN0();
+    editor->addSubstation();
+}
+
+void MainWindow::on_actionAddCommunication_triggered()
+{
+    editor->addCommunication();
+}
+
+void MainWindow::on_actionAddIED_triggered()
+{
+    editor->addIED();
+}
+
+void MainWindow::on_actionAddDataTypeTemplates_triggered()
+{
+    editor->addDataTypeTemplates();
+}
+
+void MainWindow::on_actionAddHistory_triggered()
+{
+    editor->addHistory();
+}
+
+void MainWindow::on_actionAddHitem_triggered()
+{
+    editor->addHitem();
+}
+
+void MainWindow::on_actionAddSubNetwork_triggered()
+{
+    editor->addSubNetwork();
+}
+
+void MainWindow::on_actionAddBitRate_triggered()
+{
+    editor->addBitRate();
+}
+
+void MainWindow::on_actionAddConnectedAP_triggered()
+{
+    editor->addConnectedAP();
+}
+
+void MainWindow::on_actionAddAddress_triggered()
+{
+    editor->addAddress();
+}
+
+void MainWindow::on_actionAddGSE_triggered()
+{
+    editor->addGSE();
+}
+
+void MainWindow::on_actionAddSMV_triggered()
+{
+    editor->addSMV();
+}
+
+void MainWindow::on_actionAddPhysconn_triggered()
+{
+    editor->addPhysconn();
+}
+
+void MainWindow::on_actionAddP_triggered()
+{
+    editor->addP();
+}
+
+void MainWindow::on_actionAddMinTime_triggered()
+{
+    editor->addMinTime();
+}
+
+void MainWindow::on_actionAddMaxTime_triggered()
+{
+    editor->addMaxTime();
+}
+
+void MainWindow::on_actionAddServices_triggered()
+{
+    editor->addServices();
+}
+
+void MainWindow::on_actionAddAccessPoint_triggered()
+{
+    editor->addAccessPoint();
+}
+
+void MainWindow::on_actionAddServer_triggered()
+{
+    editor->addServer();
+}
+
+void MainWindow::on_actionAddServerAt_triggered()
+{
+    editor->addServerAt();
+}
+
+void MainWindow::on_actionAddGOOSESecurity_triggered()
+{
+    editor->addGOOSESecurity();
+}
+
+void MainWindow::on_actionAddSMVSecurity_triggered()
+{
+    editor->addSMVSecurity();
+}
+
+void MainWindow::on_actionAddAuthentication_triggered()
+{
+    editor->addAuthentication();
+}
+
+void MainWindow::on_actionAddLdevice_triggered()
+{
+    editor->addLDevice();
+}
+
+void MainWindow::on_actionAddAssociation_triggered()
+{
+    editor->addAssociation();
+}
+
+void MainWindow::on_actionAddLN0_triggered()
+{
+    editor->addLN0();
 }
 
 void MainWindow::on_actionAddLN_triggered()
@@ -2326,10 +3143,231 @@ void MainWindow::on_actionAddLN_triggered()
     editor->addLNode();
 }
 
+void MainWindow::on_actionAddAccessControl_triggered()
+{
+    editor->addAccessControl();
+}
+
 void MainWindow::on_actionAddDataSet_triggered()
 {
     editor->addDataSet();
 }
+
+void MainWindow::on_actionAddReportControl_triggered()
+{
+    editor->addReportControl();
+}
+
+void MainWindow::on_actionAddLogControl_triggered()
+{
+    editor->addLogControl();
+}
+
+void MainWindow::on_actionAddInputs_triggered()
+{
+    editor->addInputs();
+}
+
+void MainWindow::on_actionAddLog_triggered()
+{
+    editor->addLog();
+}
+
+void MainWindow::on_actionAddGSEControl_triggered()
+{
+    editor->addGSEControl();
+}
+
+void MainWindow::on_actionAddSMVControl_triggered()
+{
+    editor->addSMVControl();
+}
+
+void MainWindow::on_actionAddSettingControl_triggered()
+{
+    editor->addSettingControl();
+}
+
+void MainWindow::on_actionAddPowerTransformer_triggered()
+{
+    editor->addPowerTransformer();
+}
+
+void MainWindow::on_actionAddGeneralEquipment_triggered()
+{
+    editor->addGeneralEquipment();
+}
+
+void MainWindow::on_actionAddLNode_triggered()
+{
+    editor->addLNode();
+}
+
+void MainWindow::on_actionAddVoltageLevel_triggered()
+{
+    editor->addVoltageLevel();
+}
+
+void MainWindow::on_actionAddFunction_triggered()
+{
+    editor->addFunction();
+}
+
+void MainWindow::on_actionAddTransformerWinding_triggered()
+{
+    editor->addTransformerWinding();
+}
+
+void MainWindow::on_actionAddVoltage_triggered()
+{
+    editor->addVoltage();
+}
+
+void MainWindow::on_actionAddBay_triggered()
+{
+    editor->addBay();
+}
+
+void MainWindow::on_actionAddSubFunction_triggered()
+{
+    editor->addSubFunction();
+}
+
+void MainWindow::on_actionAddTapChanger_triggered()
+{
+    editor->addTapChanger();
+}
+
+void MainWindow::on_actionAddTerminal_triggered()
+{
+    editor->addTerminal();
+}
+
+void MainWindow::on_actionAddSubEquipment_triggered()
+{
+    editor->addSubEquipment();
+}
+
+void MainWindow::on_actionAddConductingEquipment_triggered()
+{
+    editor->addConductingEquipment();
+}
+
+void MainWindow::on_actionAddConnectivityNode_triggered()
+{
+    editor->addConnectivityNode();
+}
+
+void MainWindow::on_actionAddFCDA_triggered()
+{
+    editor->addFCDA();
+}
+
+void MainWindow::on_actionAddTrgOps_triggered()
+{
+    editor->addTrgOps();
+}
+
+void MainWindow::on_actionAddOptFields_triggered()
+{
+    editor->addOptFields();
+}
+
+void MainWindow::on_actionAddRptEnabled_triggered()
+{
+    editor->addRptEnabled();
+}
+
+void MainWindow::on_actionAddSDI_triggered()
+{
+    editor->addSDI();
+}
+
+void MainWindow::on_actionAddDAI_triggered()
+{
+    editor->addDAI();
+}
+
+void MainWindow::on_actionAddExtRef_triggered()
+{
+    editor->addExtRef();
+}
+
+void MainWindow::on_actionAddIEDName_triggered()
+{
+    editor->addIEDName();
+}
+
+void MainWindow::on_actionAddSmvOpts_triggered()
+{
+    editor->addSmvOpts();
+}
+
+void MainWindow::on_actionAddVal_triggered()
+{
+    editor->addVal();
+}
+
+void MainWindow::on_actionAddLNodeType_triggered()
+{
+    editor->addLNodeType();
+}
+
+void MainWindow::on_actionAddDOType_triggered()
+{
+    editor->addDOType();
+}
+
+void MainWindow::on_actionAddDAType_triggered()
+{
+    editor->addDAType();
+}
+
+void MainWindow::on_actionAddEnumType_triggered()
+{
+    editor->addEnumType();
+}
+
+void MainWindow::on_actionAddDO_triggered()
+{
+    editor->addDO();
+}
+
+void MainWindow::on_actionAddSDO_triggered()
+{
+    editor->addSDO();
+}
+
+void MainWindow::on_actionAddDA_triggered()
+{
+    editor->addDA();
+}
+
+void MainWindow::on_actionAddBDA_triggered()
+{
+    editor->addBDA();
+}
+
+void MainWindow::on_actionAddEnumVal_triggered()
+{
+    editor->addEnumVal();
+}
+
+
+//void MainWindow::on_actionAddLN0_triggered()
+//{
+//    editor->addLN0();
+//}
+
+//void MainWindow::on_actionAddLN_triggered()
+//{
+//    editor->addLNode();
+//}
+
+//void MainWindow::on_actionAddDataSet_triggered()
+//{
+//    editor->addDataSet();
+//}
 
 void MainWindow::CreateNewICD(QDomDocument *doc)
 {

@@ -98,12 +98,90 @@ public:
     void addChild();
     void addBrother();
 
-    void addText();
     void editAttribute();
+    void addText();
+    void addPrivate();
 
+    void addSubstation();
+    void addCommunication();
+    void addIED();
+    void addDataTypeTemplates();
+
+    void addHistory();
+    void addHitem();
+
+    void addSubNetwork();
+    void addBitRate();
+    void addConnectedAP();
+    void addAddress();
+    void addGSE();
+    void addSMV();
+    void addPhysconn();
+    void addP();
+    void addMinTime();
+    void addMaxTime();
+
+    void addServices();
+    void addAccessPoint();
+    void addServer();
+    void addServerAt();
+    void addGOOSESecurity();
+    void addSMVSecurity();
+    void addSubject();
+    void addIssuerName();
+    void addAuthentication();
+    void addLDevice();
+    void addAssociation();
+
+    void addLN0();
     void addLNode();
-    void addLLN0();
+    void addAccessControl();
     void addDataSet();
+    void addReportControl();
+    void addLogControl();
+    void addInputs();
+    void addLog();
+    void addGSEControl();
+    void addSMVControl();
+    void addSettingControl();
+
+    void addPowerTransformer();
+    void addGeneralEquipment();
+//    void addLNode();
+    void addVoltageLevel();
+    void addFunction();
+    void addTransformerWinding();
+    void addVoltage();
+    void addBay();
+    void addSubFunction();
+    void addTapChanger();
+    void addTerminal();
+    void addSubEquipment();
+    void addConductingEquipment();
+    void addConnectivityNode();
+    void addFCDA();
+    void addTrgOps();
+    void addOptFields();
+    void addRptEnabled();
+    void addSDI();
+    void addDAI();
+    void addExtRef();
+    void addIEDName();
+    void addSmvOpts();
+    void addVal();
+    void addLNodeType();
+    void addDOType();
+    void addDAType();
+    void addEnumType();
+    void addDO();
+    void addSDO();
+    void addDA();
+    void addBDA();
+    void addEnumVal();
+
+//    void addLNode();
+//    void addLN0();
+//    void addDataSet();
 
     void errorNoRule();
     void setClipBoardItem(DomItem *pItem);

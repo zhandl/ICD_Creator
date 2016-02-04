@@ -113,6 +113,7 @@
         <file alias="view_columns">images/view-file-columns.png</file>
         <file>images/AddText.png</file>
         <file>images/EditAttributes.png</file>
+        <file>images/private.png</file>
     </qresource>
     <qresource prefix="/goto">
         <file>images/gotoprevbro.png</file>
@@ -139,5 +140,35 @@
         <file>images/Server.png</file>
         <file>images/IED.png</file>
         <file>images/Attribute.png</file>
+        <file>images/history.png</file>
+        <file>images/hitem.png</file>
+        <file>images/accesspoint.png</file>
+        <file>images/address.png</file>
+        <file>images/connectedAP.png</file>
+        <file>images/dai.png</file>
+        <file>images/doi.png</file>
+        <file>images/ip.png</file>
+        <file>images/ldevices.png</file>
+        <file>images/ln.png</file>
+        <file>images/subNetwork.png</file>
+        <file>images/authentication.png</file>
+        <file>images/services.png</file>
+        <file>images/sdi.png</file>
+        <file>images/iec.png</file>
+        <file>images/servicesItem.png</file>
+        <file>images/servicesItemGroup.png</file>
+        <file>images/dataset.png</file>
+        <file>images/fcda.png</file>
+        <file>images/ln0.png</file>
+        <file>images/bitRate.png</file>
+        <file>images/physconn.png</file>
+        <file>images/bufReport.png</file>
+        <file>images/gseControl.png</file>
+        <file>images/inputs.png</file>
+        <file>images/log.png</file>
+        <file>images/logControl.png</file>
+        <file>images/settingControl.png</file>
+        <file>images/smvControl.png</file>
+        <file>images/unbufReport.png</file>
     </qresource>
 </RCC>

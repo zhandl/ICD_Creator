@@ -69,6 +69,8 @@ private slots:
     void on_elementTable_cellClicked(int row, int column);
     void on_attrTable_itemChanged(QTableWidgetItem * item);
 
+    void on_noUseAttrTable_itemClicked(QTableWidgetItem *item);
+
 private:
 //    Ui::Dialog ui;
     void init();
@@ -87,6 +89,8 @@ private:
     bool isElementText(QTableWidgetItem *item);
 
     void retranslate();
+
+    void setAviableAttrbutes(QTableWidget *table);
 
     /*********************************************
      *************** UI  *************************
@@ -128,6 +132,9 @@ private:
     QVBoxLayout *verticalLayout_6;
     QDialogButtonBox *buttonBox;
     QSpacerItem *verticalSpacer_3;
+
+    QLabel *label_4;
+    QTableWidget *noUseAttrTable;
 };
 
 #endif // EDITELEMENT_H

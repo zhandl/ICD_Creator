@@ -196,21 +196,100 @@ private:
     QAction *actionNewRcdICDWizard;
     QAction *actionNewNetICDWizard;
 
-    QMenu *menuAddLN0;
-    QMenu *menuAddLN;
+//    QMenu *menuAddLN0;
+//    QMenu *menuAddLN;
 
-    QAction *actionAddLLN0;
-//    QAction *actionAddLPHD;
-//    QAction *actionAddGGIO;
-//    QAction *actionAddLTSM;
-    QAction *actionAddLN;
 
     //** Add the action for customContext
     //** add icd element for every node
     QAction *actionEditAttribute;
     QAction *actionAddText;
+    QAction *actionAddPrivate;
+
+    QAction *actionAddSubstation;
+    QAction *actionAddCommunication;
+    QAction *actionAddIED;
+    QAction *actionAddDataTypeTemplates;
+
+    QAction *actionAddHistory;
+    QAction *actionAddHitem;
+
+    QAction *actionAddSubNetwork;
+
+    QAction *actionAddBitRate;
+    QAction *actionAddConnectedAP;
+
+    QAction *actionAddAddress;
+    QMenu *menuAddGSE;
+    QMenu *menuAddSMV;
+    QAction *actionAddPhysconn;
+
+    QAction *actionAddP;
+    QAction *actionAddMinTime;
+    QAction *actionAddMaxTime;
+
+    QAction *actionAddServices;
+    QAction *actionAddAccessPoint;
+
+    QAction *actionAddServer;
+    QAction *actionAddServerAt;
+    QAction *actionAddGOOSESecurity;
+    QAction *actionAddSMVSecurity;
+
+    QAction *actionAddAuthentication;
+    QAction *actionAddLdevice;
+    QAction *actionAddAssociation;
+
+    QAction *actionAddLN0;
+    QAction *actionAddLN;
+    QAction *actionAddAccessControl;
 
     QAction *actionAddDataSet;
+    QAction *actionAddReportControl;
+    QAction *actionAddLogControl;
+    QAction *actionAddInputs;
+    QAction *actionAddLog;
+
+    QAction *actionAddGSEControl;
+    QAction *actionAddSMVControl;
+    QAction *actionAddSettingControl;
+
+    QAction *actionAddGSE;
+    QAction *actionAddSMV;
+
+    QAction *actionAddPowerTransformer;
+    QAction *actionAddGeneralEquipment;
+    QAction *actionAddLNode;
+    QAction *actionAddVoltageLevel;
+    QAction *actionAddFunction;
+    QAction *actionAddTransformerWinding;
+    QAction *actionAddVoltage;
+    QAction *actionAddBay;
+    QAction *actionAddSubFunction;
+    QAction *actionAddTapChanger;
+    QAction *actionAddTerminal;
+    QAction *actionAddSubEquipment;
+    QAction *actionAddConductingEquipment;
+    QAction *actionAddConnectivityNode;
+    QAction *actionAddFCDA;
+    QAction *actionAddTrgOps;
+    QAction *actionAddOptFields;
+    QAction *actionAddRptEnabled;
+    QAction *actionAddSDI;
+    QAction *actionAddDAI;
+    QAction *actionAddExtRef;
+    QAction *actionAddIEDName;
+    QAction *actionAddSmvOpts;
+    QAction *actionAddVal;
+    QAction *actionAddLNodeType;
+    QAction *actionAddDOType;
+    QAction *actionAddDAType;
+    QAction *actionAddEnumType;
+    QAction *actionAddDO;
+    QAction *actionAddSDO;
+    QAction *actionAddDA;
+    QAction *actionAddBDA;
+    QAction *actionAddEnumVal;
 
 //    QMenu *actionAddLN0;
 //    QMenu *actionAddLN;
@@ -319,12 +398,85 @@ private slots:
 
     void on_actionEditAttribute_triggered();
     void on_actionAddText_triggered();
+    void on_actionAddPrivate_triggered();
 
-    void on_actionAddLNNode_triggered();
+    void on_actionAddSubstation_triggered();
+    void on_actionAddCommunication_triggered();
+    void on_actionAddIED_triggered();
+    void on_actionAddDataTypeTemplates_triggered();
 
-    void on_actionAddLLN0_triggered();
+    void on_actionAddHistory_triggered();
+    void on_actionAddHitem_triggered();
+
+    void on_actionAddBitRate_triggered();
+    void on_actionAddSubNetwork_triggered();
+    void on_actionAddConnectedAP_triggered();
+    void on_actionAddAddress_triggered();
+    void on_actionAddGSE_triggered();
+    void on_actionAddSMV_triggered();
+    void on_actionAddPhysconn_triggered();
+    void on_actionAddP_triggered();
+    void on_actionAddMinTime_triggered();
+    void on_actionAddMaxTime_triggered();
+
+    void on_actionAddServices_triggered();
+    void on_actionAddAccessPoint_triggered();
+    void on_actionAddServer_triggered();
+    void on_actionAddServerAt_triggered();
+    void on_actionAddGOOSESecurity_triggered();
+    void on_actionAddSMVSecurity_triggered();
+    void on_actionAddAuthentication_triggered();
+    void on_actionAddLdevice_triggered();
+    void on_actionAddAssociation_triggered();
+    void on_actionAddLN0_triggered();
     void on_actionAddLN_triggered();
+    void on_actionAddAccessControl_triggered();
     void on_actionAddDataSet_triggered();
+    void on_actionAddReportControl_triggered();
+    void on_actionAddLogControl_triggered();
+    void on_actionAddInputs_triggered();
+    void on_actionAddLog_triggered();
+    void on_actionAddGSEControl_triggered();
+    void on_actionAddSMVControl_triggered();
+    void on_actionAddSettingControl_triggered();
+
+    void on_actionAddPowerTransformer_triggered();
+    void on_actionAddGeneralEquipment_triggered();
+    void on_actionAddLNode_triggered();
+    void on_actionAddVoltageLevel_triggered();
+    void on_actionAddFunction_triggered();
+    void on_actionAddTransformerWinding_triggered();
+    void on_actionAddVoltage_triggered();
+    void on_actionAddBay_triggered();
+    void on_actionAddSubFunction_triggered();
+    void on_actionAddTapChanger_triggered();
+    void on_actionAddTerminal_triggered();
+    void on_actionAddSubEquipment_triggered();
+    void on_actionAddConductingEquipment_triggered();
+    void on_actionAddConnectivityNode_triggered();
+    void on_actionAddFCDA_triggered();
+    void on_actionAddTrgOps_triggered();
+    void on_actionAddOptFields_triggered();
+    void on_actionAddRptEnabled_triggered();
+    void on_actionAddSDI_triggered();
+    void on_actionAddDAI_triggered();
+    void on_actionAddExtRef_triggered();
+    void on_actionAddIEDName_triggered();
+    void on_actionAddSmvOpts_triggered();
+    void on_actionAddVal_triggered();
+    void on_actionAddLNodeType_triggered();
+    void on_actionAddDOType_triggered();
+    void on_actionAddDAType_triggered();
+    void on_actionAddEnumType_triggered();
+    void on_actionAddDO_triggered();
+    void on_actionAddSDO_triggered();
+    void on_actionAddDA_triggered();
+    void on_actionAddBDA_triggered();
+    void on_actionAddEnumVal_triggered();
+
+//    void on_actionAddLN0_triggered();
+//    void on_actionAddLN_triggered();
+//    void on_actionAddDataSet_triggered();
 
     //----- other slots ------------------
 

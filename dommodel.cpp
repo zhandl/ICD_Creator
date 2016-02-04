@@ -55,6 +55,11 @@
 #include "editelement.h"
 #include "xsaxhandler.h"
 #include "editattribute.h"
+#include "editlnode.h"
+#include "editdataset.h"
+#include "addtext.h"
+#include "addprivate.h"
+#include "editreportcontrol.h"
 
 #include "undo/undomoveupcommand.h"
 #include "undo/undomovedowncommand.h"
@@ -133,6 +138,7 @@ void DomModel::clearUndo()
 void DomModel::setTreeValue(QTreeWidget *pTree)
 {
     pTree->clear();
+    pTree->setIconSize(QSize(20, 20));
     QVectorIterator<DomItem*> it(childItems);
     while(it.hasNext())
     {
@@ -199,6 +205,12 @@ DomItem *DomModel::setItem(QDomNode &node, DomItem *parent, QVector<DomItem *> *
 
             if(item->tag() == tr("LNodeType"))
                 _dataTypeItems.append(item);
+
+            if(item->tag() == tr("DOType"))
+                _doTypeItems.append(item);
+
+            if((item->tag() == tr("DAType")) | (item->tag() == tr("EnumType")))
+                _daEnumTypeItems.append(item);
 
         } else if(childNode.isCDATASection()) {
             QDomCDATASection text = childNode.toCDATASection();
@@ -375,6 +387,7 @@ DomItem *DomModel::newItem(const QString &tagName)
 {
     DomItem *newItem = new DomItem(this);
     newItem->_tag = addNameToPool(tagName);
+    newItem->setNodeType();
     return newItem;
 }
 
@@ -438,17 +451,66 @@ bool DomModel::editNodeItem(QWidget * const parentWindow, DomItem *pItem)
     return false;
 }
 
+bool DomModel::editDataSetItem(QWidget * const parentWindow, DomItem *pItem)
+{
+    EditDataSet element(parentWindow);
+    element.setModal(true);
+    element.setTarget(pItem);
+    if(element.exec() == QDialog::Accepted) {
+        return true;
+    }
+    return false;
+}
+
+bool DomModel::editReportControlItem(QWidget * const parentWindow, DomItem *pItem)
+{
+    EditReportControl element(parentWindow);
+    element.setModal(true);
+    element.setTarget(pItem);
+    if(element.exec() == QDialog::Accepted) {
+        return true;
+    }
+    return false;
+}
+
+bool DomModel::editLNodeItem(QWidget * const parentWindow, DomItem *pItem)
+{
+    EditLNode element(parentWindow);
+    element.setModal(true);
+    element.setTarget(pItem);
+    if(element.exec() == QDialog::Accepted) {
+        return true;
+    }
+    return false;
+}
+
 void DomModel::editAttribute(QWidget *const window, QTreeWidgetItem *pItem)
 {
     DomItem *item = DomItem::fromItemData(pItem);
-    EditAttribute element(window);
+
+    bool updateInfo = false;
+    UndoEditCommand *undoCommand = new UndoEditCommand(pItem->treeWidget(), this, item->indexPath());
+    EditElement element(window);
     element.setModal(true);
     element.setTarget(item);
     if(element.exec() == QDialog::Accepted) {
-        return ;
+        updateInfo = true;
+    }
+    if(updateInfo) {
+        item->updateSizeInfo();
+        item->display(pItem, paintInfo);
+        setModified(true);
+
+        undoCommand->setModifiedElement(item);
+        _undoStack.push(undoCommand);
+    } else {
+        delete undoCommand;
     }
 
+    return;
+
 }
+
 
 bool DomModel::editNodeComment(QWidget * const parentWindow, DomItem *pItem)
 {
@@ -566,14 +628,20 @@ void DomModel::addText(QWidget *window, QTreeWidget *tree)
             Utils::errorNoSel(window);
             return;
         }
+    }    
+
+    DomItem *theNewItem = new DomItem(addNameToPool(tr("Text")), "", this, parentItem);
+    theNewItem->setNodeType();
+
+    AddText element(window);
+    element.setModal(true);
+    element.setTarget(theNewItem);
+    if(element.exec() == QDialog::Accepted) {
+        insertItemInternal(theNewItem, parentItem, tree, true, 0);
     }
-
-    addChildToItem(window, tree, parentItem, tr("text"), true, 0);
-
 }
 
-
-void DomModel::addLLN0(QWidget *window, QTreeWidget *tree)
+void DomModel::addPrivate(QWidget *window, QTreeWidget *tree)
 {
     QTreeWidgetItem *currItem = getSelItem(tree);
     bool isEmptyE = isEmpty(true);
@@ -589,17 +657,611 @@ void DomModel::addLLN0(QWidget *window, QTreeWidget *tree)
         }
     }
 
-    DomItem *theNewElement = new DomItem(addNameToPool(tr("LN0")), "", this, parentItem);
-    theNewElement->addAttribute("lnClass", "LLN0");
-    theNewElement->addAttribute("lnType", "LLN0");
+    int pos = 0;
+    if(parentItem->hasChildOfName(tr("Text")))
+        pos++;
 
-    if(!editNodeItem(window, theNewElement)) {
+    DomItem *theNewItem = new DomItem(addNameToPool(tr("Private")), "", this, parentItem);
+    theNewItem->setNodeType();
+
+    AddPrivate element(window);
+    element.setModal(true);
+    element.setTarget(theNewItem);
+    if(element.exec() == QDialog::Accepted) {
+        insertItemInternal(theNewItem, parentItem, tree, true, pos);
+    }
+}
+
+void DomModel::addSubstation(QWidget *window, QTreeWidget *tree)
+{
+    QTreeWidgetItem *currItem = getSelItem(tree);
+    bool isEmptyE = isEmpty(true);
+    DomItem *parentItem = NULL;
+    if(NULL != currItem) {
+        parentItem = DomItem::fromItemData(currItem);
+        if(parentItem->getType() != DomItem::ET_ELEMENT)
+            return ;
+    } else {
+        if(!isEmptyE) {
+            Utils::errorNoSel(window);
+            return;
+        }
+    }
+    int pos = 0;
+    for(int i = 0 ; i < parentItem->getItems().count(); i++) {
+        if(parentItem->getItems().at(i)->tag() == "Header")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "Substation")
+            pos ++;
+    }
+
+    addChildToItem(window, tree, parentItem, tr("Substation"), true, pos);
+}
+
+void DomModel::addCommunication(QWidget *window, QTreeWidget *tree)
+{
+    QTreeWidgetItem *currItem = getSelItem(tree);
+    bool isEmptyE = isEmpty(true);
+    DomItem *parentItem = NULL;
+    if(NULL != currItem) {
+        parentItem = DomItem::fromItemData(currItem);
+        if(parentItem->getType() != DomItem::ET_ELEMENT)
+            return ;
+    } else {
+        if(!isEmptyE) {
+            Utils::errorNoSel(window);
+            return;
+        }
+    }
+    int pos = 0;
+    for(int i = 0 ; i < parentItem->getItems().count(); i++) {
+        if(parentItem->getItems().at(i)->tag() == "Header")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "Substation")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "Communication")
+            pos ++;
+    }
+
+    addChildToItem(window, tree, parentItem, tr("Communication"), true, pos);
+}
+
+void DomModel::addIED(QWidget *window, QTreeWidget *tree)
+{
+    QTreeWidgetItem *currItem = getSelItem(tree);
+    bool isEmptyE = isEmpty(true);
+    DomItem *parentItem = NULL;
+    if(NULL != currItem) {
+        parentItem = DomItem::fromItemData(currItem);
+        if(parentItem->getType() != DomItem::ET_ELEMENT)
+            return ;
+    } else {
+        if(!isEmptyE) {
+            Utils::errorNoSel(window);
+            return;
+        }
+    }
+    int pos = 0;
+    for(int i = 0 ; i < parentItem->getItems().count(); i++) {
+        if(parentItem->getItems().at(i)->tag() == "Header")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "Substation")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "Communication")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "IED")
+            pos ++;
+    }
+
+    addChildToItem(window, tree, parentItem, tr("IED"), true, pos);
+}
+
+void DomModel::addDataTypeTemplates(QWidget *window, QTreeWidget *tree)
+{
+    QTreeWidgetItem *currItem = getSelItem(tree);
+    bool isEmptyE = isEmpty(true);
+    DomItem *parentItem = NULL;
+    if(NULL != currItem) {
+        parentItem = DomItem::fromItemData(currItem);
+        if(parentItem->getType() != DomItem::ET_ELEMENT)
+            return ;
+    } else {
+        if(!isEmptyE) {
+            Utils::errorNoSel(window);
+            return;
+        }
+    }
+    int pos = 0;
+    for(int i = 0 ; i < parentItem->getItems().count(); i++) {
+        if(parentItem->getItems().at(i)->tag() == "Header")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "Substation")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "Communication")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "IED")
+            pos ++;
+    }
+
+    addChildToItem(window, tree, parentItem, tr("DataTypeTemplates"), true, pos);
+}
+
+
+void DomModel::addHistory(QWidget *window, QTreeWidget *tree)
+{
+    QTreeWidgetItem *currItem = getSelItem(tree);
+    bool isEmptyE = isEmpty(true);
+    DomItem *parentItem = NULL;
+    if(NULL != currItem) {
+        parentItem = DomItem::fromItemData(currItem);
+        if(parentItem->getType() != DomItem::ET_ELEMENT)
+            return ;
+    } else {
+        if(!isEmptyE) {
+            Utils::errorNoSel(window);
+            return;
+        }
+    }
+
+    DomItem *theNewItem = new DomItem(addNameToPool(tr("History")), "", this, parentItem);
+    DomItem *hitem = new DomItem(addNameToPool("Hitem"), "", this, theNewItem);
+    hitem->addAttribute("version", "1.00");
+    hitem->addAttribute("revision", "1.01");
+    hitem->addAttribute("when", QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss"));
+    hitem->addAttribute("who", "ICD Creator");
+    theNewItem->addChild(hitem);
+    if(NULL != theNewItem) {
+        insertItemInternal(theNewItem, isEmptyE ? NULL : parentItem, tree, true, -1);
+    }
+}
+
+void DomModel::addHitem(QWidget *window, QTreeWidget *tree)
+{
+    QTreeWidgetItem *currItem = getSelItem(tree);
+    bool isEmptyE = isEmpty(true);
+    DomItem *parentItem = NULL;
+    if(NULL != currItem) {
+        parentItem = DomItem::fromItemData(currItem);
+        if(parentItem->getType() != DomItem::ET_ELEMENT)
+            return ;
+    } else {
+        if(!isEmptyE) {
+            Utils::errorNoSel(window);
+            return;
+        }
+    }
+
+    addChildToItem(window, tree, parentItem, tr("Hitem"), true, -1);
+}
+
+void DomModel::addSubNetwork(QWidget *window, QTreeWidget *tree)
+{
+    QTreeWidgetItem *currItem = getSelItem(tree);
+    bool isEmptyE = isEmpty(true);
+    DomItem *parentItem = NULL;
+    if(NULL != currItem) {
+        parentItem = DomItem::fromItemData(currItem);
+        if(parentItem->getType() != DomItem::ET_ELEMENT)
+            return ;
+    } else {
+        if(!isEmptyE) {
+            Utils::errorNoSel(window);
+            return;
+        }
+    }
+
+    addChildToItem(window, tree, parentItem, tr("SubNetwork"), true, -1);
+}
+
+void DomModel::addBitRate(QWidget *window, QTreeWidget *tree)
+{
+    QTreeWidgetItem *currItem = getSelItem(tree);
+    bool isEmptyE = isEmpty(true);
+    DomItem *parentItem = NULL;
+    if(NULL != currItem) {
+        parentItem = DomItem::fromItemData(currItem);
+        if(parentItem->getType() != DomItem::ET_ELEMENT)
+            return ;
+    } else {
+        if(!isEmptyE) {
+            Utils::errorNoSel(window);
+            return;
+        }
+    }
+
+    addChildToItem(window, tree, parentItem, tr("BitRate"), true, 0);
+}
+
+void DomModel::addConnectedAP(QWidget *window, QTreeWidget *tree)
+{
+    QTreeWidgetItem *currItem = getSelItem(tree);
+    bool isEmptyE = isEmpty(true);
+    DomItem *parentItem = NULL;
+    if(NULL != currItem) {
+        parentItem = DomItem::fromItemData(currItem);
+        if(parentItem->getType() != DomItem::ET_ELEMENT)
+            return ;
+    } else {
+        if(!isEmptyE) {
+            Utils::errorNoSel(window);
+            return;
+        }
+    }
+
+    addChildToItem(window, tree, parentItem, tr("ConnectedAP"), true, -1);
+}
+
+void DomModel::addAddress(QWidget *window, QTreeWidget *tree)
+{
+    QTreeWidgetItem *currItem = getSelItem(tree);
+    bool isEmptyE = isEmpty(true);
+    DomItem *parentItem = NULL;
+    if(NULL != currItem) {
+        parentItem = DomItem::fromItemData(currItem);
+        if(parentItem->getType() != DomItem::ET_ELEMENT)
+            return ;
+    } else {
+        if(!isEmptyE) {
+            Utils::errorNoSel(window);
+            return;
+        }
+    }
+
+    addChildToItem(window, tree, parentItem, tr("Address"), true, 0);
+}
+
+void DomModel::addGSE(QWidget *window, QTreeWidget *tree)
+{
+    QTreeWidgetItem *currItem = getSelItem(tree);
+    bool isEmptyE = isEmpty(true);
+    DomItem *parentItem = NULL;
+    if(NULL != currItem) {
+        parentItem = DomItem::fromItemData(currItem);
+        if(parentItem->getType() != DomItem::ET_ELEMENT)
+            return ;
+    } else {
+        if(!isEmptyE) {
+            Utils::errorNoSel(window);
+            return;
+        }
+    }
+
+    addChildToItem(window, tree, parentItem, tr("GSE"), true, -1);
+}
+
+void DomModel::addSMV(QWidget *window, QTreeWidget *tree)
+{
+    QTreeWidgetItem *currItem = getSelItem(tree);
+    bool isEmptyE = isEmpty(true);
+    DomItem *parentItem = NULL;
+    if(NULL != currItem) {
+        parentItem = DomItem::fromItemData(currItem);
+        if(parentItem->getType() != DomItem::ET_ELEMENT)
+            return ;
+    } else {
+        if(!isEmptyE) {
+            Utils::errorNoSel(window);
+            return;
+        }
+    }
+
+    addChildToItem(window, tree, parentItem, tr("SMV"), true, -1);
+}
+
+void DomModel::addPhysconn(QWidget *window, QTreeWidget *tree)
+{
+    QTreeWidgetItem *currItem = getSelItem(tree);
+    bool isEmptyE = isEmpty(true);
+    DomItem *parentItem = NULL;
+    if(NULL != currItem) {
+        parentItem = DomItem::fromItemData(currItem);
+        if(parentItem->getType() != DomItem::ET_ELEMENT)
+            return ;
+    } else {
+        if(!isEmptyE) {
+            Utils::errorNoSel(window);
+            return;
+        }
+    }
+
+    addChildToItem(window, tree, parentItem, tr("PhysConn"), true, -1);
+}
+
+void DomModel::addP(QWidget *window, QTreeWidget *tree)
+{
+    QTreeWidgetItem *currItem = getSelItem(tree);
+    bool isEmptyE = isEmpty(true);
+    DomItem *parentItem = NULL;
+    if(NULL != currItem) {
+        parentItem = DomItem::fromItemData(currItem);
+        if(parentItem->getType() != DomItem::ET_ELEMENT)
+            return ;
+    } else {
+        if(!isEmptyE) {
+            Utils::errorNoSel(window);
+            return;
+        }
+    }
+
+    addChildToItem(window, tree, parentItem, tr("P"), true, -1);
+}
+
+void DomModel::addMinTime(QWidget *window, QTreeWidget *tree)
+{
+    QTreeWidgetItem *currItem = getSelItem(tree);
+    bool isEmptyE = isEmpty(true);
+    DomItem *parentItem = NULL;
+    if(NULL != currItem) {
+        parentItem = DomItem::fromItemData(currItem);
+        if(parentItem->getType() != DomItem::ET_ELEMENT)
+            return ;
+    } else {
+        if(!isEmptyE) {
+            Utils::errorNoSel(window);
+            return;
+        }
+    }
+
+    addChildToItem(window, tree, parentItem, tr("MinTime"), true, 0);
+}
+
+void DomModel::addMaxTime(QWidget *window, QTreeWidget *tree)
+{
+    QTreeWidgetItem *currItem = getSelItem(tree);
+    bool isEmptyE = isEmpty(true);
+    DomItem *parentItem = NULL;
+    if(NULL != currItem) {
+        parentItem = DomItem::fromItemData(currItem);
+        if(parentItem->getType() != DomItem::ET_ELEMENT)
+            return ;
+    } else {
+        if(!isEmptyE) {
+            Utils::errorNoSel(window);
+            return;
+        }
+    }
+
+    addChildToItem(window, tree, parentItem, tr("MaxTime"), true, -1);
+}
+
+void DomModel::addServices(QWidget *window, QTreeWidget *tree)
+{
+    QTreeWidgetItem *currItem = getSelItem(tree);
+    bool isEmptyE = isEmpty(true);
+    DomItem *parentItem = NULL;
+    if(NULL != currItem) {
+        parentItem = DomItem::fromItemData(currItem);
+        if(parentItem->getType() != DomItem::ET_ELEMENT)
+            return ;
+    } else {
+        if(!isEmptyE) {
+            Utils::errorNoSel(window);
+            return;
+        }
+    }
+
+    addChildToItem(window, tree, parentItem, tr("Services"), true, 0);
+}
+
+void DomModel::addAccessPoint(QWidget *window, QTreeWidget *tree)
+{
+    QTreeWidgetItem *currItem = getSelItem(tree);
+    bool isEmptyE = isEmpty(true);
+    DomItem *parentItem = NULL;
+    if(NULL != currItem) {
+        parentItem = DomItem::fromItemData(currItem);
+        if(parentItem->getType() != DomItem::ET_ELEMENT)
+            return ;
+    } else {
+        if(!isEmptyE) {
+            Utils::errorNoSel(window);
+            return;
+        }
+    }
+
+    addChildToItem(window, tree, parentItem, tr("AccessPoint"), true, -1);
+}
+
+void DomModel::addServer(QWidget *window, QTreeWidget *tree)
+{
+    QTreeWidgetItem *currItem = getSelItem(tree);
+    bool isEmptyE = isEmpty(true);
+    DomItem *parentItem = NULL;
+    if(NULL != currItem) {
+        parentItem = DomItem::fromItemData(currItem);
+        if(parentItem->getType() != DomItem::ET_ELEMENT)
+            return ;
+    } else {
+        if(!isEmptyE) {
+            Utils::errorNoSel(window);
+            return;
+        }
+    }
+
+    addChildToItem(window, tree, parentItem, tr("Server"), true, 0);
+}
+
+void DomModel::addServerAt(QWidget *window, QTreeWidget *tree)
+{
+    QTreeWidgetItem *currItem = getSelItem(tree);
+    bool isEmptyE = isEmpty(true);
+    DomItem *parentItem = NULL;
+    if(NULL != currItem) {
+        parentItem = DomItem::fromItemData(currItem);
+        if(parentItem->getType() != DomItem::ET_ELEMENT)
+            return ;
+    } else {
+        if(!isEmptyE) {
+            Utils::errorNoSel(window);
+            return;
+        }
+    }
+
+    addChildToItem(window, tree, parentItem, tr("ServerAt"), true, -1);
+}
+
+void DomModel::addGOOSESecurity(QWidget *window, QTreeWidget *tree)
+{
+    QTreeWidgetItem *currItem = getSelItem(tree);
+    bool isEmptyE = isEmpty(true);
+    DomItem *parentItem = NULL;
+    if(NULL != currItem) {
+        parentItem = DomItem::fromItemData(currItem);
+        if(parentItem->getType() != DomItem::ET_ELEMENT)
+            return ;
+    } else {
+        if(!isEmptyE) {
+            Utils::errorNoSel(window);
+            return;
+        }
+    }
+
+    addChildToItem(window, tree, parentItem, tr("GOOSESecurity"), true, -1);
+}
+
+void DomModel::addSMVSecurity(QWidget *window, QTreeWidget *tree)
+{
+    QTreeWidgetItem *currItem = getSelItem(tree);
+    bool isEmptyE = isEmpty(true);
+    DomItem *parentItem = NULL;
+    if(NULL != currItem) {
+        parentItem = DomItem::fromItemData(currItem);
+        if(parentItem->getType() != DomItem::ET_ELEMENT)
+            return ;
+    } else {
+        if(!isEmptyE) {
+            Utils::errorNoSel(window);
+            return;
+        }
+    }
+
+    addChildToItem(window, tree, parentItem, tr("SMVSecurity"), true, -1);
+}
+
+void DomModel::addSubject(QWidget *window, QTreeWidget *tree)
+{
+    QTreeWidgetItem *currItem = getSelItem(tree);
+    bool isEmptyE = isEmpty(true);
+    DomItem *parentItem = NULL;
+    if(NULL != currItem) {
+        parentItem = DomItem::fromItemData(currItem);
+        if(parentItem->getType() != DomItem::ET_ELEMENT)
+            return ;
+    } else {
+        if(!isEmptyE) {
+            Utils::errorNoSel(window);
+            return;
+        }
+    }
+
+    addChildToItem(window, tree, parentItem, tr("Subject"), true, -1);
+}
+
+void DomModel::addIssuerName(QWidget *window, QTreeWidget *tree)
+{
+    QTreeWidgetItem *currItem = getSelItem(tree);
+    bool isEmptyE = isEmpty(true);
+    DomItem *parentItem = NULL;
+    if(NULL != currItem) {
+        parentItem = DomItem::fromItemData(currItem);
+        if(parentItem->getType() != DomItem::ET_ELEMENT)
+            return ;
+    } else {
+        if(!isEmptyE) {
+            Utils::errorNoSel(window);
+            return;
+        }
+    }
+
+    addChildToItem(window, tree, parentItem, tr("IssuerName"), true, -1);
+}
+
+void DomModel::addAuthentication(QWidget *window, QTreeWidget *tree)
+{
+    QTreeWidgetItem *currItem = getSelItem(tree);
+    bool isEmptyE = isEmpty(true);
+    DomItem *parentItem = NULL;
+    if(NULL != currItem) {
+        parentItem = DomItem::fromItemData(currItem);
+        if(parentItem->getType() != DomItem::ET_ELEMENT)
+            return ;
+    } else {
+        if(!isEmptyE) {
+            Utils::errorNoSel(window);
+            return;
+        }
+    }
+
+    addChildToItem(window, tree, parentItem, tr("Authentication"), true, 0);
+}
+
+
+void DomModel::addLDevice(QWidget *window, QTreeWidget *tree)
+{
+    QTreeWidgetItem *currItem = getSelItem(tree);
+    bool isEmptyE = isEmpty(true);
+    DomItem *parentItem = NULL;
+    if(NULL != currItem) {
+        parentItem = DomItem::fromItemData(currItem);
+        if(parentItem->getType() != DomItem::ET_ELEMENT)
+            return ;
+    } else {
+        if(!isEmptyE) {
+            Utils::errorNoSel(window);
+            return;
+        }
+    }
+
+    addChildToItem(window, tree, parentItem, tr("LDevice"), true, -1);
+}
+
+
+void DomModel::addAssociation(QWidget *window, QTreeWidget *tree)
+{
+    QTreeWidgetItem *currItem = getSelItem(tree);
+    bool isEmptyE = isEmpty(true);
+    DomItem *parentItem = NULL;
+    if(NULL != currItem) {
+        parentItem = DomItem::fromItemData(currItem);
+        if(parentItem->getType() != DomItem::ET_ELEMENT)
+            return ;
+    } else {
+        if(!isEmptyE) {
+            Utils::errorNoSel(window);
+            return;
+        }
+    }
+
+    addChildToItem(window, tree, parentItem, tr("Association"), true, -1);
+}
+
+void DomModel::addLN0(QWidget *window, QTreeWidget *tree)
+{
+    QTreeWidgetItem *currItem = getSelItem(tree);
+    bool isEmptyE = isEmpty(currItem);
+    DomItem *parentItem = NULL;
+    if(NULL != currItem) {
+        parentItem = DomItem::fromItemData(currItem);
+        if(parentItem->getType() != DomItem::ET_ELEMENT)
+            return ;
+    } else {
+        if(!isEmptyE) {
+            Utils::errorNoSel(window);
+            return;
+        }
+    }
+
+    DomItem *theNewElement = new DomItem(addNameToPool(tr("LN0")), "", this, parentItem);
+    theNewElement->setNodeType();
+//    theNewElement->addAttribute("lnClass", "LLN0");
+
+    if(!editLNodeItem(window, theNewElement)) {
         delete theNewElement;
         theNewElement = NULL ;
     }
 
     if(NULL != theNewElement) {
-        insertItemInternal(theNewElement, isEmptyE ? NULL : parentItem, tree, true, -1);
+        insertItemInternal(theNewElement, isEmptyE ? NULL : parentItem, tree, true, 0);
     }
 
 }
@@ -621,10 +1283,35 @@ void DomModel::addLNode(QWidget *window, QTreeWidget *tree)
     }
 
     DomItem *theNewElement = new DomItem(addNameToPool(tr("LN")), "", this, parentItem);
+    theNewElement->setNodeType();
+
+    if(!editLNodeItem(window, theNewElement)) {
+        delete theNewElement;
+        theNewElement = NULL ;
+    }
     if(NULL != theNewElement) {
         insertItemInternal(theNewElement, isEmptyE ? NULL : parentItem, tree, true, -1);
     }
 
+}
+
+void DomModel::addAccessControl(QWidget *window, QTreeWidget *tree)
+{
+    QTreeWidgetItem *currItem = getSelItem(tree);
+    bool isEmptyE = isEmpty(true);
+    DomItem *parentItem = NULL;
+    if(NULL != currItem) {
+        parentItem = DomItem::fromItemData(currItem);
+        if(parentItem->getType() != DomItem::ET_ELEMENT)
+            return ;
+    } else {
+        if(!isEmptyE) {
+            Utils::errorNoSel(window);
+            return;
+        }
+    }
+
+    addChildToItem(window, tree, parentItem, tr("AccessControl"), true, -1);
 }
 
 void DomModel::addDataSet(QWidget *window, QTreeWidget *tree)
@@ -644,10 +1331,296 @@ void DomModel::addDataSet(QWidget *window, QTreeWidget *tree)
     }
 
     DomItem *theNewElement = new DomItem(addNameToPool(tr("DataSet")), "", this, parentItem);
+    if(!editDataSetItem(window, theNewElement)) {
+        delete theNewElement;
+        theNewElement = NULL ;
+    }    
+
+    int pos = 0;
+    for(int i = 0 ; i < parentItem->getItems().count(); i++) {
+        if(parentItem->getItems().at(i)->tag() == "Text")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "Private")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "DataSet")
+            pos ++;
+    }
     if(NULL != theNewElement) {
-        insertItemInternal(theNewElement, isEmptyE ? NULL : parentItem, tree, true, -1);
+        insertItemInternal(theNewElement, isEmptyE ? NULL : parentItem, tree, true, pos);
     }
 
+}
+
+void DomModel::addReportControl(QWidget *window, QTreeWidget *tree)
+{
+    QTreeWidgetItem *currItem = getSelItem(tree);
+    bool isEmptyE = isEmpty(true);
+    DomItem *parentItem = NULL;
+    if(NULL != currItem) {
+        parentItem = DomItem::fromItemData(currItem);
+        if(parentItem->getType() != DomItem::ET_ELEMENT)
+            return ;
+    } else {
+        if(!isEmptyE) {
+            Utils::errorNoSel(window);
+            return;
+        }
+    }
+    DomItem *theNewElement = new DomItem(addNameToPool(tr("ReportControl")), "", this, parentItem);
+    if(!editReportControlItem(window, theNewElement)) {
+        delete theNewElement;
+        theNewElement = NULL ;
+    }
+
+    int pos = 0;
+    for(int i = 0 ; i < parentItem->getItems().count(); i++) {
+        if(parentItem->getItems().at(i)->tag() == "Text")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "Private")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "DataSet")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "ReportControl")
+            pos ++;
+    }
+
+    if(NULL != theNewElement) {
+        insertItemInternal(theNewElement, isEmptyE ? NULL : parentItem, tree, true, pos);
+    }
+}
+
+void DomModel::addLogControl(QWidget *window, QTreeWidget *tree)
+{
+    QTreeWidgetItem *currItem = getSelItem(tree);
+    bool isEmptyE = isEmpty(true);
+    DomItem *parentItem = NULL;
+    if(NULL != currItem) {
+        parentItem = DomItem::fromItemData(currItem);
+        if(parentItem->getType() != DomItem::ET_ELEMENT)
+            return ;
+    } else {
+        if(!isEmptyE) {
+            Utils::errorNoSel(window);
+            return;
+        }
+    }
+
+    int pos = 0;
+    for(int i = 0 ; i < parentItem->getItems().count(); i++) {
+        if(parentItem->getItems().at(i)->tag() == "Text")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "Private")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "DataSet")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "ReportControl")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "LogControl")
+            pos ++;
+    }
+
+    addChildToItem(window, tree, parentItem, tr("LogControl"), true, pos);
+}
+
+void DomModel::addInputs(QWidget *window, QTreeWidget *tree)
+{
+    QTreeWidgetItem *currItem = getSelItem(tree);
+    bool isEmptyE = isEmpty(true);
+    DomItem *parentItem = NULL;
+    if(NULL != currItem) {
+        parentItem = DomItem::fromItemData(currItem);
+        if(parentItem->getType() != DomItem::ET_ELEMENT)
+            return ;
+    } else {
+        if(!isEmptyE) {
+            Utils::errorNoSel(window);
+            return;
+        }
+    }
+
+    int pos = 0;
+    for(int i = 0 ; i < parentItem->getItems().count(); i++) {
+        if(parentItem->getItems().at(i)->tag() == "Text")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "Private")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "DataSet")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "ReportControl")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "LogControl")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "DOI")
+            pos ++;
+    }
+
+    addChildToItem(window, tree, parentItem, tr("Inputs"), true, pos);
+}
+
+void DomModel::addLog(QWidget *window, QTreeWidget *tree)
+{
+    QTreeWidgetItem *currItem = getSelItem(tree);
+    bool isEmptyE = isEmpty(true);
+    DomItem *parentItem = NULL;
+    if(NULL != currItem) {
+        parentItem = DomItem::fromItemData(currItem);
+        if(parentItem->getType() != DomItem::ET_ELEMENT)
+            return ;
+    } else {
+        if(!isEmptyE) {
+            Utils::errorNoSel(window);
+            return;
+        }
+    }
+
+    int pos = 0;
+    for(int i = 0 ; i < parentItem->getItems().count(); i++) {
+        if(parentItem->getItems().at(i)->tag() == "Text")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "Private")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "DataSet")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "ReportControl")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "LogControl")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "DOI")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "Inputs")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "Log")
+            pos ++;
+    }
+
+    addChildToItem(window, tree, parentItem, tr("Log"), true, pos);
+}
+
+void DomModel::addGSEControl(QWidget *window, QTreeWidget *tree)
+{
+    QTreeWidgetItem *currItem = getSelItem(tree);
+    bool isEmptyE = isEmpty(true);
+    DomItem *parentItem = NULL;
+    if(NULL != currItem) {
+        parentItem = DomItem::fromItemData(currItem);
+        if(parentItem->getType() != DomItem::ET_ELEMENT)
+            return ;
+    } else {
+        if(!isEmptyE) {
+            Utils::errorNoSel(window);
+            return;
+        }
+    }
+
+    int pos = 0;
+    for(int i = 0 ; i < parentItem->getItems().count(); i++) {
+        if(parentItem->getItems().at(i)->tag() == "Text")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "Private")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "DataSet")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "ReportControl")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "LogControl")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "DOI")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "Inputs")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "Log")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "GSEControl")
+            pos ++;
+    }
+    addChildToItem(window, tree, parentItem, tr("GSEControl"), true, pos);
+}
+
+void DomModel::addSMVControl(QWidget *window, QTreeWidget *tree)
+{
+    QTreeWidgetItem *currItem = getSelItem(tree);
+    bool isEmptyE = isEmpty(true);
+    DomItem *parentItem = NULL;
+    if(NULL != currItem) {
+        parentItem = DomItem::fromItemData(currItem);
+        if(parentItem->getType() != DomItem::ET_ELEMENT)
+            return ;
+    } else {
+        if(!isEmptyE) {
+            Utils::errorNoSel(window);
+            return;
+        }
+    }
+
+    int pos = 0;
+    for(int i = 0 ; i < parentItem->getItems().count(); i++) {
+        if(parentItem->getItems().at(i)->tag() == "Text")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "Private")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "DataSet")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "ReportControl")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "LogControl")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "DOI")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "Inputs")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "Log")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "GSEControl")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "SampledValueControl")
+            pos ++;
+    }
+
+    addChildToItem(window, tree, parentItem, tr("SampledValueControl"), true, pos);
+}
+
+void DomModel::addSettingControl(QWidget *window, QTreeWidget *tree)
+{
+    QTreeWidgetItem *currItem = getSelItem(tree);
+    bool isEmptyE = isEmpty(true);
+    DomItem *parentItem = NULL;
+    if(NULL != currItem) {
+        parentItem = DomItem::fromItemData(currItem);
+        if(parentItem->getType() != DomItem::ET_ELEMENT)
+            return ;
+    } else {
+        if(!isEmptyE) {
+            Utils::errorNoSel(window);
+            return;
+        }
+    }
+
+    int pos = 0;
+    for(int i = 0 ; i < parentItem->getItems().count(); i++) {
+        if(parentItem->getItems().at(i)->tag() == "Text")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "Private")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "DataSet")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "ReportControl")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "LogControl")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "DOI")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "Inputs")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "Log")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "GSEControl")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "SampledValueControl")
+            pos ++;
+        if(parentItem->getItems().at(i)->tag() == "SettingControl")
+            pos ++;
+    }
+    addChildToItem(window, tree, parentItem, tr("SettingControl"), true, pos);
 }
 
 void DomModel::addChild(QWidget *window, QTreeWidget *tree)
@@ -658,6 +1631,7 @@ void DomModel::addChild(QWidget *window, QTreeWidget *tree)
 // if empty, add, else add only to element
 void DomModel::addChild(QWidget *window, QTreeWidget *tree, DomItem *preElement)
 {
+    bool execAddChild = false;
     QTreeWidgetItem *currItem = getSelItem(tree);
     bool isEmptyE = isEmpty(true);
     DomItem *parentElement = NULL ;
@@ -678,8 +1652,15 @@ void DomModel::addChild(QWidget *window, QTreeWidget *tree, DomItem *preElement)
             delete theNewElement;
             theNewElement = NULL ;
         }
+    } else {
+        EditElement element(window);
+        element.setModal(true);
+        element.setTarget(theNewElement);
+        if(element.exec() == QDialog::Accepted)
+            execAddChild = true;
     }
-    if(NULL != theNewElement) {
+
+    if(NULL != theNewElement && execAddChild) {
         insertItemInternal(theNewElement, isEmptyE ? NULL : parentElement, tree);
     }
 }
@@ -1716,7 +2697,7 @@ void DomModel::insertItemInternal(DomItem *theNewElement, DomItem *parentElement
 void DomModel::insertItemInternal(DomItem *theNewElement, DomItem *parentElement, QTreeWidget *tree, const bool useUndo, int position)
 {
     if(NULL != parentElement) {
-        parentElement->addChild(theNewElement);
+        parentElement->addChildAt(theNewElement, position);
         theNewElement->setChildItem(tree, parentElement->getUI(), paintInfo, true, position);
     } else {
         addTopItem(theNewElement);
@@ -1986,3 +2967,12 @@ void DomModel::processDocument(QDomDocument &document)
     setDocType(dtype.name(), dtype.systemId(), dtype.publicId());
 }
 
+DomItem *DomModel::getDataTypeItemWithId(const QString &lnType)
+{
+    foreach (DomItem *item, _dataTypeItems) {
+        if(item->attributeValueOfName("id") == lnType)
+            return item;
+    }
+
+    return NULL;
+}
