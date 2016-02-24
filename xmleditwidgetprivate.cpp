@@ -420,6 +420,10 @@ void XmlEditWidgetPrivate::setClipBoardActoinsState()
 void XmlEditWidgetPrivate::on_treeWidget_itemSelectionChanged()
 {
     computeSelectionState();
+//    getModel()->unseletedAll();
+//    DomItem *item = DomItem::fromItemData(p->treeWidget->currentItem());
+//    item->selected();
+//    p->treeWidget->currentItem()->setBackground(0, QBrush(QColor(0xFF, 0xC0, 0xFF)));
 }
 
 void XmlEditWidgetPrivate::computeSelectionState()
@@ -578,8 +582,10 @@ void XmlEditWidgetPrivate::editAttribute()
         Utils::errorNoSel(p);
         return;
     }
-
-    model->editAttribute(p, itemSel);
+    if(itemSel->text(0) == tr("Services"))
+        model->editServices(p, itemSel);
+    else
+        model->editAttribute(p, itemSel);
     computeSelectionState();
 
 }
@@ -655,7 +661,9 @@ void XmlEditWidgetPrivate::addChild(QString newTag)
         errorNoRule();
         return ;
     }
-    DomItem *newItem = new DomItem(newTag, "", model);
+
+    DomItem *parentItem = DomItem::fromItemData(p->treeWidget->currentItem());
+    DomItem *newItem = new DomItem(newTag, "", model, parentItem);
 
     model->addChild(p, p->treeWidget, newItem);
 }
@@ -1032,7 +1040,7 @@ void XmlEditWidgetPrivate::addLN0()
     model->addLN0(p, p->treeWidget);
 }
 
-void XmlEditWidgetPrivate::addLNode()
+void XmlEditWidgetPrivate::addLN()
 {
     if(!isActionMode()) {
         return ;
@@ -1041,7 +1049,7 @@ void XmlEditWidgetPrivate::addLNode()
         errorNoRule();
         return ;
     }
-    model->addLNode(p, p->treeWidget);
+    model->addLN(p, p->treeWidget);
 }
 
 void XmlEditWidgetPrivate::addAccessControl()
@@ -1151,6 +1159,8 @@ void XmlEditWidgetPrivate::addSettingControl()
     }
     model->addSettingControl(p, p->treeWidget);
 }
+
+
 
 void XmlEditWidgetPrivate::on_addBrother_clicked()
 {

@@ -381,6 +381,7 @@ void EditElement::setTarget(DomItem* pTarget)
     path->setText(setPath);
     show();
     editTag->setText(target->tag());
+    editTag->setEnabled(false);
     attrTable->setUpdatesEnabled(false);
     QVector<Attribute*>::iterator it;
     for(it = target->attributes.begin(); it != target->attributes.end(); ++it) {
@@ -744,6 +745,7 @@ int EditElement::appendAttrNodeInTable(QTableWidget *table, const int desiredRow
     QTableWidgetItem *itemName = new QTableWidgetItem(name);
     QTableWidgetItem *itemValue = new QTableWidgetItem(value);
     QTableWidgetItem *itemMod = new QTableWidgetItem("");
+    itemName->setFlags(itemName->flags() & ~(Qt::ItemIsEditable));
     itemMod->setFlags(itemMod->flags()& ~(Qt::ItemIsEnabled | Qt::ItemIsEnabled | Qt::ItemIsUserCheckable));
     table->setItem(row, A_COLUMN_NAME, itemName);
     table->setItem(row, A_COLUMN_TEXT, itemValue);
@@ -893,76 +895,62 @@ void EditElement::sendMoveDownCommand()
     on_textDown_clicked();
 }
 
+bool EditElement::setAttributeOfName(QTableWidget *table, int &row, const QString AttrName)
+{
+    bool result = false;
+    if(!target->hasAttrOfName(AttrName)) {
+        table->setItem(row++, 0, new QTableWidgetItem(AttrName));
+        result = true;
+    }
+
+    return result;
+}
+
 void EditElement::setAviableAttrbutes(QTableWidget *table)
 {
     switch(target->getNodeType()) {
     case DomItem::ICD_HEADER: {
         int row = 0;
-        int totalAttributeNum = 5;
-        table->setRowCount(totalAttributeNum - target->getAttributesList().count());
-        if(!target->hasAttrOfName("id")) {
-            table->setItem(row++, 0, new QTableWidgetItem("id"));
-        }
-        if(!target->hasAttrOfName("version")) {
-            table->setItem(row++, 0, new QTableWidgetItem("version"));
-        }
-        if(!target->hasAttrOfName("revision")) {
-            table->setItem(row++, 0, new QTableWidgetItem("revision"));
-        }
-        if(!target->hasAttrOfName("toolID")) {
-            table->setItem(row++, 0, new QTableWidgetItem("toolID"));
-        }
-        if(!target->hasAttrOfName("nameStructure")) {
-            table->setItem(row++, 0, new QTableWidgetItem("nameStructure"));
-        }
+        int totalAttributeNum = 5  - target->getAttributesList().count();
+        table->setRowCount(totalAttributeNum);// - target->getAttributesList().count());
+        setAttributeOfName(table, row, tr("id"));
+        setAttributeOfName(table, row, tr("version"));
+        setAttributeOfName(table, row, tr("revision"));
+        setAttributeOfName(table, row, tr("toolID"));
+        setAttributeOfName(table, row, tr("nameStructure"));
+
         break;
     }
     case DomItem::ICD_HITEM:{
         int row = 0;
         int totalAttributeNum = 6;
         table->setRowCount(totalAttributeNum - target->getAttributesList().count());
-        if(!target->hasAttrOfName("version")) {
-            table->setItem(row++, 0, new QTableWidgetItem("version"));
-        }
-        if(!target->hasAttrOfName("revision")) {
-            table->setItem(row++, 0, new QTableWidgetItem("revision"));
-        }
-        if(!target->hasAttrOfName("when")) {
-            table->setItem(row++, 0, new QTableWidgetItem("when"));
-        }
-        if(!target->hasAttrOfName("who")) {
-            table->setItem(row++, 0, new QTableWidgetItem("who"));
-        }
-        if(!target->hasAttrOfName("what")) {
-            table->setItem(row++, 0, new QTableWidgetItem("what"));
-        }
-        if(!target->hasAttrOfName("why")) {
-            table->setItem(row++, 0, new QTableWidgetItem("why"));
-        }
+
+        setAttributeOfName(table, row, tr("version"));
+        setAttributeOfName(table, row, tr("revision"));
+        setAttributeOfName(table, row, tr("when"));
+        setAttributeOfName(table, row, tr("who"));
+        setAttributeOfName(table, row, tr("what"));
+        setAttributeOfName(table, row, tr("why"));
+
         break;
     }
     case DomItem::ICD_COMMUNICATION: {
         int row = 0;
         int totalAttributeNum = 1;
         table->setRowCount(totalAttributeNum - target->getAttributesList().count());
-        if(!target->hasAttrOfName("desc")) {
-            table->setItem(row++, 0, new QTableWidgetItem("desc"));
-        }
+
+        setAttributeOfName(table, row, tr("desc"));
         break;
     }
     case DomItem::ICD_SUBNETWORK: {
         int row = 0;
         int totalAttributeNum = 3;
         table->setRowCount(totalAttributeNum - target->getAttributesList().count());
-        if(!target->hasAttrOfName("name")) {
-            table->setItem(row++, 0, new QTableWidgetItem("name"));
-        }
-        if(!target->hasAttrOfName("type")) {
-            table->setItem(row++, 0, new QTableWidgetItem("type"));
-        }
-        if(!target->hasAttrOfName("desc")) {
-            table->setItem(row++, 0, new QTableWidgetItem("desc"));
-        }
+
+        setAttributeOfName(table, row, tr("name"));
+        setAttributeOfName(table, row, tr("type"));
+        setAttributeOfName(table, row, tr("desc"));
         break;
     }
     case DomItem::ICD_BITRATE:
@@ -971,27 +959,20 @@ void EditElement::setAviableAttrbutes(QTableWidget *table)
         int row = 0;
         int totalAttributeNum = 2;
         table->setRowCount(totalAttributeNum - target->getAttributesList().count());
-        if(!target->hasAttrOfName("unit")) {
-            table->setItem(row++, 0, new QTableWidgetItem("unit"));
-        }
-        if(!target->hasAttrOfName("multiplier")) {
-            table->setItem(row++, 0, new QTableWidgetItem("multiplier"));
-        }
+
+        setAttributeOfName(table, row, tr("unit"));
+        setAttributeOfName(table, row, tr("multiplier"));
+
         break;
     }
     case DomItem::ICD_CONNECTEDAP: {
         int row = 0;
         int totalAttributeNum = 3;
         table->setRowCount(totalAttributeNum - target->getAttributesList().count());
-        if(!target->hasAttrOfName("iedName")) {
-            table->setItem(row++, 0, new QTableWidgetItem("iedName"));
-        }
-        if(!target->hasAttrOfName("apName")) {
-            table->setItem(row++, 0, new QTableWidgetItem("apName"));
-        }
-        if(!target->hasAttrOfName("desc")) {
-            table->setItem(row++, 0, new QTableWidgetItem("desc"));
-        }
+        setAttributeOfName(table, row, tr("iedName"));
+        setAttributeOfName(table, row, tr("apName"));
+        setAttributeOfName(table, row, tr("desc"));
+
         break;
     }
     case DomItem::ICD_GSE:
@@ -999,562 +980,513 @@ void EditElement::setAviableAttrbutes(QTableWidget *table)
         int row = 0;
         int totalAttributeNum = 3;
         table->setRowCount(totalAttributeNum - target->getAttributesList().count());
-        if(!target->hasAttrOfName("ldInst")) {
-            table->setItem(row++, 0, new QTableWidgetItem("ldInst"));
-        }
-        if(!target->hasAttrOfName("cbName")) {
-            table->setItem(row++, 0, new QTableWidgetItem("cbName"));
-        }
-        if(!target->hasAttrOfName("desc")) {
-            table->setItem(row++, 0, new QTableWidgetItem("desc"));
-        }
+        setAttributeOfName(table, row, tr("ldInst"));
+        setAttributeOfName(table, row, tr("cbName"));
+        setAttributeOfName(table, row, tr("desc"));
         break;
     }
     case DomItem::ICD_PHYSCONN: {
         int row = 0;
         int totalAttributeNum = 2;
         table->setRowCount(totalAttributeNum - target->getAttributesList().count());
-        if(!target->hasAttrOfName("type")) {
-            table->setItem(row++, 0, new QTableWidgetItem("type"));
-        }
-        if(!target->hasAttrOfName("desc")) {
-            table->setItem(row++, 0, new QTableWidgetItem("desc"));
-        }
+        setAttributeOfName(table, row, tr("type"));
+        setAttributeOfName(table, row, tr("desc"));
         break;
     }
     case DomItem::ICD_IP: {
         int row = 0;
         int totalAttributeNum = 1;
         table->setRowCount(totalAttributeNum - target->getAttributesList().count());
-        if(!target->hasAttrOfName("type")) {
-            table->setItem(row++, 0, new QTableWidgetItem("type"));
-        }
+        setAttributeOfName(table, row, tr("type"));
         break;
     }
     case DomItem::ICD_IED: {
         int row = 0;
         int totalAttributeNum = 5;
         table->setRowCount(totalAttributeNum - target->getAttributesList().count());
-        if(!target->hasAttrOfName("name")) {
-            table->setItem(row++, 0, new QTableWidgetItem("name"));
-        }
-        if(!target->hasAttrOfName("type")) {
-            table->setItem(row++, 0, new QTableWidgetItem("type"));
-        }
-        if(!target->hasAttrOfName("desc")) {
-            table->setItem(row++, 0, new QTableWidgetItem("desc"));
-        }
-        if(!target->hasAttrOfName("manufacturer")) {
-            table->setItem(row++, 0, new QTableWidgetItem("manufacturer"));
-        }
-        if(!target->hasAttrOfName("configVersion")) {
-            table->setItem(row++, 0, new QTableWidgetItem("configVersion"));
-        }
+        setAttributeOfName(table, row, tr("name"));
+        setAttributeOfName(table, row, tr("type"));
+        setAttributeOfName(table, row, tr("desc"));
+        setAttributeOfName(table, row, tr("manufacturer"));
+        setAttributeOfName(table, row, tr("configVersion"));
         break;
     }
     case DomItem::ICD_ACCESSPOINT: {
         int row = 0;
         int totalAttributeNum = 4;
         table->setRowCount(totalAttributeNum - target->getAttributesList().count());
-        if(!target->hasAttrOfName("name")) {
-            table->setItem(row++, 0, new QTableWidgetItem("name"));
-        }
-        if(!target->hasAttrOfName("desc")) {
-            table->setItem(row++, 0, new QTableWidgetItem("desc"));
-        }
-        if(!target->hasAttrOfName("router")) {
-            table->setItem(row++, 0, new QTableWidgetItem("router"));
-        }
-        if(!target->hasAttrOfName("clock")) {
-            table->setItem(row++, 0, new QTableWidgetItem("clock"));
-        }
+        setAttributeOfName(table, row, tr("name"));
+        setAttributeOfName(table, row, tr("desc"));
+        setAttributeOfName(table, row, tr("router"));
+        setAttributeOfName(table, row, tr("clock"));
         break;
     }
     case DomItem::ICD_SERVER: {
         int row = 0;
         int totalAttributeNum = 2;
         table->setRowCount(totalAttributeNum - target->getAttributesList().count());
-        if(!target->hasAttrOfName("timeout")) {
-            table->setItem(row++, 0, new QTableWidgetItem("timeout"));
-        }
-        if(!target->hasAttrOfName("desc")) {
-            table->setItem(row++, 0, new QTableWidgetItem("desc"));
-        }
+        setAttributeOfName(table, row, tr("timeout"));
+        setAttributeOfName(table, row, tr("desc"));
         break;
     }
     case DomItem::ICD_AUTHENTICATION: {
         int row = 0;
         int totalAttributeNum = 5;
         table->setRowCount(totalAttributeNum - target->getAttributesList().count());
-        if(!target->hasAttrOfName("none")) {
-            table->setItem(row++, 0, new QTableWidgetItem("none"));
-        }
-        if(!target->hasAttrOfName("password")) {
-            table->setItem(row++, 0, new QTableWidgetItem("password"));
-        }
-        if(!target->hasAttrOfName("weak")) {
-            table->setItem(row++, 0, new QTableWidgetItem("weak"));
-        }
-        if(!target->hasAttrOfName("strong")) {
-            table->setItem(row++, 0, new QTableWidgetItem("strong"));
-        }
-        if(!target->hasAttrOfName("certificate")) {
-            table->setItem(row++, 0, new QTableWidgetItem("certificate"));
-        }
+        setAttributeOfName(table, row, tr("none"));
+        setAttributeOfName(table, row, tr("password"));
+        setAttributeOfName(table, row, tr("weak"));
+        setAttributeOfName(table, row, tr("strong"));
+        setAttributeOfName(table, row, tr("certificate"));
         break;
     }
     case DomItem::ICD_LDEVICE: {
         int row = 0;
         int totalAttributeNum = 2;
         table->setRowCount(totalAttributeNum - target->getAttributesList().count());
-        if(!target->hasAttrOfName("inst")) {
-            table->setItem(row++, 0, new QTableWidgetItem("inst"));
-        }
-        if(!target->hasAttrOfName("desc")) {
-            table->setItem(row++, 0, new QTableWidgetItem("desc"));
-        }
+        setAttributeOfName(table, row, tr("inst"));
+        setAttributeOfName(table, row, tr("desc"));
         break;
     }
     case DomItem::ICD_LN0: {
         int row = 0;
         int totalAttributeNum = 4;
         table->setRowCount(totalAttributeNum - target->getAttributesList().count());
-        if(!target->hasAttrOfName("lnClass")) {
-            table->setItem(row++, 0, new QTableWidgetItem("lnClass"));
-        }
-        if(!target->hasAttrOfName("lnType")) {
-            table->setItem(row++, 0, new QTableWidgetItem("lnType"));
-        }
-        if(!target->hasAttrOfName("inst")) {
-            table->setItem(row++, 0, new QTableWidgetItem("inst"));
-        }
-        if(!target->hasAttrOfName("desc")) {
-            table->setItem(row++, 0, new QTableWidgetItem("desc"));
-        }
+        setAttributeOfName(table, row, tr("lnClass"));
+        setAttributeOfName(table, row, tr("lnType"));
+        setAttributeOfName(table, row, tr("inst"));
+        setAttributeOfName(table, row, tr("desc"));
         break;
     }
     case DomItem::ICD_LN: {
         int row = 0;
         int totalAttributeNum = 5;
         table->setRowCount(totalAttributeNum - target->getAttributesList().count());
-        if(!target->hasAttrOfName("prefix")) {
-            table->setItem(row++, 0, new QTableWidgetItem("prefix"));
-        }
-        if(!target->hasAttrOfName("lnClass")) {
-            table->setItem(row++, 0, new QTableWidgetItem("lnClass"));
-        }
-        if(!target->hasAttrOfName("lnType")) {
-            table->setItem(row++, 0, new QTableWidgetItem("lnType"));
-        }
-        if(!target->hasAttrOfName("inst")) {
-            table->setItem(row++, 0, new QTableWidgetItem("inst"));
-        }
-        if(!target->hasAttrOfName("desc")) {
-            table->setItem(row++, 0, new QTableWidgetItem("desc"));
-        }
+        setAttributeOfName(table, row, tr("prefix"));
+        setAttributeOfName(table, row, tr("lnClass"));
+        setAttributeOfName(table, row, tr("lnType"));
+        setAttributeOfName(table, row, tr("inst"));
+        setAttributeOfName(table, row, tr("desc"));
         break;
     }
     case DomItem::ICD_DOI: {
         int row = 0;
         int totalAttributeNum = 4;
         table->setRowCount(totalAttributeNum - target->getAttributesList().count());
-        if(!target->hasAttrOfName("name")) {
-            table->setItem(row++, 0, new QTableWidgetItem("name"));
-        }
-        if(!target->hasAttrOfName("desc")) {
-            table->setItem(row++, 0, new QTableWidgetItem("desc"));
-        }
-        if(!target->hasAttrOfName("ix")) {
-            table->setItem(row++, 0, new QTableWidgetItem("ix"));
-        }
-        if(!target->hasAttrOfName("accessControl")) {
-            table->setItem(row++, 0, new QTableWidgetItem("accessControl"));
-        }
+        setAttributeOfName(table, row, tr("name"));
+        setAttributeOfName(table, row, tr("desc"));
+        setAttributeOfName(table, row, tr("ix"));
+        setAttributeOfName(table, row, tr("accessControl"));
         break;
     }
     case DomItem::ICD_DAI: {
         int row = 0;
         int totalAttributeNum = 5;
         table->setRowCount(totalAttributeNum - target->getAttributesList().count());
-        if(!target->hasAttrOfName("name")) {
-            table->setItem(row++, 0, new QTableWidgetItem("name"));
-        }
-        if(!target->hasAttrOfName("desc")) {
-            table->setItem(row++, 0, new QTableWidgetItem("desc"));
-        }
-        if(!target->hasAttrOfName("sAddr")) {
-            table->setItem(row++, 0, new QTableWidgetItem("sAddr"));
-        }
-        if(!target->hasAttrOfName("valKind")) {
-            table->setItem(row++, 0, new QTableWidgetItem("valKind"));
-        }
-        if(!target->hasAttrOfName("ix")) {
-            table->setItem(row++, 0, new QTableWidgetItem("ix"));
-        }
+        setAttributeOfName(table, row, tr("name"));
+        setAttributeOfName(table, row, tr("desc"));
+        setAttributeOfName(table, row, tr("sAddr"));
+        setAttributeOfName(table, row, tr("valKind"));
+        setAttributeOfName(table, row, tr("ix"));
         break;
     }
     case DomItem::ICD_SDI: {
         int row = 0;
         int totalAttributeNum = 3;
         table->setRowCount(totalAttributeNum - target->getAttributesList().count());
+        setAttributeOfName(table, row, tr("name"));
+        setAttributeOfName(table, row, tr("desc"));
+        setAttributeOfName(table, row, tr("ix"));
 
-        if(!target->hasAttrOfName("name")) {
-            table->setItem(row++, 0, new QTableWidgetItem("name"));
-        }
-        if(!target->hasAttrOfName("desc")) {
-            table->setItem(row++, 0, new QTableWidgetItem("desc"));
-        }
-        if(!target->hasAttrOfName("ix")) {
-            table->setItem(row++, 0, new QTableWidgetItem("ix"));
-        }
         break;
     }
     case DomItem::ICD_DATASET: {
         int row = 0;
         int totalAttributeNum = 2;
         table->setRowCount(totalAttributeNum - target->getAttributesList().count());
-        if(!target->hasAttrOfName("name")) {
-            table->setItem(row++, 0, new QTableWidgetItem("name"));
-        }
-        if(!target->hasAttrOfName("desc")) {
-            table->setItem(row++, 0, new QTableWidgetItem("desc"));
-        }
+        setAttributeOfName(table, row, tr("name"));
+        setAttributeOfName(table, row, tr("desc"));
         break;
     }
     case DomItem::ICD_FCDA: {
         int row = 0;
         int totalAttributeNum = 7;
         table->setRowCount(totalAttributeNum - target->getAttributesList().count());
-        if(!target->hasAttrOfName("ldInst")) {
-            table->setItem(row++, 0, new QTableWidgetItem("ldInst"));
-        }
-        if(!target->hasAttrOfName("prefix")) {
-            table->setItem(row++, 0, new QTableWidgetItem("prefix"));
-        }
-        if(!target->hasAttrOfName("lnClass")) {
-            table->setItem(row++, 0, new QTableWidgetItem("lnClass"));
-        }
-        if(!target->hasAttrOfName("lnInst")) {
-            table->setItem(row++, 0, new QTableWidgetItem("lnInst"));
-        }
-        if(!target->hasAttrOfName("doName")) {
-            table->setItem(row++, 0, new QTableWidgetItem("doName"));
-        }
-        if(!target->hasAttrOfName("daName")) {
-            table->setItem(row++, 0, new QTableWidgetItem("daName"));
-        }
-        if(!target->hasAttrOfName("fc")) {
-            table->setItem(row++, 0, new QTableWidgetItem("fc"));
-        }
+        setAttributeOfName(table, row, tr("ldInst"));
+        setAttributeOfName(table, row, tr("prefix"));
+        setAttributeOfName(table, row, tr("lnClass"));
+        setAttributeOfName(table, row, tr("lnInst"));
+        setAttributeOfName(table, row, tr("doName"));
+        setAttributeOfName(table, row, tr("daName"));
+        setAttributeOfName(table, row, tr("fc"));
         break;
     }
     case DomItem::ICD_REPORTCONTROL: {
         int row = 0;
         int totalAttributeNum = 8;
         table->setRowCount(totalAttributeNum - target->getAttributesList().count());
-        if(!target->hasAttrOfName("name")) {
-            table->setItem(row++, 0, new QTableWidgetItem("name"));
-        }
-        if(!target->hasAttrOfName("desc")) {
-            table->setItem(row++, 0, new QTableWidgetItem("desc"));
-        }
-        if(!target->hasAttrOfName("datSet")) {
-            table->setItem(row++, 0, new QTableWidgetItem("datSet"));
-        }
-        if(!target->hasAttrOfName("intgPd")) {
-            table->setItem(row++, 0, new QTableWidgetItem("intgPd"));
-        }
-        if(!target->hasAttrOfName("rptID")) {
-            table->setItem(row++, 0, new QTableWidgetItem("rptID"));
-        }
-        if(!target->hasAttrOfName("confRev")) {
-            table->setItem(row++, 0, new QTableWidgetItem("confRev"));
-        }
-        if(!target->hasAttrOfName("Buffered")) {
-            table->setItem(row++, 0, new QTableWidgetItem("Buffered"));
-        }
-        if(!target->hasAttrOfName("bufTime")) {
-            table->setItem(row++, 0, new QTableWidgetItem("bufTime"));
-        }
+        setAttributeOfName(table, row, tr("name"));
+        setAttributeOfName(table, row, tr("desc"));
+        setAttributeOfName(table, row, tr("datSet"));
+        setAttributeOfName(table, row, tr("intgPd"));
+        setAttributeOfName(table, row, tr("rptID"));
+        setAttributeOfName(table, row, tr("confRev"));
+        setAttributeOfName(table, row, tr("Buffered"));
+        setAttributeOfName(table, row, tr("bufTime"));
         break;
     }
     case DomItem::ICD_TRGOPS: {
         int row = 0;
         int totalAttributeNum = 4;
         table->setRowCount(totalAttributeNum - target->getAttributesList().count());
-        if(!target->hasAttrOfName("dchg")) {
-            table->setItem(row++, 0, new QTableWidgetItem("dchg"));
-        }
-        if(!target->hasAttrOfName("qchg")) {
-            table->setItem(row++, 0, new QTableWidgetItem("qchg"));
-        }
-        if(!target->hasAttrOfName("dupd")) {
-            table->setItem(row++, 0, new QTableWidgetItem("dupd"));
-        }
-        if(!target->hasAttrOfName("period")) {
-            table->setItem(row++, 0, new QTableWidgetItem("period"));
-        }
+        setAttributeOfName(table, row, tr("dchg"));
+        setAttributeOfName(table, row, tr("qchg"));
+        setAttributeOfName(table, row, tr("dupd"));
+        setAttributeOfName(table, row, tr("period"));
         break;
     }
     case DomItem::ICD_OPTFIELDS: {
         int row = 0;
         int totalAttributeNum = 9;
         table->setRowCount(totalAttributeNum - target->getAttributesList().count());
-        if(!target->hasAttrOfName("seqNum")) {
-            table->setItem(row++, 0, new QTableWidgetItem("seqNum"));
-        }
-        if(!target->hasAttrOfName("timeStamp")) {
-            table->setItem(row++, 0, new QTableWidgetItem("timeStamp"));
-        }
-        if(!target->hasAttrOfName("dataSet")) {
-            table->setItem(row++, 0, new QTableWidgetItem("dataSet"));
-        }
-        if(!target->hasAttrOfName("reasonCode")) {
-            table->setItem(row++, 0, new QTableWidgetItem("reasonCode"));
-        }
-        if(!target->hasAttrOfName("dataRef")) {
-            table->setItem(row++, 0, new QTableWidgetItem("dataRef"));
-        }
-        if(!target->hasAttrOfName("bufOvfl")) {
-            table->setItem(row++, 0, new QTableWidgetItem("bufOvfl"));
-        }
-        if(!target->hasAttrOfName("entryID")) {
-            table->setItem(row++, 0, new QTableWidgetItem("entryID"));
-        }
-        if(!target->hasAttrOfName("configRef")) {
-            table->setItem(row++, 0, new QTableWidgetItem("configRef"));
-        }
-        if(!target->hasAttrOfName("segmentation")) {
-            table->setItem(row++, 0, new QTableWidgetItem("segmentation"));
-        }
+        setAttributeOfName(table, row, tr("seqNum"));
+        setAttributeOfName(table, row, tr("timeStamp"));
+        setAttributeOfName(table, row, tr("dataSet"));
+        setAttributeOfName(table, row, tr("reasonCode"));
+        setAttributeOfName(table, row, tr("dataRef"));
+        setAttributeOfName(table, row, tr("bufOvfl"));
+        setAttributeOfName(table, row, tr("entryID"));
+        setAttributeOfName(table, row, tr("configRef"));
+        setAttributeOfName(table, row, tr("segmentation"));
         break;
     }
     case DomItem::ICD_RPTENABLED: {
         int row = 0;
         int totalAttributeNum = 2;
         table->setRowCount(totalAttributeNum - target->getAttributesList().count());
-        if(!target->hasAttrOfName("desc")) {
-            table->setItem(row++, 0, new QTableWidgetItem("desc"));
-        }
-        if(!target->hasAttrOfName("max")) {
-            table->setItem(row++, 0, new QTableWidgetItem("max"));
-        }
+        setAttributeOfName(table, row, tr("desc"));
+        setAttributeOfName(table, row, tr("max"));
         break;
     }
     case DomItem::ICD_CLIENTLN: {
         int row = 0;
         int totalAttributeNum = 4;
         table->setRowCount(totalAttributeNum - target->getAttributesList().count());
-        if(!target->hasAttrOfName("iedName")) {
-            table->setItem(row++, 0, new QTableWidgetItem("iedName"));
-        }
-        if(!target->hasAttrOfName("ldInst")) {
-            table->setItem(row++, 0, new QTableWidgetItem("ldInst"));
-        }
-        if(!target->hasAttrOfName("prefix")) {
-            table->setItem(row++, 0, new QTableWidgetItem("prefix"));
-        }
-        if(!target->hasAttrOfName("lnClass")) {
-            table->setItem(row++, 0, new QTableWidgetItem("lnClass"));
-        }
-        if(!target->hasAttrOfName("lnInst")) {
-            table->setItem(row++, 0, new QTableWidgetItem("lnInst"));
-        }
+        setAttributeOfName(table, row, tr("iedName"));
+        setAttributeOfName(table, row, tr("ldInst"));
+        setAttributeOfName(table, row, tr("prefix"));
+        setAttributeOfName(table, row, tr("lnClass"));
+        setAttributeOfName(table, row, tr("lnInst"));
         break;
     }
     case DomItem::ICD_LOGCONTROL: {
         int row = 0;
         int totalAttributeNum = 7;
         table->setRowCount(totalAttributeNum - target->getAttributesList().count());
-        if(!target->hasAttrOfName("name")) {
-            table->setItem(row++, 0, new QTableWidgetItem("name"));
-        }
-        if(!target->hasAttrOfName("desc")) {
-            table->setItem(row++, 0, new QTableWidgetItem("desc"));
-        }
-        if(!target->hasAttrOfName("datSet")) {
-            table->setItem(row++, 0, new QTableWidgetItem("datSet"));
-        }
-        if(!target->hasAttrOfName("intgPd")) {
-            table->setItem(row++, 0, new QTableWidgetItem("intgPd"));
-        }
-        if(!target->hasAttrOfName("logName")) {
-            table->setItem(row++, 0, new QTableWidgetItem("logName"));
-        }
-        if(!target->hasAttrOfName("logEna")) {
-            table->setItem(row++, 0, new QTableWidgetItem("logEna"));
-        }
-        if(!target->hasAttrOfName("reasonCode")) {
-            table->setItem(row++, 0, new QTableWidgetItem("reasonCode"));
-        }
+        setAttributeOfName(table, row, tr("name"));
+        setAttributeOfName(table, row, tr("desc"));
+        setAttributeOfName(table, row, tr("datSet"));
+        setAttributeOfName(table, row, tr("intgPd"));
+        setAttributeOfName(table, row, tr("logName"));
+        setAttributeOfName(table, row, tr("logEna"));
+        setAttributeOfName(table, row, tr("reasonCode"));
         break;
     }
     case DomItem::ICD_GSECONTROL: {
         int row = 0;
         int totalAttributeNum = 6;
         table->setRowCount(totalAttributeNum - target->getAttributesList().count());
-        if(!target->hasAttrOfName("name")) {
-            table->setItem(row++, 0, new QTableWidgetItem("name"));
-        }
-        if(!target->hasAttrOfName("desc")) {
-            table->setItem(row++, 0, new QTableWidgetItem("desc"));
-        }
-        if(!target->hasAttrOfName("datSet")) {
-            table->setItem(row++, 0, new QTableWidgetItem("datSet"));
-        }
-        if(!target->hasAttrOfName("confRev")) {
-            table->setItem(row++, 0, new QTableWidgetItem("confRev"));
-        }
-        if(!target->hasAttrOfName("type")) {
-            table->setItem(row++, 0, new QTableWidgetItem("type"));
-        }
-        if(!target->hasAttrOfName("appID")) {
-            table->setItem(row++, 0, new QTableWidgetItem("appID"));
-        }
+        setAttributeOfName(table, row, tr("name"));
+        setAttributeOfName(table, row, tr("desc"));
+        setAttributeOfName(table, row, tr("datSet"));
+        setAttributeOfName(table, row, tr("confRev"));
+        setAttributeOfName(table, row, tr("type"));
+        setAttributeOfName(table, row, tr("appID"));
         break;
     }
     case DomItem::ICD_SVCONTROL: {
         int row = 0;
         int totalAttributeNum = 8;
         table->setRowCount(totalAttributeNum - target->getAttributesList().count());
-        if(!target->hasAttrOfName("name")) {
-            table->setItem(row++, 0, new QTableWidgetItem("name"));
-        }
-        if(!target->hasAttrOfName("desc")) {
-            table->setItem(row++, 0, new QTableWidgetItem("desc"));
-        }
-        if(!target->hasAttrOfName("datSet")) {
-            table->setItem(row++, 0, new QTableWidgetItem("datSet"));
-        }
-        if(!target->hasAttrOfName("confRev")) {
-            table->setItem(row++, 0, new QTableWidgetItem("confRev"));
-        }
-        if(!target->hasAttrOfName("smvID")) {
-            table->setItem(row++, 0, new QTableWidgetItem("smvID"));
-        }
-        if(!target->hasAttrOfName("multicast")) {
-            table->setItem(row++, 0, new QTableWidgetItem("multicast"));
-        }
-        if(!target->hasAttrOfName("smpRate")) {
-            table->setItem(row++, 0, new QTableWidgetItem("smpRate"));
-        }
-        if(!target->hasAttrOfName("nofASDU")) {
-            table->setItem(row++, 0, new QTableWidgetItem("nofASDU"));
-        }
+        setAttributeOfName(table, row, tr("name"));
+        setAttributeOfName(table, row, tr("desc"));
+        setAttributeOfName(table, row, tr("datSet"));
+        setAttributeOfName(table, row, tr("confRev"));
+        setAttributeOfName(table, row, tr("smvID"));
+        setAttributeOfName(table, row, tr("multicast"));
+        setAttributeOfName(table, row, tr("smpRate"));
+        setAttributeOfName(table, row, tr("nofASDU"));
         break;
     }
     case DomItem::ICD_SMVOPTS: {
         int row = 0;
         int totalAttributeNum = 5;
         table->setRowCount(totalAttributeNum - target->getAttributesList().count());
-        if(!target->hasAttrOfName("refreshTime")) {
-            table->setItem(row++, 0, new QTableWidgetItem("refreshTime"));
-        }
-        if(!target->hasAttrOfName("samplesSynchronized")) {
-            table->setItem(row++, 0, new QTableWidgetItem("samplesSynchronized"));
-        }
-        if(!target->hasAttrOfName("sampleRate")) {
-            table->setItem(row++, 0, new QTableWidgetItem("sampleRate"));
-        }
-        if(!target->hasAttrOfName("security")) {
-            table->setItem(row++, 0, new QTableWidgetItem("security"));
-        }
-        if(!target->hasAttrOfName("dataRef")) {
-            table->setItem(row++, 0, new QTableWidgetItem("dataRef"));
-        }
+        setAttributeOfName(table, row, tr("refreshTime"));
+        setAttributeOfName(table, row, tr("samplesSynchronized"));
+        setAttributeOfName(table, row, tr("sampleRate"));
+        setAttributeOfName(table, row, tr("security"));
+        setAttributeOfName(table, row, tr("dataRef"));
         break;
     }
     case DomItem::ICD_SETTINGCONTROL: {
         int row = 0;
         int totalAttributeNum = 3;
         table->setRowCount(totalAttributeNum - target->getAttributesList().count());
-        if(!target->hasAttrOfName("desc")) {
-            table->setItem(row++, 0, new QTableWidgetItem("desc"));
-        }
-        if(!target->hasAttrOfName("numOfSGs")) {
-            table->setItem(row++, 0, new QTableWidgetItem("numOfSGs"));
-        }
-        if(!target->hasAttrOfName("actSG")) {
-            table->setItem(row++, 0, new QTableWidgetItem("actSG"));
-        }
+        setAttributeOfName(table, row, tr("desc"));
+        setAttributeOfName(table, row, tr("numOfSGs"));
+        setAttributeOfName(table, row, tr("actSG"));
         break;
     }
     case DomItem::ICD_EXTREFS: {
         int row = 0;
         int totalAttributeNum = 8;
         table->setRowCount(totalAttributeNum - target->getAttributesList().count());
-        if(!target->hasAttrOfName("iedName")) {
-            table->setItem(row++, 0, new QTableWidgetItem("iedName"));
-        }
-        if(!target->hasAttrOfName("ldInst")) {
-            table->setItem(row++, 0, new QTableWidgetItem("ldInst"));
-        }
-        if(!target->hasAttrOfName("prefix")) {
-            table->setItem(row++, 0, new QTableWidgetItem("prefix"));
-        }
-        if(!target->hasAttrOfName("lnClass")) {
-            table->setItem(row++, 0, new QTableWidgetItem("lnClass"));
-        }
-        if(!target->hasAttrOfName("lnInst")) {
-            table->setItem(row++, 0, new QTableWidgetItem("lnInst"));
-        }
-        if(!target->hasAttrOfName("doName")) {
-            table->setItem(row++, 0, new QTableWidgetItem("doName"));
-        }
-        if(!target->hasAttrOfName("daName")) {
-            table->setItem(row++, 0, new QTableWidgetItem("daName"));
-        }
-        if(!target->hasAttrOfName("intAddr")) {
-            table->setItem(row++, 0, new QTableWidgetItem("intAddr"));
-        }
+        setAttributeOfName(table, row, tr("iedName"));
+        setAttributeOfName(table, row, tr("ldInst"));
+        setAttributeOfName(table, row, tr("prefix"));
+        setAttributeOfName(table, row, tr("lnClass"));
+        setAttributeOfName(table, row, tr("lnInst"));
+        setAttributeOfName(table, row, tr("doName"));
+        setAttributeOfName(table, row, tr("daName"));
+        setAttributeOfName(table, row, tr("intAddr"));
         break;
     }
     case DomItem::ICD_ASSOCIATION: {
         int row = 0;
         int totalAttributeNum = 7;
         table->setRowCount(totalAttributeNum - target->getAttributesList().count());
-        if(!target->hasAttrOfName("kind")) {
-            table->setItem(row++, 0, new QTableWidgetItem("kind"));
-        }
-        if(!target->hasAttrOfName("associationID")) {
-            table->setItem(row++, 0, new QTableWidgetItem("associationID"));
-        }
-        if(!target->hasAttrOfName("iedName")) {
-            table->setItem(row++, 0, new QTableWidgetItem("iedName"));
-        }
-        if(!target->hasAttrOfName("ldInst")) {
-            table->setItem(row++, 0, new QTableWidgetItem("ldInst"));
-        }
-        if(!target->hasAttrOfName("lnClass")) {
-            table->setItem(row++, 0, new QTableWidgetItem("lnClass"));
-        }
-        if(!target->hasAttrOfName("prefix")) {
-            table->setItem(row++, 0, new QTableWidgetItem("prefix"));
-        }
-        if(!target->hasAttrOfName("lnInst")) {
-            table->setItem(row++, 0, new QTableWidgetItem("lnInst"));
-        }
+        setAttributeOfName(table, row, tr("kind"));
+        setAttributeOfName(table, row, tr("associationID"));
+        setAttributeOfName(table, row, tr("iedName"));
+        setAttributeOfName(table, row, tr("ldInst"));
+        setAttributeOfName(table, row, tr("lnClass"));
+        setAttributeOfName(table, row, tr("prefix"));
+        setAttributeOfName(table, row, tr("lnInst"));
         break;
     }
     case DomItem::ICD_TEXT: {
         int row = 0;
         int totalAttributeNum = 1;
         table->setRowCount(totalAttributeNum - target->getAttributesList().count());
-        if(!target->hasAttrOfName("source")) {
-            table->setItem(row++, 0, new QTableWidgetItem("source"));
-        }
+        setAttributeOfName(table, row, tr("source"));
         break;
     }
     case DomItem::ICD_PRIVATE: {
         int row = 0;
         int totalAttributeNum = 2;
         table->setRowCount(totalAttributeNum - target->getAttributesList().count());
-        if(!target->hasAttrOfName("type")) {
-            table->setItem(row++, 0, new QTableWidgetItem("type"));
-        }
-        if(!target->hasAttrOfName("source")) {
-            table->setItem(row++, 0, new QTableWidgetItem("source"));
-        }
+        setAttributeOfName(table, row, tr("type"));
+        setAttributeOfName(table, row, tr("source"));
+        break;
+    }
+
+    case DomItem::ICD_SUBSTATION: {
+        int row = 0;
+        int totalAttributeNum = 2;
+        table->setRowCount(totalAttributeNum - target->getAttributesList().count());
+        setAttributeOfName(table, row, tr("name"));
+        setAttributeOfName(table, row, tr("type"));
+        break;
+    }
+    case DomItem::ICD_POWERTRANSFORMER: {
+        int row = 0;
+        int totalAttributeNum = 3;
+        table->setRowCount(totalAttributeNum - target->getAttributesList().count());
+        setAttributeOfName(table, row, tr("type"));
+        setAttributeOfName(table, row, tr("phase"));
+        setAttributeOfName(table, row, tr("virtual"));
+        break;
+    }
+    case DomItem::ICD_GENERALEQUIPMENT: {
+        int row = 0;
+        int totalAttributeNum = 3;
+        table->setRowCount(totalAttributeNum - target->getAttributesList().count());
+        setAttributeOfName(table, row, tr("type"));
+        setAttributeOfName(table, row, tr("phase"));
+        setAttributeOfName(table, row, tr("virtual"));
+        break;
+    }
+    case DomItem::ICD_LNODE: {
+        int row = 0;
+        int totalAttributeNum = 7;
+        table->setRowCount(totalAttributeNum - target->getAttributesList().count());
+        setAttributeOfName(table, row, tr("lnInst"));
+        setAttributeOfName(table, row, tr("lnClass"));
+        setAttributeOfName(table, row, tr("iedName"));
+        setAttributeOfName(table, row, tr("ldInst"));
+        setAttributeOfName(table, row, tr("prefix"));
+        setAttributeOfName(table, row, tr("lnType"));
+        setAttributeOfName(table, row, tr("desc"));
+        break;
+    }
+    case DomItem::ICD_VOLTAGELEVEL:
+    case DomItem::ICD_FUNCTION:
+    case DomItem::ICD_BAY:
+    case DomItem::ICD_SUBFUNCTION: {
+        int row = 0;
+        int totalAttributeNum = 2;
+        table->setRowCount(totalAttributeNum - target->getAttributesList().count());
+        setAttributeOfName(table, row, tr("name"));
+        setAttributeOfName(table, row, tr("desc"));
+
+        break;
+    }
+    case DomItem::ICD_TRANSFORMERWINDING:{
+        int row = 0;
+        int totalAttributeNum = 3;
+        table->setRowCount(totalAttributeNum - target->getAttributesList().count());
+        setAttributeOfName(table, row, tr("type"));
+        setAttributeOfName(table, row, tr("name"));
+        setAttributeOfName(table, row, tr("desc"));
+        break;
+    }
+    case DomItem::ICD_VOLTAGE:{
+        int row = 0;
+        int totalAttributeNum = 2;
+        table->setRowCount(totalAttributeNum - target->getAttributesList().count());
+
+        setAttributeOfName(table, row, tr("unit"));
+        setAttributeOfName(table, row, tr("multiplier"));
+
+        break;
+    }
+    case DomItem::ICD_TAPCHARGER:{
+        int row = 0;
+        int totalAttributeNum = 3;
+        table->setRowCount(totalAttributeNum - target->getAttributesList().count());
+        setAttributeOfName(table, row, tr("name"));
+        setAttributeOfName(table, row, tr("desc"));
+        setAttributeOfName(table, row, tr("type"));
+        break;
+    }
+    case DomItem::ICD_TERMINAL:{
+        int row = 0;
+        int totalAttributeNum = 7;
+        table->setRowCount(totalAttributeNum - target->getAttributesList().count());
+        setAttributeOfName(table, row, tr("name"));
+        setAttributeOfName(table, row, tr("connectivityNode"));
+        setAttributeOfName(table, row, tr("substationName"));
+        setAttributeOfName(table, row, tr("voltageLevelName"));
+        setAttributeOfName(table, row, tr("bayName"));
+        setAttributeOfName(table, row, tr("cNodeName"));
+        setAttributeOfName(table, row, tr("desc"));
+        break;
+    }
+    case DomItem::ICD_SUBEQUIPMENT:{
+        int row = 0;
+        int totalAttributeNum = 3;
+        table->setRowCount(totalAttributeNum - target->getAttributesList().count());
+        setAttributeOfName(table, row, tr("name"));
+        setAttributeOfName(table, row, tr("desc"));
+        setAttributeOfName(table, row, tr("phase"));
+        break;
+    }
+    case DomItem::ICD_CONDUCTINGEQUIPMENT:{
+        int row = 0;
+        int totalAttributeNum = 3;
+        table->setRowCount(totalAttributeNum - target->getAttributesList().count());
+        setAttributeOfName(table, row, tr("name"));
+        setAttributeOfName(table, row, tr("desc"));
+        setAttributeOfName(table, row, tr("type"));
+        break;
+    }
+    case DomItem::ICD_CONNECTIVITYNODE:{
+        int row = 0;
+        int totalAttributeNum = 3;
+        table->setRowCount(totalAttributeNum - target->getAttributesList().count());
+        setAttributeOfName(table, row, tr("name"));
+        setAttributeOfName(table, row, tr("desc"));
+        setAttributeOfName(table, row, tr("pathName"));
+        break;
+    }
+    case DomItem::ICD_LNODETYPES:{
+        int row = 0;
+        int totalAttributeNum = 4;
+        table->setRowCount(totalAttributeNum - target->getAttributesList().count());
+        setAttributeOfName(table, row, tr("id"));
+        setAttributeOfName(table, row, tr("desc"));
+        setAttributeOfName(table, row, tr("iedType"));
+        setAttributeOfName(table, row, tr("lnClass"));
+        break;
+    }
+    case DomItem::ICD_DOTYPE:{
+        int row = 0;
+        int totalAttributeNum = 4;
+        table->setRowCount(totalAttributeNum - target->getAttributesList().count());
+        setAttributeOfName(table, row, tr("id"));
+        setAttributeOfName(table, row, tr("desc"));
+        setAttributeOfName(table, row, tr("iedType"));
+        setAttributeOfName(table, row, tr("cdc"));
+        break;
+    }
+    case DomItem::ICD_DATYPE:{
+        int row = 0;
+        int totalAttributeNum = 3;
+        table->setRowCount(totalAttributeNum - target->getAttributesList().count());
+        setAttributeOfName(table, row, tr("id"));
+        setAttributeOfName(table, row, tr("desc"));
+        setAttributeOfName(table, row, tr("iedType"));
+
+        break;
+    }
+    case DomItem::ICD_ENUMTYPE:{
+        int row = 0;
+        int totalAttributeNum = 2;
+        table->setRowCount(totalAttributeNum - target->getAttributesList().count());
+        setAttributeOfName(table, row, tr("id"));
+        setAttributeOfName(table, row, tr("desc"));
+        break;
+    }
+    case DomItem::ICD_DO:{
+        int row = 0;
+        int totalAttributeNum = 5;
+        table->setRowCount(totalAttributeNum - target->getAttributesList().count());
+        setAttributeOfName(table, row, tr("name"));
+        setAttributeOfName(table, row, tr("type"));
+        setAttributeOfName(table, row, tr("accessControl"));
+        setAttributeOfName(table, row, tr("transient"));
+        setAttributeOfName(table, row, tr("desc"));
+        break;
+    }
+    case DomItem::ICD_DA:{
+        int row = 0;
+        int totalAttributeNum = 7;
+        table->setRowCount(totalAttributeNum - target->getAttributesList().count());
+        setAttributeOfName(table, row, tr("fc"));
+        setAttributeOfName(table, row, tr("name"));
+        setAttributeOfName(table, row, tr("sAddr"));
+        setAttributeOfName(table, row, tr("bType"));
+        setAttributeOfName(table, row, tr("valKind"));
+        setAttributeOfName(table, row, tr("type"));
+        setAttributeOfName(table, row, tr("count"));
+        break;
+    }
+    case DomItem::ICD_SDO:{
+        int row = 0;
+        int totalAttributeNum = 2;
+        table->setRowCount(totalAttributeNum - target->getAttributesList().count());
+        setAttributeOfName(table, row, tr("name"));
+        setAttributeOfName(table, row, tr("type"));
+        break;
+    }
+    case DomItem::ICD_BDA:{
+        int row = 0;
+        int totalAttributeNum = 6;
+        table->setRowCount(totalAttributeNum - target->getAttributesList().count());
+        setAttributeOfName(table, row, tr("name"));
+        setAttributeOfName(table, row, tr("sAddr"));
+        setAttributeOfName(table, row, tr("bType"));
+        setAttributeOfName(table, row, tr("valKind"));
+        setAttributeOfName(table, row, tr("type"));
+        setAttributeOfName(table, row, tr("count"));
+        break;
+    }
+    case DomItem::ICD_ENUMVAL:{
+        int row = 0;
+        int totalAttributeNum = 1;
+        table->setRowCount(totalAttributeNum - target->getAttributesList().count());
+        setAttributeOfName(table, row, tr("ord"));
         break;
     }
     default:
@@ -1568,4 +1500,9 @@ void EditElement::on_noUseAttrTable_itemClicked(QTableWidgetItem *item)
         newAttribute->setEnabled(true);
     else
         newAttribute->setEnabled(false);
+}
+
+void EditElement::on_noUseAttrTable_itemDoubleClicked(QTableWidgetItem *item)
+{
+    on_newAttribute_clicked();
 }

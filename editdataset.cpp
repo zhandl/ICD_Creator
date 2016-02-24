@@ -184,6 +184,7 @@ void EditDataSet::accept()
         if(item->hasDaName)
             fcdaItem->addAttribute("daName", item->daName);
 
+        fcdaItem->setNodeType();
         target->addChild(fcdaItem);
     }
     QDialog::accept();

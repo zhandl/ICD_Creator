@@ -64,12 +64,28 @@ QIcon DomItem::childrenHiddenBkmIcon;
 
 QIcon DomItem::sclIcon;
 QIcon DomItem::headerIcon;
+QIcon DomItem::substationIcon;
 QIcon DomItem::communicationIcon;
 QIcon DomItem::iedIcon;
 QIcon DomItem::dataTypeIcon;
 
 QIcon DomItem::addTextIcon;
 QIcon DomItem::privateIcon;
+
+QIcon DomItem::powerTransformerIcon;
+QIcon DomItem::generalEquipmentIcon;
+QIcon DomItem::lnNodeIcon;
+QIcon DomItem::voltageLevelIcon;
+QIcon DomItem::functionIcon;
+QIcon DomItem::transformerWindingIcon;
+QIcon DomItem::bayIcon;
+QIcon DomItem::voltageIcon;
+QIcon DomItem::subFunctionIcon;
+QIcon DomItem::tapChangerIcon;
+QIcon DomItem::terminalIcon;
+QIcon DomItem::subEquipmentIcon;
+QIcon DomItem::conductingEquipmentIcon;
+QIcon DomItem::connectivityNodeIcon;
 
 QIcon DomItem::historyIcon;
 QIcon DomItem::hitemIcon;
@@ -84,6 +100,8 @@ QIcon DomItem::smvIcon;
 QIcon DomItem::physconnIcon;
 QIcon DomItem::minOrMaxTimeIcon;
 
+//QIcon DomItem::gseSecurityIcon;
+//QIcon DomItem::smvSecurityIcon;
 QIcon DomItem::servicesIcon;
 QIcon DomItem::servicesItemIcon;
 QIcon DomItem::servicesItemGroupIcon;
@@ -92,6 +110,7 @@ QIcon DomItem::serverIcon;
 QIcon DomItem::serverAtIcon;
 QIcon DomItem::authenticationIcon;
 QIcon DomItem::associationIcon;
+QIcon DomItem::accessControlIcon;
 QIcon DomItem::ldeviceIcon;
 QIcon DomItem::ln0Icon;
 QIcon DomItem::lnIcon;
@@ -109,8 +128,26 @@ QIcon DomItem::logIcon;
 QIcon DomItem::gseControlIcon;
 QIcon DomItem::smvControlIcon;
 QIcon DomItem::settingControlIcon;
+QIcon DomItem::sclControlIcon;
 
+QIcon DomItem::trgOpsIcon;
+QIcon DomItem::OptFieldsIcon;
+QIcon DomItem::RptEnabledIcon;
+QIcon DomItem::extRefIcon;
+QIcon DomItem::iedNameIcon;
+QIcon DomItem::smvOptsIcon;
 
+QIcon DomItem::valIcon;
+
+QIcon DomItem::LNodeTypeIcon;
+QIcon DomItem::DOTypeIcon;
+QIcon DomItem::DATypeIcon;
+QIcon DomItem::EnumTypeIcon;
+QIcon DomItem::doIcon;
+QIcon DomItem::daIcon;
+QIcon DomItem::sdoIcon;
+QIcon DomItem::bdaIcon;
+QIcon DomItem::enumValIcon;
 
 const int DomItem::ShowDataRole = Qt::UserRole + 1;
 
@@ -170,6 +207,7 @@ DomItem::DomItem(DomModel *model)
     initItem(model, NULL);
     type = ET_ELEMENT;
     nodeType = ICD_SCL;
+    setNodeType();
 }
 
 DomItem::DomItem(DomModel *model, const ItemType newType, DomItem *parent)
@@ -235,6 +273,7 @@ void DomItem::loadIcons()
 
     sclIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/SCL.png")), QIcon::Normal, QIcon::Off);
     headerIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/header.png")), QIcon::Normal, QIcon::Off);
+    substationIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/substation.png")), QIcon::Normal, QIcon::Off);
     communicationIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/communication.png")), QIcon::Normal, QIcon::Off);
     iedIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/IED.png")), QIcon::Normal, QIcon::Off);
     dataTypeIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/iec.png")), QIcon::Normal, QIcon::Off);
@@ -244,6 +283,21 @@ void DomItem::loadIcons()
 
     historyIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/history.png")), QIcon::Normal, QIcon::Off);
     hitemIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/hitem.png")), QIcon::Normal, QIcon::Off);
+
+    powerTransformerIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/powerTransformer.png")), QIcon::Normal, QIcon::Off);
+    generalEquipmentIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/generalEquipment.png")), QIcon::Normal, QIcon::Off);
+    lnNodeIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/lnNode.png")), QIcon::Normal, QIcon::Off);
+    voltageLevelIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/voltageLevel.png")), QIcon::Normal, QIcon::Off);
+    functionIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/function.png")), QIcon::Normal, QIcon::Off);
+    transformerWindingIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/transformerWinding.png")), QIcon::Normal, QIcon::Off);
+    bayIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/bay.png")), QIcon::Normal, QIcon::Off);
+    voltageIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/voltage.png")), QIcon::Normal, QIcon::Off);
+    subFunctionIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/subFunction.png")), QIcon::Normal, QIcon::Off);
+    tapChangerIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/tapChanger.png")), QIcon::Normal, QIcon::Off);
+    terminalIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/terminal.png")), QIcon::Normal, QIcon::Off);
+    subEquipmentIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/subEquipment.png")), QIcon::Normal, QIcon::Off);
+    conductingEquipmentIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/conductingEquipment.png")), QIcon::Normal, QIcon::Off);
+    connectivityNodeIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/connectivityNode.png")), QIcon::Normal, QIcon::Off);
 
     subnetworkIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/subNetwork.png")), QIcon::Normal, QIcon::Off);
     bitRateIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/bitRate.png")), QIcon::Normal, QIcon::Off);
@@ -261,6 +315,7 @@ void DomItem::loadIcons()
     servicesItemGroupIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/servicesItemGroup.png")), QIcon::Normal, QIcon::Off);
     accesspointIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/accesspoint.png")), QIcon::Normal, QIcon::Off);
     associationIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/association.png")), QIcon::Normal, QIcon::Off);
+    accessControlIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/accessControl.png")), QIcon::Normal, QIcon::Off);
     authenticationIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/authentication.png")), QIcon::Normal, QIcon::Off);
     serverIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/Server.png")), QIcon::Normal, QIcon::Off);
     serverAtIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/ServerAt.png")), QIcon::Normal, QIcon::Off);
@@ -280,6 +335,26 @@ void DomItem::loadIcons()
     gseControlIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/gseControl.png")), QIcon::Normal, QIcon::Off);
     smvControlIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/smvControl.png")), QIcon::Normal, QIcon::Off);
     settingControlIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/settingControl.png")), QIcon::Normal, QIcon::Off);
+    sclControlIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/sclControl.png")), QIcon::Normal, QIcon::Off);
+
+    trgOpsIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/trgOps.png")), QIcon::Normal, QIcon::Off);;
+    OptFieldsIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/optFields.png")), QIcon::Normal, QIcon::Off);;
+    RptEnabledIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/rptEnabled.png")), QIcon::Normal, QIcon::Off);;
+    extRefIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/extRef.png")), QIcon::Normal, QIcon::Off);;
+    iedNameIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/iedName.png")), QIcon::Normal, QIcon::Off);;
+    smvOptsIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/smvOpts.png")), QIcon::Normal, QIcon::Off);;
+    valIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/val.png")), QIcon::Normal, QIcon::Off);;
+
+    LNodeTypeIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/LNodeType.png")), QIcon::Normal, QIcon::Off);;
+    DOTypeIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/doType.png")), QIcon::Normal, QIcon::Off);;
+    DATypeIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/daType.png")), QIcon::Normal, QIcon::Off);;
+    EnumTypeIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/enumType.png")), QIcon::Normal, QIcon::Off);;
+    doIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/DO.png")), QIcon::Normal, QIcon::Off);;
+    daIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/DA.png")), QIcon::Normal, QIcon::Off);;
+    bdaIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/bda.png")), QIcon::Normal, QIcon::Off);;
+    sdoIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/sdo.png")), QIcon::Normal, QIcon::Off);;
+    enumValIcon.addPixmap(QPixmap(QString::fromUtf8(":/nodeType/images/enumVal.png")), QIcon::Normal, QIcon::Off);;
+
 }
 
 //bool DomItem::isShownBase64() const
@@ -2268,6 +2343,9 @@ QIcon DomItem::iconForNode()
     case ICD_HEADER:
         *showIcon = headerIcon;
         break;
+    case ICD_SUBSTATION:
+        *showIcon = substationIcon;
+        break;
     case ICD_COMMUNICATION:
         *showIcon = communicationIcon;
         break;
@@ -2290,6 +2368,49 @@ QIcon DomItem::iconForNode()
         break;
     case ICD_HITEM:
         *showIcon = hitemIcon;
+        break;
+
+    case ICD_POWERTRANSFORMER:
+        *showIcon = powerTransformerIcon;
+        break;
+    case ICD_GENERALEQUIPMENT:
+        *showIcon = generalEquipmentIcon;
+        break;
+    case ICD_LNODE:
+        *showIcon = lnNodeIcon;
+        break;
+    case ICD_VOLTAGELEVEL:
+        *showIcon = voltageLevelIcon;
+        break;
+    case ICD_FUNCTION:
+        *showIcon = functionIcon;
+        break;
+    case ICD_TRANSFORMERWINDING:
+        *showIcon = transformerWindingIcon;
+        break;
+    case ICD_BAY:
+        *showIcon = bayIcon;
+        break;
+    case ICD_VOLTAGE:
+        *showIcon = voltageIcon;
+        break;
+    case ICD_SUBFUNCTION:
+        *showIcon = subFunctionIcon;
+        break;
+    case ICD_TAPCHARGER:
+        *showIcon = tapChangerIcon;
+        break;
+    case ICD_TERMINAL:
+        *showIcon = terminalIcon;
+        break;
+    case ICD_SUBEQUIPMENT:
+        *showIcon = subEquipmentIcon;
+        break;
+    case ICD_CONDUCTINGEQUIPMENT:
+        *showIcon = conductingEquipmentIcon;
+        break;
+    case ICD_CONNECTIVITYNODE:
+        *showIcon = connectivityNodeIcon;
         break;
 
     case ICD_SUBNETWORK:
@@ -2335,11 +2456,19 @@ QIcon DomItem::iconForNode()
     case ICD_ACCESSPOINT:
         *showIcon = accesspointIcon;
         break;
+
+
     case ICD_SERVER:
         *showIcon = serverIcon;
         break;
     case ICD_AUTHENTICATION:
         *showIcon = authenticationIcon;
+        break;
+    case ICD_ACCESSCONTROL:
+        *showIcon = accessControlIcon;
+        break;
+    case ICD_ASSOCIATION:
+        *showIcon = associationIcon;
         break;
     case ICD_LDEVICE:
         *showIcon = ldeviceIcon;
@@ -2386,6 +2515,61 @@ QIcon DomItem::iconForNode()
     case ICD_SETTINGCONTROL:
         *showIcon = settingControlIcon;
         break;
+    case ICD_SCLCONTROL:
+        *showIcon = sclControlIcon;
+        break;
+
+
+    case ICD_TRGOPS:
+        *showIcon = trgOpsIcon;
+        break;
+    case ICD_OPTFIELDS:
+        *showIcon = OptFieldsIcon;
+        break;
+    case ICD_RPTENABLED:
+        *showIcon = RptEnabledIcon;
+        break;
+    case ICD_EXTREFS:
+        *showIcon = extRefIcon;
+        break;
+    case ICD_IEDNAME:
+        *showIcon = iedNameIcon;
+        break;
+    case ICD_SMVOPTS:
+        *showIcon = smvOptsIcon;
+        break;
+    case ICD_VAL:
+        *showIcon = valIcon;
+        break;
+
+    case ICD_LNODETYPES:
+        *showIcon = LNodeTypeIcon;
+        break;
+    case ICD_DOTYPE:
+        *showIcon = DOTypeIcon;
+        break;
+    case ICD_DATYPE:
+        *showIcon = DATypeIcon;
+        break;
+    case ICD_ENUMTYPE:
+        *showIcon = EnumTypeIcon;
+        break;
+    case ICD_DO:
+        *showIcon = doIcon;
+        break;
+    case ICD_DA:
+        *showIcon = daIcon;
+        break;
+    case ICD_SDO:
+        *showIcon = sdoIcon;
+        break;
+    case ICD_BDA:
+        *showIcon = bdaIcon;
+        break;
+    case ICD_ENUMVAL:
+        *showIcon = enumValIcon;
+        break;
+
     case ICD_SCL:
     default:
         *showIcon = sclIcon;
@@ -2851,7 +3035,7 @@ void DomItem::setNodeType()
         _isSequence = true;
         _canNoUse = true;
         _canBeMore = true;
-    } else if(newTag == tr("SetttingControl")) {
+    } else if(newTag == tr("SettingControl")) {
         nodeType = ICD_SETTINGCONTROL;
         _isSequence = true;
         _canNoUse = true;
@@ -2935,17 +3119,17 @@ void DomItem::setNodeType()
         _isSequence = true;
         _canNoUse = true;
         _canBeMore = false;
-    } else if(newTag == tr("LNodeTypes")) {
+    } else if(newTag == tr("LNodeType")) {
         nodeType = ICD_LNODETYPES;
         _isSequence = true;
         _canNoUse = false;
         _canBeMore = true;
-    } else if(newTag == tr("DoTypes")) {
+    } else if(newTag == tr("DOType")) {
         nodeType = ICD_DOTYPE;
         _isSequence = true;
         _canNoUse = true;
         _canBeMore = true;
-    } else if(newTag == tr("DaTypes")) {
+    } else if(newTag == tr("DAType")) {
         nodeType = ICD_DATYPE;
         _isSequence = true;
         _canNoUse = true;
@@ -2990,6 +3174,51 @@ void DomItem::setNodeType()
         _isSequence = false;
         _canNoUse = true;
         _canBeMore = false;
+    } else if(newTag == tr("LNodeType")) {
+        nodeType = ICD_LNODETYPES;
+        _isSequence = true;
+        _canNoUse = false;
+        _canBeMore = true;
+    } else if(newTag == tr("DOType")) {
+        nodeType = ICD_DOTYPE;
+        _isSequence = true;
+        _canNoUse = false;
+        _canBeMore = true;
+    } else if(newTag == tr("DAType")) {
+        nodeType = ICD_DATYPE;
+        _isSequence = true;
+        _canNoUse = true;
+        _canBeMore = true;
+    } else if(newTag == tr("EnumType")) {
+        nodeType = ICD_ENUMTYPE;
+        _isSequence = true;
+        _canNoUse = true;
+        _canBeMore = true;
+    } else if(newTag == tr("DO")) {
+        nodeType = ICD_DO;
+        _isSequence = true;
+        _canNoUse = false;
+        _canBeMore = true;
+    } else if(newTag == tr("SDO")) {
+        nodeType = ICD_SDO;
+        _isSequence = true;
+        _canNoUse = true;
+        _canBeMore = true;
+    } else if(newTag == tr("DA")) {
+        nodeType = ICD_DA;
+        _isSequence = true;
+        _canNoUse = true;
+        _canBeMore = true;
+    } else if(newTag == tr("BDA")) {
+        nodeType = ICD_BDA;
+        _isSequence = true;
+        _canNoUse = false;
+        _canBeMore = true;
+    } else if(newTag == tr("EnumVal")) {
+        nodeType = ICD_ENUMVAL;
+        _isSequence = true;
+        _canNoUse = false;
+        _canBeMore = true;
     } else {
         nodeType = ICD_SCL;
         _isSequence = false;

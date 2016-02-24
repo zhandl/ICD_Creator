@@ -134,7 +134,7 @@ public:
     void addAssociation();
 
     void addLN0();
-    void addLNode();
+    void addLN();
     void addAccessControl();
     void addDataSet();
     void addReportControl();
@@ -144,10 +144,11 @@ public:
     void addGSEControl();
     void addSMVControl();
     void addSettingControl();
+    void addSCLControl();
 
     void addPowerTransformer();
     void addGeneralEquipment();
-//    void addLNode();
+    void addLNode();
     void addVoltageLevel();
     void addFunction();
     void addTransformerWinding();

@@ -145,7 +145,7 @@ public:
     void addAssociation();
 
     void addLN0();
-    void addLNode();
+    void addLN();
     void addAccessControl();
     void addDataSet();
     void addReportControl();

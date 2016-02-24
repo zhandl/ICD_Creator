@@ -39,6 +39,7 @@ public:
     void sendMoveUpCommand();
     void sendMoveDownCommand();
 
+    bool setAttributeOfName(QTableWidget *table, int &row, const QString AttrName);
 private:
 
     QListWidgetItem *loadTextNode(QListWidget *list, TextChunk *text);
@@ -70,6 +71,7 @@ private slots:
     void on_attrTable_itemChanged(QTableWidgetItem * item);
 
     void on_noUseAttrTable_itemClicked(QTableWidgetItem *item);
+    void on_noUseAttrTable_itemDoubleClicked(QTableWidgetItem *item);
 
 private:
 //    Ui::Dialog ui;

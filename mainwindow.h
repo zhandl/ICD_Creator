@@ -253,6 +253,7 @@ private:
     QAction *actionAddGSEControl;
     QAction *actionAddSMVControl;
     QAction *actionAddSettingControl;
+    QAction *actionAddSCLControl;
 
     QAction *actionAddGSE;
     QAction *actionAddSMV;
@@ -423,8 +424,8 @@ private slots:
     void on_actionAddAccessPoint_triggered();
     void on_actionAddServer_triggered();
     void on_actionAddServerAt_triggered();
-    void on_actionAddGOOSESecurity_triggered();
-    void on_actionAddSMVSecurity_triggered();
+//    void on_actionAddGOOSESecurity_triggered();
+//    void on_actionAddSMVSecurity_triggered();
     void on_actionAddAuthentication_triggered();
     void on_actionAddLdevice_triggered();
     void on_actionAddAssociation_triggered();
@@ -439,6 +440,7 @@ private slots:
     void on_actionAddGSEControl_triggered();
     void on_actionAddSMVControl_triggered();
     void on_actionAddSettingControl_triggered();
+    void on_actionAddSCLControl_triggered();
 
     void on_actionAddPowerTransformer_triggered();
     void on_actionAddGeneralEquipment_triggered();

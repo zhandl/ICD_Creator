@@ -414,6 +414,21 @@ private:
     static QIcon historyIcon;
     static QIcon hitemIcon;
 
+    static QIcon powerTransformerIcon;
+    static QIcon generalEquipmentIcon;
+    static QIcon lnNodeIcon;
+    static QIcon voltageLevelIcon;
+    static QIcon functionIcon;
+    static QIcon transformerWindingIcon;
+    static QIcon bayIcon;
+    static QIcon voltageIcon;
+    static QIcon subFunctionIcon;
+    static QIcon tapChangerIcon;
+    static QIcon terminalIcon;
+    static QIcon subEquipmentIcon;
+    static QIcon conductingEquipmentIcon;
+    static QIcon connectivityNodeIcon;
+
     static QIcon subnetworkIcon;
     static QIcon bitRateIcon;
     static QIcon connectedApIcon;
@@ -428,10 +443,14 @@ private:
     static QIcon servicesItemIcon;
     static QIcon servicesItemGroupIcon;
     static QIcon accesspointIcon;
+//    static QIcon gseSecurityIcon;
+//    static QIcon smvSecurityIcon;
+
     static QIcon serverIcon;
     static QIcon serverAtIcon;
     static QIcon authenticationIcon;
     static QIcon associationIcon;
+    static QIcon accessControlIcon;
     static QIcon ldeviceIcon;
     static QIcon ln0Icon;
     static QIcon lnIcon;
@@ -449,6 +468,26 @@ private:
     static QIcon gseControlIcon;
     static QIcon smvControlIcon;
     static QIcon settingControlIcon;
+    static QIcon sclControlIcon;
+
+    static QIcon trgOpsIcon;
+    static QIcon OptFieldsIcon;
+    static QIcon RptEnabledIcon;
+    static QIcon extRefIcon;
+    static QIcon iedNameIcon;
+    static QIcon smvOptsIcon;
+
+    static QIcon valIcon;
+
+    static QIcon LNodeTypeIcon;
+    static QIcon DOTypeIcon;
+    static QIcon DATypeIcon;
+    static QIcon EnumTypeIcon;
+    static QIcon doIcon;
+    static QIcon daIcon;
+    static QIcon sdoIcon;
+    static QIcon bdaIcon;
+    static QIcon enumValIcon;
 
     void generateId();
 

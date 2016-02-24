@@ -300,11 +300,23 @@ void icdDataTypeTemplateNew::registerData()
             DaType = item->getItems().at(i)->attributeValueOfName("type");
             if(DaType == tr("") || _DaTypeNamePool.contains(DaType))
                 continue;
-            foreach (DataTypeItem *daTypeItem, model->getDaTypeItems()) {
-                if((daTypeItem->attributeValueOfName("id") == DaType)) {
-                    //_DaTypeItemPool.append(selectedModel->insertToNewTemplate(newTemplateLNodeTree, selectedModel->root(), daTypeItem));
-                    _DaTypeItemPool.append(selectedModel->insertToNewTemplateInternal(selectedModel->root(), daTypeItem, _LNodeItemPool.count()+_DoTypeItemPool.count()+_DaTypeItemPool.count()));
-                    _DaTypeNamePool.insert(DaType);
+            QString btype;
+            btype = item->getItems().at(i)->attributeValueOfName("bType");
+            if(btype == "Enum") {
+                foreach (DataTypeItem *enumTypeItem, model->getEnumTypeItems()) {
+                    if((enumTypeItem->attributeValueOfName("id") == DaType)) {
+                        //selectedModel->insertToNewTemplate(newTemplateLNodeTree, selectedModel->root(), enumTypeItem);
+                        selectedModel->insertToNewTemplateInternal(selectedModel->root(), enumTypeItem, -1);
+                        _EnumTypeNamePool.insert(DaType);
+                    }
+                }
+            } else if(btype == "Struct") {
+                foreach (DataTypeItem *daTypeItem, model->getDaTypeItems()) {
+                    if((daTypeItem->attributeValueOfName("id") == DaType)) {
+                        //_DaTypeItemPool.append(selectedModel->insertToNewTemplate(newTemplateLNodeTree, selectedModel->root(), daTypeItem));
+                        _DaTypeItemPool.append(selectedModel->insertToNewTemplateInternal(selectedModel->root(), daTypeItem, _LNodeItemPool.count()+_DoTypeItemPool.count()+_DaTypeItemPool.count()));
+                        _DaTypeNamePool.insert(DaType);
+                    }
                 }
             }
         }

@@ -1,23 +1,19 @@
-#include "icdiedservicespage.h"
-#include "ui_icdIedServicesPage.h"
+#include "editservices.h"
+#include "domitem.h"
+#include "dommodel.h"
+#include "utils.h"
 
-icdIedServicesPage::icdIedServicesPage(QWidget *parent) :
-    QWizardPage(parent)
+EditServices::EditServices(QWidget *parent) :
+    QDialog(parent)
 {
-    setTitle(tr("IED Services Setting"));
-    setSubTitle(tr("This page can set the services of ied segment."));
-
     init();
     finishInit();
-
-    registerField("iedName*", iedNameText);
 }
 
-
-void icdIedServicesPage::init()
+void EditServices::init()
 {
     if (this->objectName().isEmpty())
-        this->setObjectName(QString::fromUtf8("icdIedServicesPage"));
+        this->setObjectName(QString::fromUtf8("EditServices"));
     this->resize(800, 600);
     QFont font;
     font.setFamily(QString::fromUtf8("Calibri"));
@@ -27,39 +23,6 @@ void icdIedServicesPage::init()
     iedServiceGridLayout = new QGridLayout(this);
     iedServiceGridLayout->setObjectName(QString::fromUtf8("iedServiceGridLayout"));
 
-    iedNameLabel = new QLabel(this);
-    iedNameLabel->setObjectName(QString::fromUtf8("iedNameLabel"));
-    iedNameText = new QLineEdit(this);
-    iedNameText->setObjectName(QString::fromUtf8("iedNameText"));
-    iedNameText->setStyleSheet(tr("background-color: rgb(255, 255, 200)"));
-
-    iedConfigVersionCheckBox = new QCheckBox(this);
-    iedConfigVersionCheckBox->setObjectName(QString::fromUtf8("iedConfigVersionCheckBox"));
-    iedConfigVersionLabel = new QLabel(this);
-    iedConfigVersionLabel->setObjectName(QString::fromUtf8("iedConfigVersionLabel"));
-    iedConfigVersionText = new QLineEdit(this);
-    iedConfigVersionText->setObjectName(QString::fromUtf8("iedConfigVersinoText"));
-
-    iedTypeCheckBox = new QCheckBox(this);
-    iedTypeCheckBox->setObjectName(QString::fromUtf8("iedTypeCheckBox"));
-    iedTypeLabel = new QLabel(this);
-    iedTypeLabel->setObjectName(QString::fromUtf8("iedTypeLabel"));
-    iedTypeText = new QLineEdit(this);
-    iedTypeText->setObjectName(QString::fromUtf8("iedTypeText"));
-
-    iedManuCheckBox = new QCheckBox(this);
-    iedManuCheckBox->setObjectName(QString::fromUtf8("iedManuCheckBox"));
-    iedManuLabel = new QLabel(this);
-    iedManuLabel->setObjectName(QString::fromUtf8("iedManuLabel"));
-    iedManuText = new QLineEdit(this);
-    iedManuText->setObjectName(QString::fromUtf8("iedManuText"));
-
-    iedDescCheckBox = new QCheckBox(this);
-    iedDescCheckBox->setObjectName(QString::fromUtf8("iedDescCheckBox"));
-    iedDescLabel = new QLabel(this);
-    iedDescLabel->setObjectName(QString::fromUtf8("iedDescLabel"));
-    iedDescText = new QLineEdit(this);
-    iedDescText->setObjectName(QString::fromUtf8("iedDescText"));
 
     iedModeSelLabel = new QLabel(this);
     iedModeSelLabel->setObjectName(QString::fromUtf8("iedModeSelLabel"));
@@ -69,23 +32,21 @@ void icdIedServicesPage::init()
     servicesGroupBox = new QGroupBox(this);
     servicesGroupBox->setObjectName(QString::fromUtf8("servicesGroupBox"));
 
-    iedServiceGridLayout->addWidget(iedNameLabel, 0, 0, 1, 2);
-    iedServiceGridLayout->addWidget(iedNameText, 0, 2, 1, 1);
-    iedServiceGridLayout->addWidget(iedConfigVersionCheckBox, 0, 3, 1, 1);
-    iedServiceGridLayout->addWidget(iedConfigVersionLabel, 0, 4, 1, 1);
-    iedServiceGridLayout->addWidget(iedConfigVersionText, 0, 5, 1, 1);
-    iedServiceGridLayout->addWidget(iedTypeCheckBox, 0, 6, 1, 1);
-    iedServiceGridLayout->addWidget(iedTypeLabel, 0, 7, 1, 1);
-    iedServiceGridLayout->addWidget(iedTypeText, 0, 8, 1, 1);
+    buttonBox = new QDialogButtonBox(this);
+    buttonBox->setObjectName(QString::fromUtf8("buttonBox"));
+    QSizePolicy sizePolicy5(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    sizePolicy5.setHorizontalStretch(0);
+    sizePolicy5.setVerticalStretch(0);
+    sizePolicy5.setHeightForWidth(buttonBox->sizePolicy().hasHeightForWidth());
+    buttonBox->setSizePolicy(sizePolicy5);
+    buttonBox->setOrientation(Qt::Horizontal);
+    buttonBox->setStandardButtons(QDialogButtonBox::Cancel|QDialogButtonBox::Ok);
+    buttonBox->setCenterButtons(false);
+
     iedServiceGridLayout->addWidget(iedModeSelLabel, 0, 9, 1, 1);
     iedServiceGridLayout->addWidget(iedModeSelComboBox, 0, 10, 1, 1);
-    iedServiceGridLayout->addWidget(iedManuCheckBox, 1, 0, 1, 1);
-    iedServiceGridLayout->addWidget(iedManuLabel, 1, 1, 1, 1);
-    iedServiceGridLayout->addWidget(iedManuText, 1, 2, 1, 1);
-    iedServiceGridLayout->addWidget(iedDescCheckBox, 1, 3, 1, 1);
-    iedServiceGridLayout->addWidget(iedDescLabel, 1, 4, 1, 1);
-    iedServiceGridLayout->addWidget(iedDescText, 1, 5, 1, 1);
-    iedServiceGridLayout->addWidget(servicesGroupBox, 2, 0, 1, 12);
+    iedServiceGridLayout->addWidget(servicesGroupBox, 1, 0, 1, 12);
+    iedServiceGridLayout->addWidget(buttonBox, 2, 10, 1, 1);
 
     servicesGridLayout = new QGridLayout(servicesGroupBox);
     servicesGridLayout->setObjectName(QString::fromUtf8("servicesGridLayout"));
@@ -601,6 +562,8 @@ void icdIedServicesPage::init()
     confLNsFixLnInstComboBox = new QComboBox(confLNsGroupBox);
     confLNsFixLnInstComboBox->setObjectName(QString::fromUtf8("confLNsFixLnInstComboBox"));
 
+
+
     confLNsGridLayout->addWidget(confLNsFixPrefixCheckBox, 0, 0, 1, 1);
     confLNsGridLayout->addWidget(confLNsFixPrefixLabel, 0, 1, 1, 1);
     confLNsGridLayout->addWidget(confLNsFixPrefixComboBox, 0, 2, 1, 1);
@@ -642,20 +605,11 @@ void icdIedServicesPage::init()
 
 }
 
-void icdIedServicesPage::retranslateUi()
+void EditServices::retranslateUi()
 {
     QStringList serviceSettingEnum = QStringList()<<tr("Dyn")<<tr("Conf")<<tr("Fix");
     QStringList confLnsEnum = QStringList()<<tr("false")<<tr("true");
-    setWindowTitle(tr("icdIedServicesPage"));
-    iedNameLabel->setText(tr("name"));
-    iedConfigVersionCheckBox->setText(QString());
-    iedConfigVersionLabel->setText(tr("configVersion"));
-    iedTypeCheckBox->setText(QString());
-    iedTypeLabel->setText(tr("type"));
-    iedManuCheckBox->setText(QString());
-    iedManuLabel->setText(tr("Mamnfacturer"));
-    iedDescCheckBox->setText(QString());
-    iedDescLabel->setText(tr("desc"));
+    setWindowTitle(tr("EditServices"));
 
     iedModeSelLabel->setText(tr("Setting Mode:"));
     iedModeSelComboBox->addItems(QStringList()<<tr("自定义")<<tr("默认")<<tr("全清")<<tr("全选"));
@@ -793,9 +747,10 @@ void icdIedServicesPage::retranslateUi()
     confLNsFixLnInstCheckBox->setText(QString());
     confLNsFixLnInstLabel->setText("fixLnInst");
     confLNsFixLnInstComboBox->addItems(confLnsEnum);
+
 }
 
-void icdIedServicesPage::finishInit()
+void EditServices::finishInit()
 {
     connect(iedModeSelComboBox, SIGNAL(activated(int)), this, SLOT(selMode(int)));
     iedModeSelComboBox->setCurrentIndex(0);
@@ -827,27 +782,6 @@ void icdIedServicesPage::finishInit()
 
     confLNsFixPrefixComboBox->setCurrentIndex(0);
     confLNsFixLnInstComboBox->setCurrentIndex(0);
-
-    connect(iedConfigVersionCheckBox, SIGNAL(toggled(bool)), iedConfigVersionLabel, SLOT(setEnabled(bool)));
-    connect(iedConfigVersionCheckBox, SIGNAL(toggled(bool)), iedConfigVersionText, SLOT(setEnabled(bool)));
-    connect(iedTypeCheckBox, SIGNAL(toggled(bool)), iedTypeLabel, SLOT(setEnabled(bool)));
-    connect(iedTypeCheckBox, SIGNAL(toggled(bool)), iedTypeText, SLOT(setEnabled(bool)));
-    connect(iedManuCheckBox, SIGNAL(toggled(bool)), iedManuLabel, SLOT(setEnabled(bool)));
-    connect(iedManuCheckBox, SIGNAL(toggled(bool)), iedManuText, SLOT(setEnabled(bool)));
-    connect(iedDescCheckBox, SIGNAL(toggled(bool)), iedDescLabel, SLOT(setEnabled(bool)));
-    connect(iedDescCheckBox, SIGNAL(toggled(bool)), iedDescText, SLOT(setEnabled(bool)));
-    bool iedConfigVersionIsChecked = iedConfigVersionCheckBox->checkState();
-    bool iedTypeIsChecked = iedTypeCheckBox->checkState();
-    bool iedManuIsChecked = iedManuCheckBox->checkState();
-    bool iedDescIsChecked = iedDescCheckBox->checkState();
-    iedConfigVersionLabel->setEnabled(iedConfigVersionIsChecked);
-    iedConfigVersionText->setEnabled(iedConfigVersionIsChecked);
-    iedTypeLabel->setEnabled(iedTypeIsChecked);
-    iedTypeText->setEnabled(iedTypeIsChecked);
-    iedManuLabel->setEnabled(iedManuIsChecked);
-    iedManuText->setEnabled(iedManuIsChecked);
-    iedDescLabel->setEnabled(iedDescIsChecked);
-    iedDescText->setEnabled(iedDescIsChecked);
 
     connect(dynAssociationCheckBox, SIGNAL(toggled(bool)), dynAssociationLabel, SLOT(setEnabled(bool)));
     connect(getDirectoryCheckBox, SIGNAL(toggled(bool)), getDirectoryLabel, SLOT(setEnabled(bool)));
@@ -1014,11 +948,14 @@ void icdIedServicesPage::finishInit()
     confLNsFixLnInstLabel->setEnabled(confLNsFixLnInstIsChecked);
     confLNsFixLnInstComboBox->setEnabled(confLNsFixLnInstIsChecked);
 
+    QObject::connect(buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
+    QObject::connect(buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
 
+    QMetaObject::connectSlotsByName(this);
 
 }
 
-void icdIedServicesPage::selMode(int index)
+void EditServices::selMode(int index)
 {
     switch(index) {
     default:
@@ -1036,18 +973,8 @@ void icdIedServicesPage::selMode(int index)
     }
 }
 
-void icdIedServicesPage::setModeDefault()
+void EditServices::setModeDefault()
 {
-    iedNameText->setText(tr("TEMPLATE"));
-    iedDescCheckBox->setChecked(true);
-    iedDescText->setText(tr(""));
-    iedTypeCheckBox->setChecked(true);
-    iedTypeText->setText(tr("WY9D"));
-    iedManuCheckBox->setChecked(true);
-    iedManuText->setText(tr("GDWY"));
-    iedConfigVersionCheckBox->setChecked(true);
-    iedConfigVersionText->setText(tr("1.0"));
-
     servicesGroupBox->setChecked(true);
     dynAssociationCheckBox->setChecked(1);
     getDirectoryCheckBox->setChecked(1);
@@ -1134,18 +1061,8 @@ void icdIedServicesPage::setModeDefault()
     confLNsFixLnInstComboBox->setCurrentIndex(1);
 }
 
-void icdIedServicesPage::setModeAllClear()
+void EditServices::setModeAllClear()
 {
-    iedNameText->clear();
-    iedDescCheckBox->setChecked(0);
-    iedDescText->clear();
-    iedTypeCheckBox->setChecked(0);
-    iedTypeText->clear();
-    iedManuCheckBox->setChecked(0);
-    iedManuText->clear();
-    iedConfigVersionCheckBox->setChecked(0);
-    iedConfigVersionText->clear();
-
     servicesWOAttrGroupBox->setChecked(0);
     dynAssociationCheckBox->setChecked(0);
     getDirectoryCheckBox->setChecked(0);
@@ -1218,12 +1135,8 @@ void icdIedServicesPage::setModeAllClear()
     confLNsFixLnInstCheckBox->setChecked(0);
 }
 
-void icdIedServicesPage::setModeAllSel()
+void EditServices::setModeAllSel()
 {
-    iedDescCheckBox->setChecked(1);
-    iedTypeCheckBox->setChecked(1);
-    iedManuCheckBox->setChecked(1);
-    iedConfigVersionCheckBox->setChecked(1);
 
     servicesWOAttrGroupBox->setChecked(1);
     dynAssociationCheckBox->setChecked(1);
@@ -1288,3 +1201,640 @@ void icdIedServicesPage::setModeAllSel()
     confLNsFixPrefixCheckBox->setChecked(1);
     confLNsFixLnInstCheckBox->setChecked(1);
 }
+
+void EditServices::setTarget(DomItem *pTarget)
+{
+    target = pTarget ;
+    setModeAllClear();
+    if(target->hasChildOfName(tr("DynAssociation")))
+        dynAssociationCheckBox->setChecked(true);
+    if(target->hasChildOfName(tr("GetDataSetValue")))
+        getDataSetValueCheckBox->setChecked(true);
+    if(target->hasChildOfName(tr("TimerActivatedControl")))
+        timerActivatedControlCheckBox->setChecked(true);
+    if(target->hasChildOfName(tr("GetDirectory")))
+        getDirectoryCheckBox->setChecked(true);
+    if(target->hasChildOfName(tr("SetDataSetValue")))
+        setDataSetValueCheckBox->setChecked(true);
+    if(target->hasChildOfName(tr("GetCBValues")))
+        getCBValuesCheckBox->setChecked(true);
+    if(target->hasChildOfName(tr("GetDataObjectDefinition")))
+        getDataObjectDefinitionCheckBox->setChecked(true);
+    if(target->hasChildOfName(tr("DataSetDirectory")))
+        dataSetDirectoryCheckBox->setChecked(true);
+    if(target->hasChildOfName(tr("GSEDir")))
+        gseDirCheckBox->setChecked(true);
+    if(target->hasChildOfName(tr("DataObjectDirectory")))
+        dataObjectDirectoryCheckBox->setChecked(true);
+    if(target->hasChildOfName(tr("ReadWrite")))
+        readWriteCheckBox->setChecked(true);
+    if(target->hasChildOfName(tr("FileHandling")))
+        fileHandlingCheckBox->setChecked(true);
+
+    QVectorIterator<DomItem*> it(target->getItems());
+    while(it.hasNext()) {
+        DomItem *item = it.next();
+        if(item->tag() == tr("DynAssociation")) {
+            dynAssociationCheckBox->setChecked(true);
+            continue;
+        }
+        if(item->tag() == tr("GetDataSetValue")) {
+            getDataSetValueCheckBox->setChecked(true);
+            continue;
+        }
+        if(item->tag() == tr("TimerActivatedControl")) {
+            timerActivatedControlCheckBox->setChecked(true);
+            continue;
+        }
+        if(item->tag() == tr("GetDirectory")) {
+            getDirectoryCheckBox->setChecked(true);
+            continue;
+        }
+        if(item->tag() == tr("SetDataSetValue")) {
+            setDataSetValueCheckBox->setChecked(true);
+            continue;
+        }
+        if(item->tag() == tr("GetCBValues")) {
+            getCBValuesCheckBox->setChecked(true);
+            continue;
+        }
+        if(item->tag() == tr("GetDataObjectDefinition")) {
+            getDataObjectDefinitionCheckBox->setChecked(true);
+            continue;
+        }
+        if(item->tag() == tr("DataSetDirectory")) {
+            dataSetDirectoryCheckBox->setChecked(true);
+            continue;
+        }
+        if(item->tag() == tr("GSEDir")) {
+            gseDirCheckBox->setChecked(true);
+            continue;
+        }
+        if(item->tag() == tr("DataObjectDirectory")) {
+            dataObjectDirectoryCheckBox->setChecked(true);
+            continue;
+        }
+        if(item->tag() == tr("ReadWrite")) {
+            readWriteCheckBox->setChecked(true);
+            continue;
+        }
+        if(item->tag() == tr("FileHandling")) {
+            fileHandlingCheckBox->setChecked(true);
+            continue;
+        }
+        if(item->tag() == tr("GOOSE")) {
+            gooseGroupBox->setChecked(true);
+            gooseMaxText->setText(item->getAttribute(tr("max"))->value);
+            continue;
+        }
+        if(item->tag() == tr("ConfReportControl")) {
+            confReportControlGroupBox->setChecked(true);
+            confReportControlMaxText->setText(item->getAttribute(tr("max"))->value);
+            continue;
+        }
+        if(item->tag() == tr("GSSE")) {
+            gsseGroupBox->setChecked(true);
+            gsseMaxText->setText(item->getAttribute(tr("max"))->value);
+            continue;
+        }
+        if(item->tag() == tr("ConfLogControl")) {
+            confLogControlGroupBox->setChecked(true);
+            confLogControlMaxText->setText(item->getAttribute(tr("max"))->value);
+            continue;
+        }
+        if(item->tag() == tr("ConfDataSet")) {
+            confDataSetGroupBox->setChecked(true);
+            confDataSetMaxText->setText(item->getAttribute(tr("max"))->value);
+            confDataSetMaxAttrText->setText(item->getAttribute(tr("maxAttributes"))->value);
+            continue;
+        }
+        if(item->tag() == tr("DynDataSet")) {
+            dynDataSetGroupBox->setChecked(true);
+            dynDataSetMaxText->setText(item->getAttribute(tr("max"))->value);
+            dynDataSetMaxAttrText->setText(item->getAttribute(tr("maxAttributes"))->value);
+            continue;
+        }
+        if(item->tag() == tr("ReportSettings")) {
+            reportSettingsGroupBox->setChecked(true);
+            if(item->hasAttrOfName(tr("cbName"))) {
+                reportSettingsCbNameCheckBox->setChecked(true);
+                int index = 0;
+                QString attrValue = item->getAttribute(tr("cbName"))->value;
+                if(attrValue == tr("Dyn"))
+                    index = 0;
+                else if(attrValue == tr("Conf"))
+                    index = 1;
+                else if(attrValue == tr("Fix"))
+                    index = 2;
+                reportSettingsCbNameComboBox->setCurrentIndex(index);
+            }
+            if(item->hasAttrOfName(tr("datSet"))) {
+                reportSettingsDatSetCheckBox->setChecked(true);
+                int index = 0;
+                QString attrValue = item->getAttribute(tr("datSet"))->value;
+                if(attrValue == tr("Dyn"))
+                    index = 0;
+                else if(attrValue == tr("Conf"))
+                    index = 1;
+                else if(attrValue == tr("Fix"))
+                    index = 2;
+                reportSettingsDatSetComboBox->setCurrentIndex(index);
+            }
+            if(item->hasAttrOfName(tr("rptID"))) {
+                reportSettingsRptIdCheckBox->setChecked(true);
+                int index = 0;
+                QString attrValue = item->getAttribute(tr("rptID"))->value;
+                if(attrValue == tr("Dyn"))
+                    index = 0;
+                else if(attrValue == tr("Conf"))
+                    index = 1;
+                else if(attrValue == tr("Fix"))
+                    index = 2;
+                reportSettingsRptIdComboBox->setCurrentIndex(index);
+            }
+            if(item->hasAttrOfName(tr("optFields"))) {
+                reportSettingsOptFieldsCheckBox->setChecked(true);
+                int index = 0;
+                QString attrValue = item->getAttribute(tr("optFields"))->value;
+                if(attrValue == tr("Dyn"))
+                    index = 0;
+                else if(attrValue == tr("Conf"))
+                    index = 1;
+                else if(attrValue == tr("Fix"))
+                    index = 2;
+                reportSettingsOptFieldsComboBox->setCurrentIndex(index);
+            }
+            if(item->hasAttrOfName(tr("bufTime"))) {
+                reportSettingsBufTimeCheckBox->setChecked(true);
+                int index = 0;
+                QString attrValue = item->getAttribute(tr("bufTime"))->value;
+                if(attrValue == tr("Dyn"))
+                    index = 0;
+                else if(attrValue == tr("Conf"))
+                    index = 1;
+                else if(attrValue == tr("Fix"))
+                    index = 2;
+                reportSettingsBufTimeComboBox->setCurrentIndex(index);
+            }
+            if(item->hasAttrOfName(tr("trgOps"))) {
+                reportSettingsTrgOpsCheckBox->setChecked(true);
+                int index = 0;
+                QString attrValue = item->getAttribute(tr("trgOps"))->value;
+                if(attrValue == tr("Dyn"))
+                    index = 0;
+                else if(attrValue == tr("Conf"))
+                    index = 1;
+                else if(attrValue == tr("Fix"))
+                    index = 2;
+                reportSettingsTrgOpsComboBox->setCurrentIndex(index);
+            }
+            if(item->hasAttrOfName(tr("intgPd"))) {
+                reportSettingsIntgPdCheckBox->setChecked(true);
+                int index = 0;
+                QString attrValue = item->getAttribute(tr("intgPd"))->value;
+                if(attrValue == tr("Dyn"))
+                    index = 0;
+                else if(attrValue == tr("Conf"))
+                    index = 1;
+                else if(attrValue == tr("Fix"))
+                    index = 2;
+                reportSettingsIntgPdComboBox->setCurrentIndex(index);
+            }
+            continue;
+        }
+        if(item->tag() == tr("LogSettings")) {
+            logSettingsGroupBox->setChecked(true);
+            if(item->hasAttrOfName(tr("cbName"))) {
+                logSettingsCbNameCheckBox->setChecked(true);
+                int index = 0;
+                QString attrValue = item->getAttribute(tr("cbName"))->value;
+                if(attrValue == tr("Dyn"))
+                    index = 0;
+                else if(attrValue == tr("Conf"))
+                    index = 1;
+                else if(attrValue == tr("Fix"))
+                    index = 2;
+                logSettingsCbNameComboBox->setCurrentIndex(index);
+            }
+            if(item->hasAttrOfName(tr("datSet"))) {
+                logSettingsDatSetCheckBox->setChecked(true);
+                int index = 0;
+                QString attrValue = item->getAttribute(tr("datSet"))->value;
+                if(attrValue == tr("Dyn"))
+                    index = 0;
+                else if(attrValue == tr("Conf"))
+                    index = 1;
+                else if(attrValue == tr("Fix"))
+                    index = 2;
+                logSettingsDatSetComboBox->setCurrentIndex(index);
+            }
+            if(item->hasAttrOfName(tr("logEna"))) {
+                logSettingsLogEnaCheckBox->setChecked(true);
+                int index = 0;
+                QString attrValue = item->getAttribute(tr("logEna"))->value;
+                if(attrValue == tr("Dyn"))
+                    index = 0;
+                else if(attrValue == tr("Conf"))
+                    index = 1;
+                else if(attrValue == tr("Fix"))
+                    index = 2;
+                logSettingsLogEnaComboBox->setCurrentIndex(index);
+            }
+            if(item->hasAttrOfName(tr("trgOps"))) {
+                logSettingsTrgOpsCheckBox->setChecked(true);
+                int index = 0;
+                QString attrValue = item->getAttribute(tr("trgOps"))->value;
+                if(attrValue == tr("Dyn"))
+                    index = 0;
+                else if(attrValue == tr("Conf"))
+                    index = 1;
+                else if(attrValue == tr("Fix"))
+                    index = 2;
+                logSettingsTrgOpsComboBox->setCurrentIndex(index);
+            }
+            if(item->hasAttrOfName(tr("intgPd"))) {
+                logSettingsIntgPdCheckBox->setChecked(true);
+                int index = 0;
+                QString attrValue = item->getAttribute(tr("intgPd"))->value;
+                if(attrValue == tr("Dyn"))
+                    index = 0;
+                else if(attrValue == tr("Conf"))
+                    index = 1;
+                else if(attrValue == tr("Fix"))
+                    index = 2;
+                logSettingsIntgPdComboBox->setCurrentIndex(index);
+            }
+            continue;
+        }
+        if(item->tag() == tr("SMVSettings")) {
+            smvSettingsGroupBox->setChecked(true);
+            if(item->hasAttrOfName(tr("cbName"))) {
+                smvSettingsCbNameCheckBox->setChecked(true);
+                int index = 0;
+                QString attrValue = item->getAttribute(tr("cbName"))->value;
+                if(attrValue == tr("Dyn"))
+                    index = 0;
+                else if(attrValue == tr("Conf"))
+                    index = 1;
+                else if(attrValue == tr("Fix"))
+                    index = 2;
+                smvSettingsCbNameComboBox->setCurrentIndex(index);
+            }
+            if(item->hasAttrOfName(tr("datSet"))) {
+                smvSettingsDatSetCheckBox->setChecked(true);
+                int index = 0;
+                QString attrValue = item->getAttribute(tr("datSet"))->value;
+                if(attrValue == tr("Dyn"))
+                    index = 0;
+                else if(attrValue == tr("Conf"))
+                    index = 1;
+                else if(attrValue == tr("Fix"))
+                    index = 2;
+                smvSettingsDatSetComboBox->setCurrentIndex(index);
+            }
+            if(item->hasAttrOfName(tr("svID"))) {
+                smvSettingsSvIDCheckBox->setChecked(true);
+                int index = 0;
+                QString attrValue = item->getAttribute(tr("svID"))->value;
+                if(attrValue == tr("Dyn"))
+                    index = 0;
+                else if(attrValue == tr("Conf"))
+                    index = 1;
+                else if(attrValue == tr("Fix"))
+                    index = 2;
+                smvSettingsSvIDComboBox->setCurrentIndex(index);
+            }
+            if(item->hasAttrOfName(tr("optFields"))) {
+                smvSettingsOptFieldsCheckBox->setChecked(true);
+                int index = 0;
+                QString attrValue = item->getAttribute(tr("optFields"))->value;
+                if(attrValue == tr("Dyn"))
+                    index = 0;
+                else if(attrValue == tr("Conf"))
+                    index = 1;
+                else if(attrValue == tr("Fix"))
+                    index = 2;
+                smvSettingsOptFieldsComboBox->setCurrentIndex(index);
+            }
+            if(item->hasAttrOfName(tr("smpRate"))) {
+                smvSettingsSmpRateCheckBox->setChecked(true);
+                int index = 0;
+                QString attrValue = item->getAttribute(tr("smpRate"))->value;
+                if(attrValue == tr("Dyn"))
+                    index = 0;
+                else if(attrValue == tr("Conf"))
+                    index = 1;
+                else if(attrValue == tr("Fix"))
+                    index = 2;
+                smvSettingsSmpRateComboBox->setCurrentIndex(index);
+            }
+            continue;
+        }
+        if(item->tag() == tr("GSESettings")) {
+            gseSettingsGroupBox->setChecked(true);
+            if(item->hasAttrOfName(tr("cbName"))) {
+                gseSettingsCbNameCheckBox->setChecked(true);
+                int index = 0;
+                QString attrValue = item->getAttribute(tr("cbName"))->value;
+                if(attrValue == tr("Dyn"))
+                    index = 0;
+                else if(attrValue == tr("Conf"))
+                    index = 1;
+                else if(attrValue == tr("Fix"))
+                    index = 2;
+                gseSettingsCbNameComboBox->setCurrentIndex(index);
+            }
+            if(item->hasAttrOfName(tr("datSet"))) {
+                gseSettingsDatSetCheckBox->setChecked(true);
+                int index = 0;
+                QString attrValue = item->getAttribute(tr("datSet"))->value;
+                if(attrValue == tr("Dyn"))
+                    index = 0;
+                else if(attrValue == tr("Conf"))
+                    index = 1;
+                else if(attrValue == tr("Fix"))
+                    index = 2;
+                gseSettingsDatSetComboBox->setCurrentIndex(index);
+            }
+            if(item->hasAttrOfName(tr("appID"))) {
+                gseSettingsAppIDCheckBox->setChecked(true);
+                int index = 0;
+                QString attrValue = item->getAttribute(tr("appID"))->value;
+                if(attrValue == tr("Dyn"))
+                    index = 0;
+                else if(attrValue == tr("Conf"))
+                    index = 1;
+                else if(attrValue == tr("Fix"))
+                    index = 2;
+                gseSettingsAppIDComboBox->setCurrentIndex(index);
+            }
+            if(item->hasAttrOfName(tr("dataLabel"))) {
+                gseSettingsDataLabelCheckBox->setChecked(true);
+                int index = 0;
+                QString attrValue = item->getAttribute(tr("dataLabel"))->value;
+                if(attrValue == tr("Dyn"))
+                    index = 0;
+                else if(attrValue == tr("Conf"))
+                    index = 1;
+                else if(attrValue == tr("Fix"))
+                    index = 2;
+                gseSettingsDataLabelComboBox->setCurrentIndex(index);
+            }
+            continue;
+        }
+        if(item->tag() == tr("SettingGroups")) {
+            settingGroupsGroupBox->setChecked(true);
+            if(item->hasChildOfName(tr("SGEdit")))
+                settingGroupsSGEditCheckBox->setChecked(true);
+            if(item->hasChildOfName(tr("ConfSG")))
+                settingGroupsConfSGCheckBox->setChecked(true);
+            continue;
+        }
+        if(item->tag() == tr("ConfLNs")) {
+            confLNsGroupBox->setChecked(true);
+            if(item->hasAttrOfName(tr("fixPrefix"))) {
+                confLNsFixPrefixCheckBox->setChecked(true);
+                int index = 0;
+                QString attrValue = item->getAttribute(tr("fixPrefix"))->value;
+                if(attrValue == tr("false"))
+                    index = 0;
+                else if(attrValue == tr("true"))
+                    index = 1;
+                confLNsFixPrefixComboBox->setCurrentIndex(index);
+            }
+            if(item->hasAttrOfName(tr("fixLnInst"))) {
+                confLNsFixLnInstCheckBox->setChecked(true);
+                int index = 0;
+                QString attrValue = item->getAttribute(tr("fixLnInst"))->value;
+                if(attrValue == tr("false"))
+                    index = 0;
+                else if(attrValue == tr("true"))
+                    index = 1;
+                confLNsFixLnInstComboBox->setCurrentIndex(index);
+            }
+            continue;
+
+        }
+
+    }
+
+}
+
+void EditServices::error(const QString &message)
+{
+    Utils::error(this, message);
+}
+
+void EditServices::accept()
+{
+    if(NULL == target) {
+        error(tr("No target"));
+        return;
+    }
+
+//    foreach (DomItem *child , target->getItems()) {
+//        target->getParentRule()->deleteItem(child, true);
+//    }
+    target->getItems().clear();
+
+    if(dynAssociationCheckBox->isChecked()) {
+        DomItem *newService = new DomItem("DynAssociation", "", target->getParentRule(), target);
+        target->addChild(newService);
+    }
+
+    if(getDirectoryCheckBox->isChecked()) {
+        DomItem *newService = new DomItem("GetDirectory", "", target->getParentRule(), target);
+        target->addChild(newService);
+    }
+
+    if(getDataObjectDefinitionCheckBox->isChecked()) {
+        DomItem *newService = new DomItem("GetDataObjectDefinition", "", target->getParentRule(), target);
+        target->addChild(newService);
+    }
+
+    if(dataObjectDirectoryCheckBox->isChecked()) {
+        DomItem *newService = new DomItem("DataObjectDirectory", "", target->getParentRule(), target);
+        target->addChild(newService);
+    }
+
+    if(getDataSetValueCheckBox->isChecked()) {
+        DomItem *newService = new DomItem("GetDataSetValue", "", target->getParentRule(), target);
+        target->addChild(newService);
+    }
+
+    if(setDataSetValueCheckBox->isChecked()) {
+        DomItem *newService = new DomItem("SetDataSetValue", "", target->getParentRule(), target);
+        target->addChild(newService);
+    }
+
+    if(dataSetDirectoryCheckBox->isChecked()) {
+        DomItem *newService = new DomItem("DataSetDirectory", "", target->getParentRule(), target);
+        target->addChild(newService);
+    }
+
+    if(readWriteCheckBox->isChecked()) {
+        DomItem *newService = new DomItem("ReadWrite", "", target->getParentRule(), target);
+        target->addChild(newService);
+    }
+
+    if(timerActivatedControlCheckBox->isChecked()) {
+        DomItem *newService = new DomItem("TimerActivatedControl", "", target->getParentRule(), target);
+        target->addChild(newService);
+    }
+
+    if(getCBValuesCheckBox->isChecked()) {
+        DomItem *newService = new DomItem("GetCBValues", "", target->getParentRule(), target);
+        target->addChild(newService);
+    }
+
+    if(gseDirCheckBox->isChecked()) {
+        DomItem *newService = new DomItem("GSEDir", "", target->getParentRule(), target);
+        target->addChild(newService);
+    }
+
+    if(fileHandlingCheckBox->isChecked()) {
+        DomItem *newService = new DomItem("FileHandling", "", target->getParentRule(), target);
+        target->addChild(newService);
+    }
+
+    if(gooseGroupBox->isChecked()) {
+        DomItem *newService = new DomItem("GOOSE", "", target->getParentRule(), target);
+        newService->addAttribute("max", gooseMaxText->text());
+        target->addChild(newService);
+    }
+
+    if(gsseGroupBox->isChecked()) {
+        DomItem *newService = new DomItem("GSSE", "", target->getParentRule(), target);
+        newService->addAttribute("max", gsseMaxText->text());
+        target->addChild(newService);
+    }
+
+    if(confDataSetGroupBox->isChecked()) {
+        DomItem *newService = new DomItem("ConfDataSet", "", target->getParentRule(), target);
+        newService->addAttribute("max", confDataSetMaxText->text());
+        newService->addAttribute("maxAttributes", confDataSetMaxAttrText->text());
+        target->addChild(newService);
+    }
+
+    if(confReportControlGroupBox->isChecked()) {
+        DomItem *newService = new DomItem("ConfReportControl", "", target->getParentRule(), target);
+        newService->addAttribute("max", confReportControlMaxText->text());
+        target->addChild(newService);
+    }
+
+    if(confLogControlGroupBox->isChecked()) {
+        DomItem *newService = new DomItem("ConfLogControl", "", target->getParentRule(), target);
+        newService->addAttribute("max", confLogControlMaxText->text());
+        target->addChild(newService);
+    }
+
+    if(dynDataSetGroupBox->isChecked()) {
+        DomItem *newService = new DomItem("DynDataSet", "", target->getParentRule(), target);
+        newService->addAttribute("max", dynDataSetMaxText->text());
+        newService->addAttribute("maxAttributes", dynDataSetMaxAttrText->text());
+        target->addChild(newService);
+    }
+
+    if(reportSettingsGroupBox->isChecked()) {
+        DomItem *newService = new DomItem("ReportSettings", "", target->getParentRule(), target);
+
+        if(reportSettingsCbNameCheckBox->isChecked())
+            newService->addAttribute("cbName", reportSettingsCbNameComboBox->currentText());
+        if(reportSettingsDatSetCheckBox->isChecked())
+            newService->addAttribute("datSet", reportSettingsDatSetComboBox->currentText());
+        if(reportSettingsRptIdCheckBox->isChecked())
+            newService->addAttribute("rptID", reportSettingsRptIdComboBox->currentText());
+        if(reportSettingsOptFieldsCheckBox->isChecked())
+            newService->addAttribute("optFields", reportSettingsOptFieldsComboBox->currentText());
+        if(reportSettingsBufTimeCheckBox->isChecked())
+            newService->addAttribute("bufTime", reportSettingsBufTimeComboBox->currentText());
+        if(reportSettingsTrgOpsCheckBox->isChecked())
+            newService->addAttribute("trgOps", reportSettingsTrgOpsComboBox->currentText());
+        if(reportSettingsIntgPdCheckBox->isChecked())
+            newService->addAttribute("intgPd", reportSettingsIntgPdComboBox->currentText());
+
+        target->addChild(newService);
+    }
+
+    if(logSettingsGroupBox->isChecked()) {
+        DomItem *newService = new DomItem("LogSettings", "", target->getParentRule(), target);
+
+        if(logSettingsCbNameCheckBox->isChecked())
+            newService->addAttribute("cbName", logSettingsCbNameComboBox->currentText());
+        if(logSettingsDatSetCheckBox->isChecked())
+            newService->addAttribute("datSet", logSettingsDatSetComboBox->currentText());
+        if(logSettingsLogEnaCheckBox->isChecked())
+            newService->addAttribute("logEna", logSettingsLogEnaComboBox->currentText());
+        if(logSettingsTrgOpsCheckBox->isChecked())
+            newService->addAttribute("trgOps", logSettingsTrgOpsComboBox->currentText());
+        if(logSettingsIntgPdCheckBox->isChecked())
+            newService->addAttribute("intgPd", logSettingsIntgPdComboBox->currentText());
+
+        target->addChild(newService);
+    }
+
+    if(settingGroupsGroupBox->isChecked()) {
+        DomItem *newService = new DomItem("SettingGroups", "", target->getParentRule(), target);
+
+        if(settingGroupsSGEditCheckBox->isChecked()) {
+            DomItem *newServiceItem = new DomItem("SGEdit", "", target->getParentRule(), newService);
+            newService->addChild(newServiceItem);
+        }
+        if(settingGroupsConfSGCheckBox->isChecked()) {
+            DomItem *newServiceItem = new DomItem("ConfSG", "", target->getParentRule(), newService);
+            newService->addChild(newServiceItem);
+        }
+
+        target->addChild(newService);
+    }
+
+    if(gseSettingsGroupBox->isChecked()) {
+        DomItem *newService = new DomItem("GSESettings", "", target->getParentRule(), target);
+
+        if(gseSettingsCbNameCheckBox->isChecked())
+            newService->addAttribute("cbName", gseSettingsCbNameComboBox->currentText());
+        if(gseSettingsDatSetCheckBox->isChecked())
+            newService->addAttribute("datSet", gseSettingsDatSetComboBox->currentText());
+        if(gseSettingsAppIDCheckBox->isChecked())
+            newService->addAttribute("appID", gseSettingsAppIDComboBox->currentText());
+        if(gseSettingsDataLabelCheckBox->isChecked())
+            newService->addAttribute("dataLabel", gseSettingsDataLabelComboBox->currentText());
+
+        target->addChild(newService);
+    }
+
+    if(smvSettingsGroupBox->isChecked()) {
+        DomItem *newService = new DomItem("SMVSettings", "", target->getParentRule(), target);
+
+        if(smvSettingsCbNameCheckBox->isChecked())
+            newService->addAttribute("cbName", smvSettingsCbNameComboBox->currentText());
+        if(smvSettingsDatSetCheckBox->isChecked())
+            newService->addAttribute("datSet", smvSettingsDatSetComboBox->currentText());
+        if(smvSettingsSvIDCheckBox->isChecked())
+            newService->addAttribute("svID", smvSettingsSvIDComboBox->currentText());
+        if(smvSettingsOptFieldsCheckBox->isChecked())
+            newService->addAttribute("optFields", smvSettingsOptFieldsComboBox->currentText());
+        if(smvSettingsSmpRateCheckBox->isChecked())
+            newService->addAttribute("smpRate", smvSettingsSmpRateComboBox->currentText());
+
+        target->addChild(newService);
+    }
+
+
+    if(confLNsGroupBox->isChecked()) {
+        DomItem *newService = new DomItem("ConfLNs", "", target->getParentRule(), target);
+
+        if(confLNsFixPrefixCheckBox->isChecked())
+            newService->addAttribute("fixPrefix", confLNsFixPrefixComboBox->currentText());
+        if(confLNsFixLnInstCheckBox->isChecked())
+            newService->addAttribute("fixLnInst", confLNsFixLnInstComboBox->currentText());
+
+        target->addChild(newService);
+    }
+
+
+    QDialog::accept();
+
+}
+
+

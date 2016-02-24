@@ -127,6 +127,8 @@ public:
     QString &fileName();
     void setFileName(const QString &newFileName);
 
+    void editServices(QWidget *const window, QTreeWidgetItem* pItem);
+
     void editAttribute(QWidget *const window, QTreeWidgetItem* pItem);
     void addText(QWidget *window, QTreeWidget *tree);
     void addPrivate(QWidget *window, QTreeWidget *tree);
@@ -163,7 +165,7 @@ public:
     void addAssociation(QWidget *window, QTreeWidget *tree);
 
     void addLN0(QWidget *window, QTreeWidget *tree);
-    void addLNode(QWidget *window, QTreeWidget *tree);
+    void addLN(QWidget *window, QTreeWidget *tree);
     void addAccessControl(QWidget *window, QTreeWidget *tree);
     void addDataSet(QWidget *window, QTreeWidget *tree);
     void addReportControl(QWidget *window, QTreeWidget *tree);
@@ -344,6 +346,8 @@ private:
     bool editNodeComment(QWidget *const parentWindow, DomItem *pItem);
     bool editTextNodeItem(QWidget *const parentWindow, const bool isBase64Coded, DomItem *pItem);
     void recalcSize();
+
+    bool editServicesItem(QWidget *const parentWindow, DomItem *pItem);
 
     bool editLNodeItem(QWidget *const parenteWindow, DomItem *pItem);
     bool editDataSetItem(QWidget *const parentWindow, DomItem *pItem);

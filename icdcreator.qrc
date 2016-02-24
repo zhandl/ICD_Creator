@@ -170,5 +170,41 @@
         <file>images/settingControl.png</file>
         <file>images/smvControl.png</file>
         <file>images/unbufReport.png</file>
+        <file>images/substation.png</file>
+        <file>images/powerTransformer.png</file>
+        <file>images/generalEquipment.png</file>
+        <file>images/lnNode.png</file>
+        <file>images/voltageLevel.png</file>
+        <file>images/function.png</file>
+        <file>images/bay.png</file>
+        <file>images/subFunction.png</file>
+        <file>images/voltage.png</file>
+        <file>images/transformerWinding.png</file>
+        <file>images/terminal.png</file>
+        <file>images/tapChanger.png</file>
+        <file>images/subEquipment.png</file>
+        <file>images/connectivityNode.png</file>
+        <file>images/conductingEquipment.png</file>
+        <file>images/accessControl.png</file>
+        <file>images/association.png</file>
+        <file>images/gseSecurity.png</file>
+        <file>images/sclControl.png</file>
+        <file>images/smvSecurity.png</file>
+        <file>images/iedName.png</file>
+        <file>images/optFields.png</file>
+        <file>images/rptEnabled.png</file>
+        <file>images/smvOpts.png</file>
+        <file>images/trgOps.png</file>
+        <file>images/extRef.png</file>
+        <file>images/val.png</file>
+        <file>images/bda.png</file>
+        <file>images/daType.png</file>
+        <file>images/doType.png</file>
+        <file>images/enumType.png</file>
+        <file>images/enumVal.png</file>
+        <file>images/LNodeType.png</file>
+        <file>images/sdo.png</file>
+        <file>images/DA.png</file>
+        <file>images/DO.png</file>
     </qresource>
 </RCC>

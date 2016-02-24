@@ -60,6 +60,7 @@
 #include "addtext.h"
 #include "addprivate.h"
 #include "editreportcontrol.h"
+#include "editservices.h"
 
 #include "undo/undomoveupcommand.h"
 #include "undo/undomovedowncommand.h"
@@ -440,6 +441,17 @@ bool DomModel::editTextNodeItem(QWidget * const parentWindow, const bool isBase6
     return false;
 }
 
+bool DomModel::editServicesItem(QWidget * const parentWindow, DomItem *pItem)
+{
+    EditServices element(parentWindow);
+    element.setModal(true);
+    element.setTarget(pItem);
+    if(element.exec() == QDialog::Accepted) {
+        return true;
+    }
+    return false;
+}
+
 bool DomModel::editNodeItem(QWidget * const parentWindow, DomItem *pItem)
 {
     EditElement element(parentWindow);
@@ -482,6 +494,38 @@ bool DomModel::editLNodeItem(QWidget * const parentWindow, DomItem *pItem)
         return true;
     }
     return false;
+}
+
+void DomModel::editServices(QWidget *const window, QTreeWidgetItem *pItem)
+{
+    DomItem *item = DomItem::fromItemData(pItem);
+
+    bool updateInfo = false;
+    UndoEditCommand *undoCommand = new UndoEditCommand(pItem->treeWidget(), this, item->indexPath());
+    EditServices element(window);
+    element.setModal(true);
+    element.setTarget(item);
+    if(element.exec() == QDialog::Accepted) {
+        updateInfo = true;
+    }
+    if(updateInfo) {
+        pItem->takeChildren();
+        foreach(DomItem *child, item->getItems()) {
+            child->setChildItem(NULL, item->getUI(), paintInfo, true, -1);
+        }
+  //      item->setChildItem(pTree, item->getUI(), paintInfo, true, -1);
+        item->updateSizeInfo();
+        item->display(pItem, paintInfo);
+//        item->displayRecursive(paintInfo);
+        setModified(true);
+
+        undoCommand->setModifiedElement(item);
+        _undoStack.push(undoCommand);
+    } else {
+        delete undoCommand;
+    }
+
+
 }
 
 void DomModel::editAttribute(QWidget *const window, QTreeWidgetItem *pItem)
@@ -562,7 +606,10 @@ bool DomModel::editItem(QWidget *const parentWindow, QTreeWidgetItem *item)
                 break;
 
             case DomItem::ET_ELEMENT:
-                result = editNodeItem(parentWindow, pItem);
+                if(pItem->getNodeType() == DomItem::ICD_SERVICES)
+                    result = editServicesItem(parentWindow, pItem);
+                else
+                    result = editNodeItem(parentWindow, pItem);
                 if(result) {
                     updateInfo = true ;
                 }
@@ -588,6 +635,12 @@ bool DomModel::editItem(QWidget *const parentWindow, QTreeWidgetItem *item)
         }
         if(result) {
             if(updateInfo) {
+                item->takeChildren();
+                if(pItem->getNodeType() == DomItem::ICD_SERVICES) {
+                    foreach (DomItem *child, pItem->getItems()) {
+                        child->setChildItem(NULL, pItem->getUI(), paintInfo, true, -1);
+                    }
+                }
                 pItem->updateSizeInfo();
                 pItem->display(item, paintInfo);
                 setModified(true);
@@ -1266,7 +1319,7 @@ void DomModel::addLN0(QWidget *window, QTreeWidget *tree)
 
 }
 
-void DomModel::addLNode(QWidget *window, QTreeWidget *tree)
+void DomModel::addLN(QWidget *window, QTreeWidget *tree)
 {
     QTreeWidgetItem *currItem = getSelItem(tree);
     bool isEmptyE = isEmpty(true);
@@ -2098,6 +2151,7 @@ PaintInfo *DomModel::getPaintInfo()
 void DomModel::redisplayItem(DomItem *element)
 {
     element->displayWithPaintInfo(paintInfo);
+//    element->displayRecursive(paintInfo);
 }
 
 

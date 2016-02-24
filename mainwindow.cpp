@@ -660,10 +660,10 @@ BasicType << "BOOLEAN" << "INT8" << "INT16" << "INT24" << "INT32" << "INT128" <<
     actionAddServer->setObjectName(tr("actionAddServer"));
     actionAddServerAt= new QAction(this);
     actionAddServerAt->setObjectName(tr("actionAddServerAt"));
-    actionAddGOOSESecurity= new QAction(this);
-    actionAddGOOSESecurity->setObjectName(tr("actionAddGOOSESecurity"));
-    actionAddSMVSecurity= new QAction(this);
-    actionAddSMVSecurity->setObjectName(tr("actionAddSMVSecurity"));
+//    actionAddGOOSESecurity= new QAction(this);
+//    actionAddGOOSESecurity->setObjectName(tr("actionAddGOOSESecurity"));
+//    actionAddSMVSecurity= new QAction(this);
+//    actionAddSMVSecurity->setObjectName(tr("actionAddSMVSecurity"));
     actionAddAuthentication= new QAction(this);
     actionAddAuthentication->setObjectName(tr("actionAddAuthentication"));
     actionAddLdevice= new QAction(this);
@@ -694,6 +694,8 @@ BasicType << "BOOLEAN" << "INT8" << "INT16" << "INT24" << "INT32" << "INT128" <<
     actionAddSMVControl->setObjectName(tr("actionAddSMVControl"));
     actionAddSettingControl = new QAction(this);
     actionAddSettingControl->setObjectName(tr("actionAddSettingControl"));
+    actionAddSCLControl = new QAction(this);
+    actionAddSCLControl->setObjectName(tr("actionAddSCLControl"));
 
     actionAddPowerTransformer = new QAction(this);
     actionAddPowerTransformer->setObjectName(tr("actionAddPowerTransformer"));
@@ -1093,10 +1095,10 @@ void MainWindow::retranslateUi()
     actionAddServer->setIcon(QIcon(":/nodeType/images/Server.png"));
     actionAddServerAt->setText(tr("ServerAt"));
     actionAddServerAt->setIcon(QIcon(":/nodeType/images/Server.png"));
-    actionAddGOOSESecurity->setText(tr("GOOSESecurity"));
-    actionAddGOOSESecurity->setIcon(QIcon(":/nodeType/images/gooseSecurity.png"));
-    actionAddSMVSecurity->setText(tr("SMVSecurity"));
-    actionAddSMVSecurity->setIcon(QIcon(":/nodeType/images/smvSecurity.png"));
+//    actionAddGOOSESecurity->setText(tr("GOOSESecurity"));
+//    actionAddGOOSESecurity->setIcon(QIcon(":/nodeType/images/gseSecurity.png"));
+//    actionAddSMVSecurity->setText(tr("SMVSecurity"));
+//    actionAddSMVSecurity->setIcon(QIcon(":/nodeType/images/smvSecurity.png"));
 
     actionAddAuthentication->setText(tr("Authentication"));
     actionAddAuthentication->setIcon(QIcon(":/nodeType/images/authentication.png"));
@@ -1110,7 +1112,7 @@ void MainWindow::retranslateUi()
     actionAddLN->setText(tr("LN"));
     actionAddLN->setIcon(QIcon(":/nodeType/images/ln.png"));
     actionAddAccessControl->setText(tr("AccessControl"));
-    actionAddAccessControl->setIcon(QIcon(":/nodeType/images/accesscontrol.png"));
+    actionAddAccessControl->setIcon(QIcon(":/nodeType/images/accessControl.png"));
 
     actionAddDataSet->setText(tr("DataSet"));
     actionAddDataSet->setIcon(QIcon(":/nodeType/images/dataset.png"));
@@ -1128,13 +1130,15 @@ void MainWindow::retranslateUi()
     actionAddSMVControl->setIcon(QIcon(":/nodeType/images/smvControl.png"));
     actionAddSettingControl->setText(tr("SettingControl"));
     actionAddSettingControl->setIcon(QIcon(":/nodeType/images/settingControl.png"));
+    actionAddSCLControl->setText(tr("SCLControl"));
+    actionAddSCLControl->setIcon(QIcon(":/nodeType/images/sclControl.png"));
 
     actionAddPowerTransformer->setText(tr("PowerTransformer"));
     actionAddPowerTransformer->setIcon(QIcon(":/nodeType/images/powerTransformer.png"));
     actionAddGeneralEquipment->setText(tr("GeneralEquipment"));
     actionAddGeneralEquipment->setIcon(QIcon(":/nodeType/images/generalEquipment.png"));
     actionAddLNode->setText(tr("LNode"));
-    actionAddLNode->setIcon(QIcon(":/nodeType/images/LNode.png"));
+    actionAddLNode->setIcon(QIcon(":/nodeType/images/lnNode.png"));
     actionAddVoltageLevel->setText(tr("VoltageLevel"));
     actionAddVoltageLevel->setIcon(QIcon(":/nodeType/images/voltageLevel.png"));
     actionAddFunction->setText(tr("Function"));
@@ -1158,7 +1162,7 @@ void MainWindow::retranslateUi()
     actionAddConnectivityNode->setText(tr("ConnectivityNode"));
     actionAddConnectivityNode->setIcon(QIcon(":/nodeType/images/connectivityNode.png"));
     actionAddFCDA->setText(tr("FCDA"));
-    actionAddFCDA->setIcon(QIcon(":/nodeType/images/FCDA.png"));
+    actionAddFCDA->setIcon(QIcon(":/nodeType/images/fcda.png"));
     actionAddTrgOps->setText(tr("TrgOps"));
     actionAddTrgOps->setIcon(QIcon(":/nodeType/images/trgOps.png"));
     actionAddOptFields->setText(tr("OptFields"));
@@ -1166,13 +1170,13 @@ void MainWindow::retranslateUi()
     actionAddRptEnabled->setText(tr("RptEnabled"));
     actionAddRptEnabled->setIcon(QIcon(":/nodeType/images/rptEnabled.png"));
     actionAddSDI->setText(tr("SDI"));
-    actionAddSDI->setIcon(QIcon(":/nodeType/images/SDI.png"));
+    actionAddSDI->setIcon(QIcon(":/nodeType/images/sdi.png"));
     actionAddDAI->setText(tr("DAI"));
-    actionAddDAI->setIcon(QIcon(":/nodeType/images/DAI.png"));
+    actionAddDAI->setIcon(QIcon(":/nodeType/images/dai.png"));
     actionAddExtRef->setText(tr("ExtRef"));
     actionAddExtRef->setIcon(QIcon(":/nodeType/images/extRef.png"));
     actionAddIEDName->setText(tr("IEDName"));
-    actionAddIEDName->setIcon(QIcon(":/nodeType/images/IEDName.png"));
+    actionAddIEDName->setIcon(QIcon(":/nodeType/images/iedName.png"));
     actionAddSmvOpts->setText(tr("SmvOpts"));
     actionAddSmvOpts->setIcon(QIcon(":/nodeType/images/smvOpts.png"));
     actionAddVal->setText(tr("Val"));
@@ -1180,9 +1184,9 @@ void MainWindow::retranslateUi()
     actionAddLNodeType->setText(tr("LNodeType"));
     actionAddLNodeType->setIcon(QIcon(":/nodeType/images/LNodeType.png"));
     actionAddDOType->setText(tr("DOType"));
-    actionAddDOType->setIcon(QIcon(":/nodeType/images/DOType.png"));
+    actionAddDOType->setIcon(QIcon(":/nodeType/images/doType.png"));
     actionAddDAType->setText(tr("DAType"));
-    actionAddDAType->setIcon(QIcon(":/nodeType/images/dAType.png"));
+    actionAddDAType->setIcon(QIcon(":/nodeType/images/daType.png"));
     actionAddEnumType->setText(tr("EnumType"));
     actionAddEnumType->setIcon(QIcon(":/nodeType/images/enumType.png"));
     actionAddDO->setText(tr("DO"));
@@ -1612,8 +1616,8 @@ void MainWindow::treeContextMenu(const QPoint& position)
             contextMenu.addAction(actionAddServerAt);
         }
         contextMenu.addAction(actionAddServices);
-        contextMenu.addAction(actionAddGOOSESecurity);
-        contextMenu.addAction(actionAddSMVSecurity);
+//        contextMenu.addAction(actionAddGOOSESecurity);
+//        contextMenu.addAction(actionAddSMVSecurity);
         break;
     case DomItem::ICD_SERVER:
         if(!(currItem->hasChildOfName(tr("Text"))))
@@ -1658,6 +1662,7 @@ void MainWindow::treeContextMenu(const QPoint& position)
         contextMenu.addAction(actionAddSMVControl);
         if(!(currItem->hasChildOfName(tr("SettingControl"))))
             contextMenu.addAction(actionAddSettingControl);
+        contextMenu.addAction(actionAddSCLControl);
         break;
     case DomItem::ICD_DATASET:
         if(!(currItem->hasChildOfName(tr("Text"))))
@@ -1863,7 +1868,7 @@ void MainWindow::treeContextMenu(const QPoint& position)
             if(currItem->parent()->getChildAt(i)->getNodeType() == currItem->getNodeType())
                 currItemNum++;
         }
-        if(currItem->isCanNoUse() && currItemNum == 1) {
+        if(!currItem->isCanNoUse() && currItemNum == 1) {
             actionCut->setEnabled(false);
             actionDelete->setEnabled(false);
         }
@@ -3108,15 +3113,15 @@ void MainWindow::on_actionAddServerAt_triggered()
     editor->addServerAt();
 }
 
-void MainWindow::on_actionAddGOOSESecurity_triggered()
-{
-    editor->addGOOSESecurity();
-}
+//void MainWindow::on_actionAddGOOSESecurity_triggered()
+//{
+//    editor->addGOOSESecurity();
+//}
 
-void MainWindow::on_actionAddSMVSecurity_triggered()
-{
-    editor->addSMVSecurity();
-}
+//void MainWindow::on_actionAddSMVSecurity_triggered()
+//{
+//    editor->addSMVSecurity();
+//}
 
 void MainWindow::on_actionAddAuthentication_triggered()
 {
@@ -3140,7 +3145,7 @@ void MainWindow::on_actionAddLN0_triggered()
 
 void MainWindow::on_actionAddLN_triggered()
 {
-    editor->addLNode();
+    editor->addLN();
 }
 
 void MainWindow::on_actionAddAccessControl_triggered()
@@ -3186,6 +3191,11 @@ void MainWindow::on_actionAddSMVControl_triggered()
 void MainWindow::on_actionAddSettingControl_triggered()
 {
     editor->addSettingControl();
+}
+
+void MainWindow::on_actionAddSCLControl_triggered()
+{
+    editor->addSCLControl();
 }
 
 void MainWindow::on_actionAddPowerTransformer_triggered()

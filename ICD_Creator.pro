@@ -132,7 +132,8 @@ SOURCES += main.cpp\
     editdataset.cpp \
     addtext.cpp \
     addprivate.cpp \
-    editreportcontrol.cpp
+    editreportcontrol.cpp \
+    editservices.cpp
 
 HEADERS  += mainwindow.h \
     domitem.h \
@@ -250,7 +251,9 @@ HEADERS  += mainwindow.h \
     editdataset.h \
     addtext.h \
     addprivate.h \
-    editreportcontrol.h
+    editreportcontrol.h \
+    xsdeditor/editservices.h \
+    editservices.h
 
 FORMS += \
     xsdeditor/xsdwindow.ui \

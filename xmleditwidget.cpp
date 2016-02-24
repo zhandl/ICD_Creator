@@ -223,6 +223,9 @@ void XmlEditWidget::setupUi()
     mainLayout->setObjectName(QString::fromUtf8("mainLayout"));
     treeWidget = new QTreeWidget(this);
     treeWidget->setObjectName(QString::fromUtf8("treeWidget"));
+//    treeWidget->setStyleSheet("Item::selected{background-color: rgb(0xFF, 0xC0, 0xFF)}");
+    treeWidget->setStyleSheet("QTreeView::item:selected {background-color: rgb(255, 128, 64);}");
+//    treeWidget->setStyleSheet("QTreeView {selection-background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,stop: 0 #506B79, stop: 1.0 #0D95A6);}");
 
     mainLayout->addWidget(treeWidget);
 
@@ -380,7 +383,7 @@ void XmlEditWidget::retranslateUi()
     label_2->setText(QApplication::translate("XmlEditWidget", "Text to Search", 0, QApplication::UnicodeUTF8));
     clearText->setText(QApplication::translate("XmlEditWidget", "...", 0, QApplication::UnicodeUTF8));
     findButton->setText(QApplication::translate("XmlEditWidget", "Find", 0, QApplication::UnicodeUTF8));
-    counting->setText(QApplication::translate("XmlEditWidget", "Conta", 0, QApplication::UnicodeUTF8));
+    counting->setText(QApplication::translate("XmlEditWidget", "Clear", 0, QApplication::UnicodeUTF8));
     label->setText(QApplication::translate("XmlEditWidget", "Search in:", 0, QApplication::UnicodeUTF8));
     labelScope->setText(QApplication::translate("XmlEditWidget", "scope:", 0, QApplication::UnicodeUTF8));
     closeUnrelated->setText(QApplication::translate("XmlEditWidget", "Close Unrelated", 0, QApplication::UnicodeUTF8));
@@ -775,9 +778,9 @@ void XmlEditWidget::addLN0()
     d->addLN0();
 }
 
-void XmlEditWidget::addLNode()
+void XmlEditWidget::addLN()
 {
-    d->addLNode();
+    d->addLN();
 }
 
 void XmlEditWidget::addAccessControl()
@@ -825,6 +828,11 @@ void XmlEditWidget::addSettingControl()
     d->addSettingControl();
 }
 
+void XmlEditWidget::addSCLControl()
+{
+    d->addChild("SCLControl");
+}
+
 void XmlEditWidget::addPowerTransformer()
 {
     d->addChild("PowerTransformer");
@@ -835,9 +843,10 @@ void XmlEditWidget::addGeneralEquipment()
     d->addChild("GeneralEquipment");
 }
 
-//void XmlEditWidget::addLNode()
-//{
-//}
+void XmlEditWidget::addLNode()
+{
+    d->addChild("LNode");
+}
 
 void XmlEditWidget::addVoltageLevel()
 {
