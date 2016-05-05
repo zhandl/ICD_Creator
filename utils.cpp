@@ -20,7 +20,8 @@ void Utils::error(const QString & message)
 
 void Utils::error(QWidget *parent, const QString & message)
 {
-    qWarning(message.toLatin1().data());
+//    qWarning(message.toLatin1().data());
+    qWarning(message.toUtf8().data());
     if(isUnitTest && silenceMessages1 && !filler1  && !filler2 && silenceMessages2) {
         return ;
     }

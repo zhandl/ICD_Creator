@@ -24,10 +24,10 @@ icdIedAccessPointPage::icdIedAccessPointPage(QWidget *parent) :
     connect(apServerAuthenticationStrongCheckBox, SIGNAL(toggled(bool)), apServerAuthenticationStrongComboBox, SLOT(setEnabled(bool)));
     connect(apServerAuthenticationCertificateCheckBox, SIGNAL(toggled(bool)), apServerAuthenticationCertificateLabel, SLOT(setEnabled(bool)));
     connect(apServerAuthenticationCertificateCheckBox, SIGNAL(toggled(bool)), apServerAuthenticationCertificateComboBox, SLOT(setEnabled(bool)));
-    connect(apIed0DescCheckBox, SIGNAL(toggled(bool)), apIed0DescLabel, SLOT(setEnabled(bool)));
-    connect(apIed0DescCheckBox, SIGNAL(toggled(bool)), apIed0DescText, SLOT(setEnabled(bool)));
-    connect(apIed1DescCheckBox, SIGNAL(toggled(bool)), apIed1DescLabel, SLOT(setEnabled(bool)));
-    connect(apIed1DescCheckBox, SIGNAL(toggled(bool)), apIed1DescText, SLOT(setEnabled(bool)));
+//    connect(apIed0DescCheckBox, SIGNAL(toggled(bool)), apIed0DescLabel, SLOT(setEnabled(bool)));
+//    connect(apIed0DescCheckBox, SIGNAL(toggled(bool)), apIed0DescText, SLOT(setEnabled(bool)));
+//    connect(apIed1DescCheckBox, SIGNAL(toggled(bool)), apIed1DescLabel, SLOT(setEnabled(bool)));
+//    connect(apIed1DescCheckBox, SIGNAL(toggled(bool)), apIed1DescText, SLOT(setEnabled(bool)));
 
     bool apDescIsChecked = apDescCheckBox->isChecked();
     apDescLabel->setEnabled(apDescIsChecked);
@@ -53,24 +53,24 @@ icdIedAccessPointPage::icdIedAccessPointPage(QWidget *parent) :
     bool apServerAuthenticationCertificateIsChecked = apServerAuthenticationCertificateCheckBox->isChecked();
     apServerAuthenticationCertificateLabel->setEnabled(apServerAuthenticationCertificateIsChecked);
     apServerAuthenticationCertificateComboBox->setEnabled(apServerAuthenticationCertificateIsChecked);
-    bool apIed0DescIsChecked = apIed0DescCheckBox->isChecked();
-    apIed0DescLabel->setEnabled(apIed0DescIsChecked);
-    apIed0DescText->setEnabled(apIed0DescIsChecked);
-    bool apIed1DescIsChecked = apIed1DescCheckBox->isChecked();
-    apIed1DescLabel->setEnabled(apIed1DescIsChecked);
-    apIed1DescText->setEnabled(apIed1DescIsChecked);
+//    bool apIed0DescIsChecked = apIed0DescCheckBox->isChecked();
+//    apIed0DescLabel->setEnabled(apIed0DescIsChecked);
+//    apIed0DescText->setEnabled(apIed0DescIsChecked);
+//    bool apIed1DescIsChecked = apIed1DescCheckBox->isChecked();
+//    apIed1DescLabel->setEnabled(apIed1DescIsChecked);
+//    apIed1DescText->setEnabled(apIed1DescIsChecked);
 
-    apIed0InstComboBox->setCurrentIndex(0);
-    apIed1InstComboBox->setCurrentIndex(1);
+//    apIed0InstComboBox->setCurrentIndex(0);
+//    apIed1InstComboBox->setCurrentIndex(1);
 
     apNameText->setText(tr("S1"));
     apServerAuthenticationNoneCheckBox->setChecked(true);
     apServerAuthenticationNoneComboBox->setCurrentIndex(1);
 
-    apIed0DescCheckBox->setChecked(true);
-    apIed0DescText->setText(tr("公共逻辑设备"));
-    apIed1DescCheckBox->setChecked(true);
-    apIed1DescText->setText(tr("录波控制单元"));
+//    apIed0DescCheckBox->setChecked(true);
+//    apIed0DescText->setText(tr("公共逻辑设备"));
+//    apIed1DescCheckBox->setChecked(true);
+//    apIed1DescText->setText(tr("录波控制单元"));
 
 }
 
@@ -208,58 +208,58 @@ void icdIedAccessPointPage::init()
     apServerAuthenticationGridLayout->addWidget(apServerAuthenticationCertificateLabel, 1, 4, 1, 1);
     apServerAuthenticationGridLayout->addWidget(apServerAuthenticationCertificateComboBox, 1, 5, 1, 1);
 
-    apLDeviceGroupBox = new QGroupBox(apServerGroupBox);
-    apLDeviceGroupBox->setObjectName(QString::fromUtf8("apLDeviceGroupBox"));
-    apLDeviceGridLayout = new QGridLayout(apLDeviceGroupBox);
-    apLDeviceGridLayout->setObjectName(QString::fromUtf8("apLDeviceGridLayout"));
+//    apLDeviceGroupBox = new QGroupBox(apServerGroupBox);
+//    apLDeviceGroupBox->setObjectName(QString::fromUtf8("apLDeviceGroupBox"));
+//    apLDeviceGridLayout = new QGridLayout(apLDeviceGroupBox);
+//    apLDeviceGridLayout->setObjectName(QString::fromUtf8("apLDeviceGridLayout"));
 
-    apIed0InstLabel = new QLabel(apLDeviceGroupBox);
-    apIed0InstLabel->setObjectName(QString::fromUtf8("apIed0InstLabel"));
-    apIed0InstLabel->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Minimum);
-    apIed0InstComboBox = new QComboBox(apLDeviceGroupBox);
-    apIed0InstComboBox->setObjectName(QString::fromUtf8("apIed0InstComboBox"));
-    apIed0DescCheckBox = new QCheckBox(apLDeviceGroupBox);
-    apIed0DescCheckBox->setObjectName(QString::fromUtf8("apIed0DescCheckBox"));
-    apIed0DescCheckBox->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Minimum);
-    apIed0DescLabel = new QLabel(apLDeviceGroupBox);
-    apIed0DescLabel->setObjectName(QString::fromUtf8("apIed0DescLabel"));
-    apIed0DescLabel->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Minimum);
-    apIed0DescText = new QLineEdit(apLDeviceGroupBox);
-    apIed0DescText->setObjectName(QString::fromUtf8("apIed0DescText"));
-    apIed1InstLabel = new QLabel(apLDeviceGroupBox);
-    apIed1InstLabel->setObjectName(QString::fromUtf8("apIed1InstLabel"));
-    apIed1InstLabel->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Minimum);
-    apIed1InstComboBox = new QComboBox(apLDeviceGroupBox);
-    apIed1InstComboBox->setObjectName(QString::fromUtf8("apIed1InstComboBox"));
-    apIed1DescCheckBox = new QCheckBox(apLDeviceGroupBox);
-    apIed1DescCheckBox->setObjectName(QString::fromUtf8("apIed1DescCheckBox"));
-    apIed1DescCheckBox->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Minimum);
-    apIed1DescLabel = new QLabel(apLDeviceGroupBox);
-    apIed1DescLabel->setObjectName(QString::fromUtf8("apIed1DescLabel"));
-    apIed1DescLabel->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Minimum);
-    apIed1DescText = new QLineEdit(apLDeviceGroupBox);
-    apIed1DescText->setObjectName(QString::fromUtf8("apIed1DescText"));
+//    apIed0InstLabel = new QLabel(apLDeviceGroupBox);
+//    apIed0InstLabel->setObjectName(QString::fromUtf8("apIed0InstLabel"));
+//    apIed0InstLabel->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Minimum);
+//    apIed0InstComboBox = new QComboBox(apLDeviceGroupBox);
+//    apIed0InstComboBox->setObjectName(QString::fromUtf8("apIed0InstComboBox"));
+//    apIed0DescCheckBox = new QCheckBox(apLDeviceGroupBox);
+//    apIed0DescCheckBox->setObjectName(QString::fromUtf8("apIed0DescCheckBox"));
+//    apIed0DescCheckBox->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Minimum);
+//    apIed0DescLabel = new QLabel(apLDeviceGroupBox);
+//    apIed0DescLabel->setObjectName(QString::fromUtf8("apIed0DescLabel"));
+//    apIed0DescLabel->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Minimum);
+//    apIed0DescText = new QLineEdit(apLDeviceGroupBox);
+//    apIed0DescText->setObjectName(QString::fromUtf8("apIed0DescText"));
+//    apIed1InstLabel = new QLabel(apLDeviceGroupBox);
+//    apIed1InstLabel->setObjectName(QString::fromUtf8("apIed1InstLabel"));
+//    apIed1InstLabel->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Minimum);
+//    apIed1InstComboBox = new QComboBox(apLDeviceGroupBox);
+//    apIed1InstComboBox->setObjectName(QString::fromUtf8("apIed1InstComboBox"));
+//    apIed1DescCheckBox = new QCheckBox(apLDeviceGroupBox);
+//    apIed1DescCheckBox->setObjectName(QString::fromUtf8("apIed1DescCheckBox"));
+//    apIed1DescCheckBox->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Minimum);
+//    apIed1DescLabel = new QLabel(apLDeviceGroupBox);
+//    apIed1DescLabel->setObjectName(QString::fromUtf8("apIed1DescLabel"));
+//    apIed1DescLabel->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Minimum);
+//    apIed1DescText = new QLineEdit(apLDeviceGroupBox);
+//    apIed1DescText->setObjectName(QString::fromUtf8("apIed1DescText"));
 
-    apLDeviceGridLayout->addWidget(apIed0InstLabel, 0, 0, 1, 1);
-    apLDeviceGridLayout->addWidget(apIed0InstComboBox, 0, 1, 1, 1);
-    apLDeviceGridLayout->addWidget(apIed0DescCheckBox, 0, 2, 1, 1);
-    apLDeviceGridLayout->addWidget(apIed0DescLabel, 0, 3, 1, 1);
-    apLDeviceGridLayout->addWidget(apIed0DescText, 0, 4, 1, 1);
-    apLDeviceGridLayout->addWidget(apIed1InstLabel, 1, 0, 1, 1);
-    apLDeviceGridLayout->addWidget(apIed1InstComboBox, 1, 1, 1, 1);
-    apLDeviceGridLayout->addWidget(apIed1DescCheckBox, 1, 2, 1, 1);
-    apLDeviceGridLayout->addWidget(apIed1DescLabel, 1, 3, 1, 1);
-    apLDeviceGridLayout->addWidget(apIed1DescText, 1, 4, 1, 1);
+//    apLDeviceGridLayout->addWidget(apIed0InstLabel, 0, 0, 1, 1);
+//    apLDeviceGridLayout->addWidget(apIed0InstComboBox, 0, 1, 1, 1);
+//    apLDeviceGridLayout->addWidget(apIed0DescCheckBox, 0, 2, 1, 1);
+//    apLDeviceGridLayout->addWidget(apIed0DescLabel, 0, 3, 1, 1);
+//    apLDeviceGridLayout->addWidget(apIed0DescText, 0, 4, 1, 1);
+//    apLDeviceGridLayout->addWidget(apIed1InstLabel, 1, 0, 1, 1);
+//    apLDeviceGridLayout->addWidget(apIed1InstComboBox, 1, 1, 1, 1);
+//    apLDeviceGridLayout->addWidget(apIed1DescCheckBox, 1, 2, 1, 1);
+//    apLDeviceGridLayout->addWidget(apIed1DescLabel, 1, 3, 1, 1);
+//    apLDeviceGridLayout->addWidget(apIed1DescText, 1, 4, 1, 1);
 
     apServerVLayout->addWidget(apServerAttributeGroupBox);
     apServerVLayout->addWidget(apServerAuthenticationGroupBox);
-    apServerVLayout->addWidget(apLDeviceGroupBox);
+//    apServerVLayout->addWidget(apLDeviceGroupBox);
 
     apVLayout->addWidget(apAttributeGroupBox);
     apVLayout->addWidget(apServerGroupBox);
 
     QStringList booleanEnum = QStringList()<<tr("false")<<tr("true");
-    QStringList LDeviceNameEnum = QStringList()<<tr("LD0")<<tr("RCD");
+//    QStringList LDeviceNameEnum = QStringList()<<tr("LD0")<<tr("RCD");
     setWindowTitle(tr("icdIedAccessPointPage"));
 
     apAttributeGroupBox->setTitle(tr("AccessPoint Attributes"));
@@ -291,13 +291,13 @@ void icdIedAccessPointPage::init()
     apServerAuthenticationCertificateLabel->setText(tr("certificate: "));
     apServerAuthenticationCertificateComboBox->addItems(booleanEnum);
 
-    apLDeviceGroupBox->setTitle(tr("LDevice"));
-    apIed0InstLabel->setText(tr("inst: "));
-    apIed0InstComboBox->addItems(LDeviceNameEnum);
-    apIed0DescCheckBox->setText(QString());
-    apIed0DescLabel->setText(tr("desc: "));
-    apIed1InstLabel->setText(tr("inst: "));
-    apIed1InstComboBox->addItems(LDeviceNameEnum);
-    apIed1DescCheckBox->setText(QString());
-    apIed1DescLabel->setText(tr("desc: "));
+//    apLDeviceGroupBox->setTitle(tr("LDevice"));
+//    apIed0InstLabel->setText(tr("inst: "));
+//    apIed0InstComboBox->addItems(LDeviceNameEnum);
+//    apIed0DescCheckBox->setText(QString());
+//    apIed0DescLabel->setText(tr("desc: "));
+//    apIed1InstLabel->setText(tr("inst: "));
+//    apIed1InstComboBox->addItems(LDeviceNameEnum);
+//    apIed1DescCheckBox->setText(QString());
+//    apIed1DescLabel->setText(tr("desc: "));
 }

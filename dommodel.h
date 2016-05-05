@@ -130,6 +130,7 @@ public:
     void editServices(QWidget *const window, QTreeWidgetItem* pItem);
 
     void editAttribute(QWidget *const window, QTreeWidgetItem* pItem);
+    void addVal(QWidget *window, QTreeWidget *tree);
     void addText(QWidget *window, QTreeWidget *tree);
     void addPrivate(QWidget *window, QTreeWidget *tree);
 

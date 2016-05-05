@@ -363,6 +363,7 @@ private:
     bool _isSequence;
     bool _canNoUse;
     bool _canBeMore;
+    bool _isMixed;
 
     void initItem(DomModel *model, DomItem *parent);
 

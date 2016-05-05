@@ -58,6 +58,10 @@ public:
         return &childItems;
     }
 
+    QVector<DataTypeItem*> &getLNodeTypeItems() {
+        return LNodeTypeItemPool;
+    }
+
     QVector<DataTypeItem*> &getDoTypeItems() {
         return DoTypeItemPool;
     }
@@ -81,6 +85,9 @@ public:
     QString getAttributeString(const QString &attributeName);
     QString addIdToPool(const QString &inputString);
 
+//    QString delNameFromPool(const QString &string);
+//    QString delIdFromPool(const QString &string);
+
     void addSelected(DataTypeItem *);
     void unSelected(DataTypeItem *);
 
@@ -101,6 +108,7 @@ private:
    QHash<int, DataTypeItem*> selection;
    PaintInfo *paintInfo;
 
+   QVector<DataTypeItem*> LNodeTypeItemPool;
    QVector<DataTypeItem*> DoTypeItemPool;
    QVector<DataTypeItem*> DaTypeItemPool;
    QVector<DataTypeItem*> EnumItemPool;
@@ -111,7 +119,7 @@ private:
 
    DocumentType  *_docType;
 
-   static int renameCounter;
+//   static int renameCounter;
 
    void setDocType(const QString &newDocType, const QString &systemId, const QString &publicId);
    void processDocument(QDomDocument &document);

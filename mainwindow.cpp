@@ -23,6 +23,7 @@
 #include "snippet_interface.h"
 #include "test.h"
 #include "recodericdwizard.h"
+#include "netaicdwizard.h"
 
 #define MAX_LAST_FILES  (20)
 #define SHORT_TIMEOUT  2000
@@ -599,7 +600,6 @@ BasicType << "BOOLEAN" << "INT8" << "INT16" << "INT24" << "INT32" << "INT128" <<
     toolBar->addAction(actionGo_to_Next_Brother);
     toolBar->addSeparator();
     toolBar->addAction(actionHelpOnQXmlEdit);
-
 
     actionEditAttribute = new QAction(this);
     actionEditAttribute->setObjectName(tr("actionEditAttribute"));
@@ -2163,7 +2163,7 @@ void MainWindow::on_actionSave_triggered()
 QString MainWindow::askFileName(const QString &actualName)
 {
     QString filePath = QFileDialog::getSaveFileName(this, tr("Save Data"),
-                       actualName, tr("XML files (*.xml);;XML Schema files (*.xsd);;All files (*);;"));
+                       actualName, tr("ICD files (*.icd);;SCD files (*.scd);;XML files (*.xml);;XML Schema files (*.xsd);;All files (*);;"));
 
     if(!filePath.isEmpty()) {
         return filePath;
@@ -2989,18 +2989,32 @@ void MainWindow::on_actionNewRcdICDWizard_triggered()
     if(recoderICDWizard.exec() == QDialog::Accepted) {
         QDomDocument *document = recoderICDWizard.document;
         setDocument(*document, "", true);
+
     }
 }
 
 void MainWindow::on_actionNewNetICDWizard_triggered()
 {
-
+    NetaIcdWizard netaIcdWizard(this);
+    if(netaIcdWizard.exec() == QDialog::Accepted) {
+        QDomDocument *document = netaIcdWizard.document;
+        setDocument(*document, "", true);
+//        ShowTreeThread *showTree_thread = new ShowTreeThread();
+//        connect(showTree_thread, SIGNAL(showOvered()), showTree_thread, SLOT(stop()));
+//        showTree_thread->setTarget(editor, document);
+//        showTree_thread->start();
+    }
 }
 
 void MainWindow::on_actionEditAttribute_triggered()
 {
     editor->editAttribute();
 
+}
+
+void MainWindow::on_actionAddVal_triggered()
+{
+    editor->addVal();
 }
 
 void MainWindow::on_actionAddText_triggered()
@@ -3313,10 +3327,10 @@ void MainWindow::on_actionAddSmvOpts_triggered()
     editor->addSmvOpts();
 }
 
-void MainWindow::on_actionAddVal_triggered()
-{
-    editor->addVal();
-}
+//void MainWindow::on_actionAddVal_triggered()
+//{
+//    editor->addVal();
+//}
 
 void MainWindow::on_actionAddLNodeType_triggered()
 {

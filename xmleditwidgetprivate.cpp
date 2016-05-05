@@ -50,6 +50,30 @@ XmlEditWidgetPrivate::XmlEditWidgetPrivate(XmlEditWidget *theOwner) :
     clipBoardItem = NULL;
 }
 
+XmlEditWidgetPrivate::XmlEditWidgetPrivate() :
+    styleActionGroup(this)
+{
+    p = NULL;
+    _appData = &_defaultData;
+    started = false;
+    internalStateOk = false;
+
+    _schemaRoot = NULL;
+
+    _displayMode = qxmledit::NORMAL;
+    paintInfo.setExploreMode(false);
+    isSlave = false;
+
+    styleMenu = NULL;
+    copyMenu = NULL;
+
+    application = NULL;
+    paintInfo.loadState();
+    model = newModel();
+    model->assignCollectSizeDataFlag(paintInfo.showItemSize());
+    clipBoardItem = NULL;
+}
+
 DomModel *XmlEditWidgetPrivate::newModel()
 {
     DomModel *newRule = new DomModel();
@@ -678,6 +702,18 @@ void XmlEditWidgetPrivate::addBrother()
         return ;
     }
     model->addBrother(p, p->treeWidget);
+}
+
+void XmlEditWidgetPrivate::addVal()
+{
+    if(!isActionMode()) {
+        return ;
+    }
+    if(NULL == model) {
+        errorNoRule();
+        return ;
+    }
+    model->addVal(p, p->treeWidget);
 }
 
 void XmlEditWidgetPrivate::addText()
@@ -1900,6 +1936,7 @@ void XmlEditWidgetPrivate::loadText(const QString &text, const bool isChangeStat
     if(!text.isEmpty()) {
         QDomDocument document;
         if(document.setContent(text)) {
+          //  setDocumentPara(document, "", isChangeState);
             setDocument(document, QString(""), isChangeState);
             autoLoadValidation();
         } else {
@@ -1942,16 +1979,56 @@ void XmlEditWidgetPrivate::doLoadFileXplore(const QString &filePath)
 
 void XmlEditWidgetPrivate::setDocument(QDomDocument &document, const QString &filePath, const bool isSetState)
 {
-    DomModel *newModel = new DomModel(document, filePath);
-    newModel->setPaintInfo(&paintInfo);
+//    DomModel *newModel = new DomModel(document, filePath);
+
+//    newModel->setPaintInfo(&paintInfo);
+
+    setModel_thread = new SetModelThread();
+    setModel_thread->setTarget(document, filePath);
+
+    connect(setModel_thread, SIGNAL(setModelOvered()), this, SLOT(setModelCompleted()));
+
+    p->setModelLoadingLabel();
+    setModel_thread->start();
+
+//    p->emitDataReadyMessage(tr("Data loaded"));
+////    deleteModel();
+////    model = newModel;
+//    model->assignCollectSizeDataFlag(paintInfo.showItemSize());
+//    docTypeChanged(model->docType());
+//    if(isSetState) {
+//        setDisplayMode(qxmledit::NORMAL);
+//    }
+//    connect(model, SIGNAL(wasModified()), this, SLOT(modelIsModified()));
+//    connect(model, SIGNAL(undoStateChanged()), this, SLOT(modelUndoChanged()));
+//    connect(model, SIGNAL(docTypeChanged(QString)), this, SLOT(docTypeChanged(QString)));
+//    resetTree();
+//    display();
+//    startUIState();
+//    modelIsModified();
+//    if(isExpandTreeOnLoad()) {
+//        onActionExpandAll();
+//    }
+//    resizeTreeColumns();
+//    showControls(true);
+}
+
+void XmlEditWidgetPrivate::setModelCompleted()
+{
+    setModel_thread->quit();
+    model = setModel_thread->getModel();
+    setModel_thread->deleteLater();
+
+    p->setModelCompleted();
+
     p->emitDataReadyMessage(tr("Data loaded"));
-    deleteModel();
-    model = newModel;
+//    deleteModel();
+//    model = newModel;
     model->assignCollectSizeDataFlag(paintInfo.showItemSize());
     docTypeChanged(model->docType());
-    if(isSetState) {
+//    if(isSetState) {
         setDisplayMode(qxmledit::NORMAL);
-    }
+//    }
     connect(model, SIGNAL(wasModified()), this, SLOT(modelIsModified()));
     connect(model, SIGNAL(undoStateChanged()), this, SLOT(modelUndoChanged()));
     connect(model, SIGNAL(docTypeChanged(QString)), this, SLOT(docTypeChanged(QString)));

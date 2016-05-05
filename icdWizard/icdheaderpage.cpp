@@ -221,7 +221,6 @@ void icdHeaderPage::init()
     headerVLayout->addWidget(historyGroupBox);
     headerVLayout->setStretch(2, 10);
 
-
     retranslateUi();
 
     QMetaObject::connectSlotsByName(this);

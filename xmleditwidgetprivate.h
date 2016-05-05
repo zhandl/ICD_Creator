@@ -3,6 +3,8 @@
 
 #include "xmleditwidget.h"
 
+#include "setmodelthread.h"
+
 class XElementContent;
 
 class XmlEditWidgetPrivate : public QObject
@@ -29,8 +31,14 @@ class XmlEditWidgetPrivate : public QObject
     XSDSchema *_schemaRoot;
     DomItem *clipBoardItem;
     DomModel *newModel();
+
+private:
+
+    SetModelThread *setModel_thread;
+
 public:
     XmlEditWidgetPrivate(XmlEditWidget *theOwner);
+    XmlEditWidgetPrivate();
     ~XmlEditWidgetPrivate();
 
     bool isReady();
@@ -110,6 +118,7 @@ public:
     void addChild(QString newTag);
 
     void editAttribute();
+    void addVal();
     void addText();
     void addPrivate();
 
@@ -288,6 +297,7 @@ private slots:
     void on_deleteItem_clicked();
     void on_closeSearchPanel_clicked();
 
+    void setModelCompleted();
 };
 
 #endif // XMLEDITWIDGETPRIVATE_H

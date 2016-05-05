@@ -11,7 +11,6 @@
 
 #include "utils.h"
 
-int DataTypeModel::renameCounter = 0;
 
 DataTypeModel::DataTypeModel(QDomDocument &document, const QString &name)
 {
@@ -138,6 +137,8 @@ DataTypeItem *DataTypeModel::setItem(QDomNode &node, DataTypeItem *parent, QVect
                         item->setUnchecked();
                 }
             }
+            if(item->tag() == tr("LNodeType"))
+                LNodeTypeItemPool.append(item);
             if(item->tag() == tr("DOType"))
                 DoTypeItemPool.append(item);
             if(item->tag() == tr("DAType"))
@@ -263,6 +264,9 @@ void DataTypeModel::deleteItem(DataTypeItem *item)
     if(NULL == item) {
         return ;
     }
+    _namesPool.remove(item->tag());
+    if(item->hasAttributeOfName("id"))
+        _LNodeIdPool.remove(item->attributeValueOfName("id"));
     item->autoDelete(true);
 }
 
@@ -312,11 +316,25 @@ QString DataTypeModel::addNameToPool(const QString &inputString)
 QString DataTypeModel::addIdToPool(const QString &inputString)
 {
     QString idName = inputString;
+    int renameCounter = 0;
     if(_LNodeIdPool.contains(idName)) {
-        renameCounter++;
-        idName.append("_");
-        idName += QString::number(renameCounter,10);
+        foreach (const QString &value, _LNodeIdPool) {
+            if(value.contains(idName))
+                renameCounter++;
+        }
     }
+
+    if(renameCounter > 0) {
+        idName.append("_");
+        idName += QString::number(renameCounter,10);    
+        if(_LNodeIdPool.contains(idName)){
+            renameCounter++;
+            idName = idName.split("_").at(0);
+            idName.append("_");
+            idName += QString::number(renameCounter, 10);
+        }
+    }
+
 
     QSet<QString>::const_iterator it = _LNodeIdPool.insert(idName);
     return *it;
@@ -471,6 +489,8 @@ void DataTypeModel::insertItemInternal(DataTypeItem *theNewElement, DataTypeItem
         tree->expandItem(parentItem);
     }
 
+    if(theNewElement->tag() == tr("LNodeType"))
+        LNodeTypeItemPool.append(theNewElement);
     if(theNewElement->tag() == tr("DOType"))
         DoTypeItemPool.append(theNewElement);
     if(theNewElement->tag() == tr("DAType"))

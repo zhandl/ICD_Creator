@@ -61,6 +61,7 @@ public:
     void zeroUI();
     void zeroUISelf();
 
+    bool hasAttributeOfName(const QString &name);
     QString attributeValueOfName(const QString &name);
 
     DataTypeModel* getParentModel() const {

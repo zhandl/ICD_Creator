@@ -74,7 +74,7 @@ private slots:
     void on_noUseAttrTable_itemDoubleClicked(QTableWidgetItem *item);
 
 private:
-//    Ui::Dialog ui;
+ //   Ui::Dialog ui;
     void init();
     void error(const QString& message);
     void errorNoAttrData();

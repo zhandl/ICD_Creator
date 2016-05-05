@@ -19,6 +19,7 @@ void icdIedServicesPage::init()
     if (this->objectName().isEmpty())
         this->setObjectName(QString::fromUtf8("icdIedServicesPage"));
     this->resize(800, 600);
+    this->setMaximumSize(800, 600);
     QFont font;
     font.setFamily(QString::fromUtf8("Calibri"));
     font.setPointSize(9);

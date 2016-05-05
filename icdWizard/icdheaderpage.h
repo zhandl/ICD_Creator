@@ -64,6 +64,8 @@ private:
     void retranslateUi();
     void registerData();
 
+protected:
+
 signals:
 
 public slots:

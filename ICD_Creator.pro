@@ -133,7 +133,13 @@ SOURCES += main.cpp\
     addtext.cpp \
     addprivate.cpp \
     editreportcontrol.cpp \
-    editservices.cpp
+    editservices.cpp \
+    addval.cpp \
+    icdWizard/icdnetiedldevicepage.cpp \
+    netaicdwizard.cpp \
+    parsescdthread.cpp \
+    setmodelthread.cpp \
+    appendldthread.cpp
 
 HEADERS  += mainwindow.h \
     domitem.h \
@@ -253,7 +259,14 @@ HEADERS  += mainwindow.h \
     addprivate.h \
     editreportcontrol.h \
     xsdeditor/editservices.h \
-    editservices.h
+    editservices.h \
+    addval.h \
+    icdWizard/icdnetiedldevicepage.h \
+    netaicdwizard.h \
+    parsescdthread.h \
+    setmodelthread.h \
+    appendldthread.h \
+    controlBlock.h
 
 FORMS += \
     xsdeditor/xsdwindow.ui \

@@ -65,18 +65,18 @@ public:
     QComboBox *apServerAuthenticationCertificateComboBox;
 
     QGroupBox *apLDeviceGroupBox;
-    QGridLayout *apLDeviceGridLayout;
+//    QGridLayout *apLDeviceGridLayout;
 
-    QLabel *apIed0InstLabel;
-    QComboBox *apIed0InstComboBox;
-    QCheckBox *apIed0DescCheckBox;
-    QLabel *apIed0DescLabel;
-    QLineEdit *apIed0DescText;
-    QLabel *apIed1InstLabel;
-    QComboBox *apIed1InstComboBox;
-    QCheckBox *apIed1DescCheckBox;
-    QLabel *apIed1DescLabel;
-    QLineEdit *apIed1DescText;
+//    QLabel *apIed0InstLabel;
+//    QComboBox *apIed0InstComboBox;
+//    QCheckBox *apIed0DescCheckBox;
+//    QLabel *apIed0DescLabel;
+//    QLineEdit *apIed0DescText;
+//    QLabel *apIed1InstLabel;
+//    QComboBox *apIed1InstComboBox;
+//    QCheckBox *apIed1DescCheckBox;
+//    QLabel *apIed1DescLabel;
+//    QLineEdit *apIed1DescText;
 
 private:
     void init();

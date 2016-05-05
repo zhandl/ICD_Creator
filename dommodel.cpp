@@ -57,6 +57,7 @@
 #include "editattribute.h"
 #include "editlnode.h"
 #include "editdataset.h"
+#include "addval.h"
 #include "addtext.h"
 #include "addprivate.h"
 #include "editreportcontrol.h"
@@ -467,7 +468,8 @@ bool DomModel::editDataSetItem(QWidget * const parentWindow, DomItem *pItem)
 {
     EditDataSet element(parentWindow);
     element.setModal(true);
-    element.setTarget(pItem);
+    if(!element.setTarget(pItem))
+        return false;
     if(element.exec() == QDialog::Accepted) {
         return true;
     }
@@ -665,6 +667,33 @@ bool DomModel::editEntry(QWidget * const parentWindow, const QString &title, con
         result = text ;
     }
     return ok;
+}
+
+void DomModel::addVal(QWidget *window, QTreeWidget *tree)
+{
+    QTreeWidgetItem *currItem = getSelItem(tree);
+    bool isEmptyE = isEmpty(true);
+    DomItem *parentItem = NULL;
+    if(NULL != currItem) {
+        parentItem = DomItem::fromItemData(currItem);
+        if(parentItem->getType() != DomItem::ET_ELEMENT)
+            return ;
+    } else {
+        if(!isEmptyE) {
+            Utils::errorNoSel(window);
+            return;
+        }
+    }
+
+    DomItem *theNewItem = new DomItem(addNameToPool(tr("Val")), "", this, parentItem);
+    theNewItem->setNodeType();
+
+    AddVal element(window);
+    element.setModal(true);
+    element.setTarget(theNewItem);
+    if(element.exec() == QDialog::Accepted) {
+        insertItemInternal(theNewItem, parentItem, tree, true, 0);
+    }
 }
 
 void DomModel::addText(QWidget *window, QTreeWidget *tree)
@@ -1343,6 +1372,7 @@ void DomModel::addLN(QWidget *window, QTreeWidget *tree)
         theNewElement = NULL ;
     }
     if(NULL != theNewElement) {
+
         insertItemInternal(theNewElement, isEmptyE ? NULL : parentItem, tree, true, -1);
     }
 

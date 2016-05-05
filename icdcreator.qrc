@@ -207,4 +207,12 @@
         <file>images/DA.png</file>
         <file>images/DO.png</file>
     </qresource>
+    <qresource prefix="/scdTree">
+        <file>images/Folder.png</file>
+        <file>images/OpenFolder.png</file>
+    </qresource>
+    <qresource prefix="/">
+        <file>images/loading.gif</file>
+        <file>images/generating.gif</file>
+    </qresource>
 </RCC>

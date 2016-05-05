@@ -1040,7 +1040,7 @@ void DomItem::setChildItem(QTreeWidget *pTree, QTreeWidgetItem *parent, PaintInf
     bool isTop = false;
     if(isGUI) {
         if(NULL == parent) {
-            me = new QTreeWidgetItem(0);
+            me = new QTreeWidgetItem(pTree);
             isTop = true;
         } else {
             if(pos >= 0) {
@@ -1062,6 +1062,7 @@ void DomItem::setChildItem(QTreeWidget *pTree, QTreeWidgetItem *parent, PaintInf
             pTree->addTopLevelItem(me);
         }
     }
+
 }
 
 bool DomItem::generateDom(QDomDocument &document, QDomNode &parent)
@@ -2709,6 +2710,14 @@ QString DomItem::textForNode()
             showText += attributeValueOfName("daName");
         }
         break;
+    case ICD_REPORTCONTROL:
+        showText.clear();
+        showText += attributeValueOfName("rptID");
+        break;
+    case ICD_VAL:
+        showText.append(": ");
+        showText += textNodes.at(0)->text;
+        break;
     default:
         showText = _tag;
         break;
@@ -2789,6 +2798,7 @@ void DomItem::setNodeType()
         _isSequence = true;
         _canNoUse = false;
         _canBeMore = false;
+        wasOpen = true;
     } else if(newTag == tr("History")) {
         nodeType = ICD_HISTORY;
         _isSequence = false;
@@ -2805,6 +2815,7 @@ void DomItem::setNodeType()
         _isSequence = true;
         _canNoUse = true;
         _canBeMore = true;
+        wasOpen = true;
     } else if(newTag == tr("LNode")) {
         nodeType = ICD_LNODE;
         _isSequence = true;
@@ -2898,6 +2909,7 @@ void DomItem::setNodeType()
         _isSequence = true;
         _canNoUse = true;
         _canBeMore = false;
+        wasOpen = true;
     } else if(newTag == tr("SubNetwork")) {
         nodeType = ICD_SUBNETWORK;
         _isSequence = true;
@@ -2955,6 +2967,7 @@ void DomItem::setNodeType()
         _isSequence = true;
         _canNoUse = true;
         _canBeMore = true;
+        wasOpen = true;
     } else if(newTag == tr("Services")) {
         nodeType = ICD_SERVICES;
         _isSequence = true;
@@ -2965,11 +2978,13 @@ void DomItem::setNodeType()
         _isSequence = true;
         _canNoUse = false;
         _canBeMore = true;
+        wasOpen = true;
     } else if(newTag == tr("Server")) {
         nodeType = ICD_SERVER;
         _isSequence = false;
         _canNoUse = true;
         _canBeMore = false;
+        wasOpen = true;
     } else if(newTag == tr("LN")) {
         nodeType = ICD_LN;
         _isSequence = false;
@@ -2980,11 +2995,13 @@ void DomItem::setNodeType()
         _isSequence = true;
         _canNoUse = false;
         _canBeMore = false;
+        wasOpen = true;
     } else if(newTag == tr("LDevice")) {
         nodeType = ICD_LDEVICE;
         _isSequence = true;
         _canNoUse = false;
         _canBeMore = true;
+        wasOpen = true;
     } else if(newTag == tr("Association")) {
         nodeType = ICD_ASSOCIATION;
         _isSequence = true;

@@ -467,32 +467,32 @@ void RecoderIcdWizard::accept()
         authentication.setAttributeNode(certificate);
     }
 
-    QDomElement LdLd0 = document->createElement("LDevice");
-    QDomAttr Ld0Inst = document->createAttribute("inst");
-    Ld0Inst.setValue(icdIedAccessPoint_page->apIed0InstComboBox->currentText());
-    LdLd0.setAttributeNode(Ld0Inst);
-    if(icdIedAccessPoint_page->apIed0DescCheckBox->isChecked()) {
-        QDomAttr Ld0Desc = document->createAttribute("desc");
-        Ld0Desc.setValue(icdIedAccessPoint_page->apIed0DescText->text());
-        LdLd0.setAttributeNode(Ld0Desc);
-    }
+//    QDomElement LdLd0 = document->createElement("LDevice");
+//    QDomAttr Ld0Inst = document->createAttribute("inst");
+//    Ld0Inst.setValue(icdIedAccessPoint_page->apIed0InstComboBox->currentText());
+//    LdLd0.setAttributeNode(Ld0Inst);
+//    if(icdIedAccessPoint_page->apIed0DescCheckBox->isChecked()) {
+//        QDomAttr Ld0Desc = document->createAttribute("desc");
+//        Ld0Desc.setValue(icdIedAccessPoint_page->apIed0DescText->text());
+//        LdLd0.setAttributeNode(Ld0Desc);
+//    }
 
 
-    QDomElement LdRcd = document->createElement("LDevice");
-    QDomAttr LdRcdInst = document->createAttribute("inst");
-    LdRcdInst.setValue(icdIedAccessPoint_page->apIed1InstComboBox->currentText());
-    LdRcd.setAttributeNode(LdRcdInst);
-    if(icdIedAccessPoint_page->apIed0DescCheckBox->isChecked()) {
-        QDomAttr LdRcdDesc = document->createAttribute("desc");
-        LdRcdDesc.setValue(icdIedAccessPoint_page->apIed1DescText->text());
-        LdRcd.setAttributeNode(LdRcdDesc);
-    }
+//    QDomElement LdRcd = document->createElement("LDevice");
+//    QDomAttr LdRcdInst = document->createAttribute("inst");
+//    LdRcdInst.setValue(icdIedAccessPoint_page->apIed1InstComboBox->currentText());
+//    LdRcd.setAttributeNode(LdRcdInst);
+//    if(icdIedAccessPoint_page->apIed0DescCheckBox->isChecked()) {
+//        QDomAttr LdRcdDesc = document->createAttribute("desc");
+//        LdRcdDesc.setValue(icdIedAccessPoint_page->apIed1DescText->text());
+//        LdRcd.setAttributeNode(LdRcdDesc);
+//    }
 
     server.appendChild(authentication);
-    server.appendChild(LdLd0);
-    server.appendChild(LdRcd);
+//    server.appendChild(LdLd0);
+//    server.appendChild(LdRcd);
 
-    root.appendChild(ied);
+//    root.appendChild(ied);
 
     if(icdCommunication_page->communicationGroupBox->isChecked()) {
         QDomElement communication = document->createElement("Communication");

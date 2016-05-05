@@ -224,6 +224,8 @@ void DataTypeItem::display(QTreeWidgetItem *me, PaintInfo *paintInfo, bool isNew
             else
                 showText = tr("DLT860-74");
 
+            me->setFlags(me->flags() & ~Qt::ItemIsSelectable);
+
             wasOpen = true;
 
         } else if(tag() == tr("LNodeType")) {
@@ -275,7 +277,7 @@ void DataTypeItem::display(QTreeWidgetItem *me, PaintInfo *paintInfo, bool isNew
 
             me->setFlags(me->flags() & ~Qt::ItemIsUserCheckable);
 
-            wasOpen = true;
+            wasOpen = false;
         } else if(tag() == tr("DA") && isNewTemplate) {
             me->setIcon(0, QIcon(":/dataType/images/DANode.png"));
 
@@ -295,7 +297,7 @@ void DataTypeItem::display(QTreeWidgetItem *me, PaintInfo *paintInfo, bool isNew
 
             me->setFlags(me->flags() & ~Qt::ItemIsUserCheckable);
 
-            wasOpen = true;
+            wasOpen = false;
         } else if(tag() == tr("BDA") && isNewTemplate) {
             me->setIcon(0, QIcon(":/dataType/images/DATypeNode.png"));
 
@@ -310,7 +312,7 @@ void DataTypeItem::display(QTreeWidgetItem *me, PaintInfo *paintInfo, bool isNew
 
             me->setFlags(me->flags() & ~Qt::ItemIsUserCheckable);
 
-            wasOpen = true;
+            wasOpen = false;
         } else if(tag() == tr("EnumType") && isNewTemplate) {
             me->setIcon(0, QIcon(":/dataType/images/DATypeNode.png"));
 
@@ -318,7 +320,7 @@ void DataTypeItem::display(QTreeWidgetItem *me, PaintInfo *paintInfo, bool isNew
 
             me->setFlags(me->flags() & ~Qt::ItemIsUserCheckable);
 
-            wasOpen = true;
+            wasOpen = false;
         } else if(tag() == tr("EnumVal") && isNewTemplate) {
             me->setIcon(0, QIcon(":/dataType/images/DATypeNode.png"));
 
@@ -334,6 +336,8 @@ void DataTypeItem::display(QTreeWidgetItem *me, PaintInfo *paintInfo, bool isNew
     }
     if(wasOpen)
         ui->setExpanded(true);
+    else
+        ui->setExpanded(false);
 
 }
 
@@ -450,8 +454,10 @@ void DataTypeItem::displayChildItem(QTreeWidget *pTree, QTreeWidgetItem *parentI
         }
     }
 
-    if(isTop)
+    if(isTop) {
         pTree->addTopLevelItem(me);
+        me->setExpanded(true);
+    }
 }
 
 void DataTypeItem::displayChildItemSelected(QTreeWidget *pTree, QTreeWidgetItem *parentItem, PaintInfo *paintInfo)
@@ -618,6 +624,15 @@ void DataTypeItem::calcCheckState()
        else
            item->isSelected = false;
    }
+}
+
+bool DataTypeItem::hasAttributeOfName(const QString &name)
+{
+    foreach (Attribute *attr, attributes) {
+        if(attr->name == name)
+            return true;
+    }
+    return false;
 }
 
 QString DataTypeItem::attributeValueOfName(const QString &name)

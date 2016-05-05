@@ -1,6 +1,7 @@
 #include "editdataset.h"
 #include "domitem.h"
 #include "dommodel.h"
+#include "utils.h"
 
 EditDataSet::EditDataSet(QWidget *parent) :
     QDialog(parent)
@@ -66,12 +67,20 @@ void EditDataSet::init()
 
 }
 
-void EditDataSet::setTarget(DomItem *pItem)
+bool EditDataSet::setTarget(DomItem *pItem)
 {
+    if(NULL == pItem)
+        return false;
+
     target = pItem;
     model = target->getParentRule();
     DomItem *iedItem = target->parent()->parent()->parent()->parent()->parent();
     DomItem *ldItem = target->parent()->parent();
+
+    if(NULL == iedItem)
+        return false;
+    if(NULL == ldItem)
+        return false;
 
     QTreeWidgetItem *iedTreeItem = new QTreeWidgetItem(0);
     iedTreeItem->setText(0, iedItem->attributeValueOfName("name"));
@@ -92,7 +101,8 @@ void EditDataSet::setTarget(DomItem *pItem)
 
         FC.clear();
 
-        getDataSetItems(item);
+        if(!getDataSetItems(item))
+            return false;
 
         foreach (DomItem *doItem, item->getItems()) {
             if(doItem->tag() == tr("DOI")) {
@@ -163,6 +173,7 @@ void EditDataSet::setTarget(DomItem *pItem)
 
         LNodeComboBox->addItem(item->attributeValueOfName("lnType"));
     }
+    return true;
 
 }
 
@@ -190,16 +201,27 @@ void EditDataSet::accept()
     QDialog::accept();
 }
 
-void EditDataSet::getDataSetItems(DomItem *item)
+bool EditDataSet::getDataSetItems(DomItem *item)
 {
     if(NULL == item)
-        return ;
+        return false;
 
     DomModel *itemModel = item->getParentRule();
+
+    if(NULL == itemModel)
+        return false;
+
+    if(itemModel->getDataTypeItems().isEmpty()) {
+        error(tr("没有找到DataTypeTemplates，请检查ICD文件!"));
+        return false;
+    }
 
     if(item->tag() == tr("DAI") || item->tag() == tr("SDI")) {
         QString itemName = item->attributeValueOfName("name");
         DomItem *lnodeTypeItem = itemModel->getDataTypeItemWithId(item->parent()->parent()->attributeValueOfName("lnType"));
+        if(NULL == lnodeTypeItem) {
+            return false;
+        }
         QString itemType;
         for(int i = 0; i < lnodeTypeItem->getChildItems()->size(); i++) {
             if(lnodeTypeItem->getChildAt(i)->attributeValueOfName("name") == item->parent()->attributeValueOfName("name")) {
@@ -225,6 +247,8 @@ void EditDataSet::getDataSetItems(DomItem *item)
         foreach(DomItem *childItem, item->getItems())
             getDataSetItems(childItem);
     }
+
+    return true;
 }
 
 void EditDataSet::showFCDA(QTreeWidgetItem *item, int column)
@@ -315,4 +339,9 @@ void EditDataSet::showFCDA(QTreeWidgetItem *item, int column)
         fcdaListItem->setText(fcdaText);
         fcdaList->addItem(fcdaListItem);
     }
+}
+
+void EditDataSet::error(const QString& message)
+{
+    Utils::error(this, message);
 }

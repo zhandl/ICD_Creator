@@ -219,7 +219,8 @@ void XmlEditWidget::setupUi()
 
     verticalLayout_2->addWidget(cdataElement);
 
-    mainLayout = new QHBoxLayout();
+//    mainLayout = new QHBoxLayout();
+    mainLayout = new QGridLayout();
     mainLayout->setObjectName(QString::fromUtf8("mainLayout"));
     treeWidget = new QTreeWidget(this);
     treeWidget->setObjectName(QString::fromUtf8("treeWidget"));
@@ -227,7 +228,8 @@ void XmlEditWidget::setupUi()
     treeWidget->setStyleSheet("QTreeView::item:selected {background-color: rgb(255, 128, 64);}");
 //    treeWidget->setStyleSheet("QTreeView {selection-background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,stop: 0 #506B79, stop: 1.0 #0D95A6);}");
 
-    mainLayout->addWidget(treeWidget);
+//    mainLayout->addWidget(treeWidget);
+    mainLayout->addWidget(treeWidget, 0, 0, 10, 10);
 
     verticalLayout = new QVBoxLayout();
     verticalLayout->setObjectName(QString::fromUtf8("verticalLayout"));
@@ -357,7 +359,8 @@ void XmlEditWidget::setupUi()
 
     horizontalLowLayout->addWidget(copySpecial);
     verticalLayout->addLayout(horizontalLowLayout);
-    mainLayout->addLayout(verticalLayout);
+//    mainLayout->addLayout(verticalLayout);
+    mainLayout->addLayout(verticalLayout, 0, 11, 10, 1);
 
     verticalLayout_2->addLayout(mainLayout);
 
@@ -626,6 +629,11 @@ void XmlEditWidget::editAttribute()
 void XmlEditWidget::addChild()
 {
     d->addChild();
+}
+
+void XmlEditWidget::addVal()
+{
+    d->addVal();
 }
 
 void XmlEditWidget::addText()
@@ -948,10 +956,10 @@ void XmlEditWidget::addSmvOpts()
     d->addChild("SmvOpts");
 }
 
-void XmlEditWidget::addVal()
-{
-    d->addChild("Val");
-}
+//void XmlEditWidget::addVal()
+//{
+//    d->addChild("Val");
+//}
 
 void XmlEditWidget::addLNodeType()
 {
@@ -1432,4 +1440,23 @@ void XmlEditWidget::onActionShowAllLeafChildren()
 XmlEditWidgetPrivate *XmlEditWidget::getPrivate()
 {
     return d;
+}
+
+void XmlEditWidget::setModelLoadingLabel()
+{
+    loading = new QLabel(this);
+    movie = new QMovie(":/images/generating.gif");
+
+//    mainLayout->addWidget(loading, Qt::AlignCenter);
+    mainLayout->addWidget(loading, 4, 5, 1, 1);
+
+    loading->setMovie(movie);
+    movie->start();
+}
+
+void XmlEditWidget::setModelCompleted()
+{
+    movie->stop();
+    movie->deleteLater();
+    loading->deleteLater();
 }

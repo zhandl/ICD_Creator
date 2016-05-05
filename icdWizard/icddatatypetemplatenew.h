@@ -49,6 +49,9 @@ public:
     QAction *checkItems;
     QAction *uncheckItems;
 
+    QAction *expandedAll;
+    QAction *unexpandedAll;
+
 
     DataTypeModel *model;
     DataTypeModel *selectedModel;
@@ -61,6 +64,8 @@ private:
     void createDoc(QDomDocument *document);
 
     void setStandardDLT860();
+    void setStandardUserRCD();
+    void setStandardUserNETA();
 
     void registerData();
 
@@ -80,6 +85,9 @@ public slots:
     void treeContextMenu(const QPoint& pos);
     void checkSelecteItems();
     void uncheckSelecteItems();
+    void expandedAllItems();
+    void unexpandedAllItems();
+
     void showDesc(QTreeWidgetItem *item, int column);
 //    void setSelectedItemsBackground();
     void setLNodeSelected(QTreeWidgetItem* item, int column);
@@ -87,6 +95,8 @@ public slots:
 
     void on_addLNode_clicked();
     void on_delLNode_clicked();
+    void on_addAll_clicked();
+    void on_delAll_clicked();
 
     void on_newTemplateLNodeTree_itemDoubleClicked(QTreeWidgetItem* item, int column);
 

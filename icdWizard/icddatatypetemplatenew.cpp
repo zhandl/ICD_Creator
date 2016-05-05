@@ -40,7 +40,7 @@ void icdDataTypeTemplateNew::init()
 
     standardComboBox = new QComboBox(this);
     standardComboBox->setObjectName(tr("standardComboBox"));
-    standardComboBox->addItems(QStringList()<<tr("DL/T860.74-2006"));
+    standardComboBox->addItems(QStringList()<<tr("DL/T860.74-2006")<<tr("UserDefinitionRCD")<<tr("UserDefinationNETA"));
 
     LNodeFilter = new QComboBox(this);
     LNodeFilter->setObjectName(tr("LNodeFilter"));
@@ -105,6 +105,13 @@ void icdDataTypeTemplateNew::init()
     uncheckItems->setText(tr("unselectItems"));
     uncheckItems->setObjectName(tr("uncheckItems"));
 
+    expandedAll = new QAction(this);
+    expandedAll->setText(tr("Expanded All Items"));
+    expandedAll->setObjectName(tr("expandedAll"));
+    unexpandedAll = new QAction(this);
+    unexpandedAll->setText(tr("Unexpanded All Items"));
+    unexpandedAll->setObjectName(tr("unexpandedAll"));
+
     LNodeTree->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(LNodeTree, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(treeContextMenu(QPoint)));
     connect(LNodeTree, SIGNAL(itemClicked(QTreeWidgetItem*,int)), this, SLOT(showDesc(QTreeWidgetItem*, int)));
@@ -112,9 +119,13 @@ void icdDataTypeTemplateNew::init()
     connect(LNodeTree, SIGNAL(itemChanged(QTreeWidgetItem*,int)), this, SLOT(calcCheckState(QTreeWidgetItem*, int)));
     connect(checkItems, SIGNAL(triggered()), this, SLOT(checkSelecteItems()));
     connect(uncheckItems, SIGNAL(triggered()), this, SLOT(uncheckSelecteItems()));
+    connect(expandedAll, SIGNAL(triggered()), this, SLOT(expandedAllItems()));
+    connect(unexpandedAll, SIGNAL(triggered()), this, SLOT(unexpandedAllItems()));
 
     connect(addLNode, SIGNAL(clicked()), this, SLOT(on_addLNode_clicked()));
     connect(delLNode, SIGNAL(clicked()), this, SLOT(on_delLNode_clicked()));
+    connect(addAll, SIGNAL(clicked()), this, SLOT(on_addAll_clicked()));
+    connect(delAll, SIGNAL(clicked()), this, SLOT(on_delAll_clicked()));
 }
 
 void icdDataTypeTemplateNew::selecteDataTypeStandard(int index)
@@ -124,6 +135,12 @@ void icdDataTypeTemplateNew::selecteDataTypeStandard(int index)
         return;
     case 0:
         setStandardDLT860();
+        return;
+    case 1:
+        setStandardUserRCD();
+        return;
+    case 2:
+        setStandardUserNETA();
         return;
     }
 }
@@ -145,21 +162,73 @@ void icdDataTypeTemplateNew::setStandardDLT860()
             model = newModel;
             LNodeTree->setUpdatesEnabled(false);
             model->setTreeValue(LNodeTree);
+            LNodeTree->topLevelItem(0)->setText(0, tr("DL/T860-74-2006"));
             LNodeTree->setUpdatesEnabled(true);
-            LNodeTree->expandAll();
+//            LNodeTree->expandAll();
         }
     }
 }
 
+void icdDataTypeTemplateNew::setStandardUserRCD()
+{
+    DataTypeModel *newModel;
+    QString filePath = tr("userRCD.xml");
+    QFile file(filePath);
+    if(file.open(QIODevice::ReadOnly)) {
+        QDomDocument document;
+        if(document.setContent(&file)) {
+
+            newModel = new DataTypeModel(document, filePath);
+            if(model != NULL) {
+                delete model;
+                model = NULL;
+            }
+            model = newModel;
+            LNodeTree->setUpdatesEnabled(false);
+            model->setTreeValue(LNodeTree);
+            LNodeTree->topLevelItem(0)->setText(0, tr("UserDefinition RCD Templates"));
+            LNodeTree->setUpdatesEnabled(true);
+        }
+    }
+}
+
+void icdDataTypeTemplateNew::setStandardUserNETA()
+{
+    DataTypeModel *newModel;
+    QString filePath = tr("userNETA.xml");
+    QFile file(filePath);
+    if(file.open(QIODevice::ReadOnly)) {
+        QDomDocument document;
+        if(document.setContent(&file)) {
+
+            newModel = new DataTypeModel(document, filePath);
+            if(model != NULL) {
+                delete model;
+                model = NULL;
+            }
+            model = newModel;
+            LNodeTree->setUpdatesEnabled(false);
+            model->setTreeValue(LNodeTree);
+            LNodeTree->topLevelItem(0)->setText(0, tr("UserDefinition NETA Templates"));
+            LNodeTree->setUpdatesEnabled(true);
+        }
+    }
+}
 
 void icdDataTypeTemplateNew::treeContextMenu(const QPoint &pos)
 {
     QMenu *contextMenu = new QMenu(this);
-    contextMenu->addAction(checkItems);
-    contextMenu->addAction(uncheckItems);
 
-    if(LNodeTree->itemAt(pos)->isSelected())
-        contextMenu->exec(LNodeTree->mapToGlobal(pos));
+    if(LNodeTree->itemAt(pos)->isSelected()) {
+        contextMenu->addAction(checkItems);
+        contextMenu->addAction(uncheckItems);
+
+    } else {
+        contextMenu->addAction(expandedAll);
+        contextMenu->addAction(unexpandedAll);
+    }
+
+    contextMenu->exec(LNodeTree->mapToGlobal(pos));
 }
 
 void icdDataTypeTemplateNew::checkSelecteItems()
@@ -172,6 +241,16 @@ void icdDataTypeTemplateNew::checkSelecteItems()
             item->setChecked();
     }
     LNodeTree->clearSelection();
+}
+
+void icdDataTypeTemplateNew::expandedAllItems()
+{
+    LNodeTree->expandAll();
+}
+
+void icdDataTypeTemplateNew::unexpandedAllItems()
+{
+    LNodeTree->collapseAll();
 }
 
 void icdDataTypeTemplateNew::uncheckSelecteItems()
@@ -247,6 +326,17 @@ void icdDataTypeTemplateNew::on_addLNode_clicked()
 
 }
 
+void icdDataTypeTemplateNew::on_addAll_clicked()
+{
+    foreach (DataTypeItem* item, model->getLNodeTypeItems()) {
+        _LNodeItemPool.append(selectedModel->insertToNewTemplate(newTemplateLNodeTree, selectedModel->root(), item, _LNodeItemPool.count()));
+    }
+
+    registerData();
+
+}
+
+
 void icdDataTypeTemplateNew::on_delLNode_clicked()
 {
     QList<QTreeWidgetItem*> itemList = newTemplateLNodeTree->selectedItems();
@@ -263,6 +353,14 @@ void icdDataTypeTemplateNew::on_delLNode_clicked()
         } else if(item->tag() == tr("EnumType")) {
             selectedModel->deleteItem(item);
         }
+    }
+}
+
+void icdDataTypeTemplateNew::on_delAll_clicked()
+{
+    foreach(DataTypeItem *item, _LNodeItemPool) {
+        selectedModel->deleteItem(item);
+        _LNodeItemPool.remove(_LNodeItemPool.indexOf(item));
     }
 }
 
@@ -328,11 +426,24 @@ void icdDataTypeTemplateNew::registerData()
             EnumType = item->getItems().at(i)->attributeValueOfName("type");
             if(EnumType == tr("") || _EnumTypeNamePool.contains(EnumType))
                 continue;
-            foreach (DataTypeItem *enumTypeItem, model->getEnumTypeItems()) {
-                if((enumTypeItem->attributeValueOfName("id") == EnumType)) {
-                    //selectedModel->insertToNewTemplate(newTemplateLNodeTree, selectedModel->root(), enumTypeItem);
-                    selectedModel->insertToNewTemplateInternal(selectedModel->root(), enumTypeItem, -1);
-                    _EnumTypeNamePool.insert(EnumType);
+
+            QString btype;
+            btype = item->getItems().at(i)->attributeValueOfName("bType");
+            if(btype == "Enum") {
+                foreach (DataTypeItem *enumTypeItem, model->getEnumTypeItems()) {
+                    if((enumTypeItem->attributeValueOfName("id") == EnumType)) {
+                        //selectedModel->insertToNewTemplate(newTemplateLNodeTree, selectedModel->root(), enumTypeItem);
+                        selectedModel->insertToNewTemplateInternal(selectedModel->root(), enumTypeItem, -1);
+                        _EnumTypeNamePool.insert(EnumType);
+                    }
+                }
+            } else if(btype == "Struct") {
+                foreach (DataTypeItem *daTypeItem, model->getDaTypeItems()) {
+                    if((daTypeItem->attributeValueOfName("id") == EnumType)) {
+                        //_DaTypeItemPool.append(selectedModel->insertToNewTemplate(newTemplateLNodeTree, selectedModel->root(), daTypeItem));
+                        _DaTypeItemPool.append(selectedModel->insertToNewTemplateInternal(selectedModel->root(), daTypeItem, _LNodeItemPool.count()+_DoTypeItemPool.count()+_DaTypeItemPool.count()));
+                        _DaTypeNamePool.insert(EnumType);
+                    }
                 }
             }
         }

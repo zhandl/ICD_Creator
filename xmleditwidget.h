@@ -30,6 +30,7 @@
 #include <QtGui/QTreeWidget>
 #include <QtGui/QVBoxLayout>
 #include <QtGui/QWidget>
+#include <QtGui/QMovie>
 
 class XSDSchema;
 class DomItem;
@@ -238,7 +239,8 @@ private:
     QLabel *sizeOfSearch;
     QSpacerItem *horizontalSpacer_3;
     QCheckBox *cdataElement;
-    QHBoxLayout *mainLayout;
+//    QHBoxLayout *mainLayout;
+    QGridLayout *mainLayout;
     QTreeWidget *treeWidget;
     QVBoxLayout *verticalLayout;
     QLabel *docTypeLabel;
@@ -259,6 +261,9 @@ private:
     QHBoxLayout *horizontalLowLayout;
     QToolButton *styleButton;
     QToolButton *copySpecial;
+
+    QLabel *loading;
+    QMovie *movie;
 
     void setupUi();
     void retranslateUi();
@@ -349,6 +354,10 @@ public:
     bool isValidXsd();
     void loadSchema(const QString &schemaURL);
     void setCurrentItem(DomItem *newSelection);
+
+    void setModelLoadingLabel();
+    void setModelCompleted();
+
 
 signals:
     void reevaluateSelectionState();

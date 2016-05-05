@@ -87,7 +87,7 @@ void EditElement::init()
 
     horizontalLayout_4->addWidget(label);
 
-    editTag = new QLineEdit(groupBox);
+    editTag = new QLineEdit(this);
     editTag->setObjectName(QString::fromUtf8("editTag"));
     QSizePolicy sizePolicy4(QSizePolicy::MinimumExpanding, QSizePolicy::Fixed);
     sizePolicy4.setHorizontalStretch(0);
@@ -204,11 +204,12 @@ void EditElement::init()
     attrTable->setObjectName(QString::fromUtf8("attrTable"));
     attrTable->setAlternatingRowColors(true);
     attrTable->setShowGrid(true);
-    attrTable->setSortingEnabled(true);
+//    attrTable->setSortingEnabled(true);
     attrTable->setColumnCount(3);
     attrTable->horizontalHeader()->setCascadingSectionResizes(false);
     attrTable->horizontalHeader()->setProperty("showSortIndicator", QVariant(true));
     attrTable->horizontalHeader()->setStretchLastSection(true);
+    attrTable->setSortingEnabled(false);
 
     label_4 = new QLabel(this);
     label_4->setObjectName(QString::fromUtf8("label_4"));
@@ -899,7 +900,9 @@ bool EditElement::setAttributeOfName(QTableWidget *table, int &row, const QStrin
 {
     bool result = false;
     if(!target->hasAttrOfName(AttrName)) {
-        table->setItem(row++, 0, new QTableWidgetItem(AttrName));
+        QTableWidgetItem *newItem = new QTableWidgetItem(AttrName);
+        newItem->setFlags(newItem->flags() & ~Qt::ItemIsEditable);
+        table->setItem(row++, 0, newItem);
         result = true;
     }
 
@@ -1502,7 +1505,7 @@ void EditElement::on_noUseAttrTable_itemClicked(QTableWidgetItem *item)
         newAttribute->setEnabled(false);
 }
 
-void EditElement::on_noUseAttrTable_itemDoubleClicked(QTableWidgetItem *item)
+void EditElement::on_noUseAttrTable_itemDoubleClicked(QTableWidgetItem*/* item*/)
 {
     on_newAttribute_clicked();
 }

@@ -16,7 +16,7 @@ public:
     EditDataSet(QWidget *parent = 0);
     ~EditDataSet();
 
-    void setTarget(DomItem *pItem);
+    bool setTarget(DomItem *pItem);
 
 signals:
 
@@ -24,6 +24,8 @@ public slots:
     void accept();
 
 private:
+
+    void error(const QString& message);
 
     QLabel *dataSetNameLabel;
     QLineEdit *dataSetNameText;
@@ -46,7 +48,7 @@ private:
     QVector<QTreeWidgetItem*> _fcItems;
     QVector<QTreeWidgetItem*> _doItems;
 
-    void getDataSetItems(DomItem *item);
+    bool getDataSetItems(DomItem *item);
 
     typedef struct _fcda{
         bool hasDaName;
